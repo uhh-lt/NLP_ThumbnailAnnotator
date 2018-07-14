@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  web:
+    build: ./thumbnailAnnotator.web
+    depends_on:
+      - 'db'
+    ports:
+      - '8081:8081'
+      - '8080:8080'
+      
+  db:
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/redis
+
+volumes:
+  redis_data:
+    driver: local
