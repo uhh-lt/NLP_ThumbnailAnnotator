@@ -6,22 +6,15 @@
     <groupId>nlp.floschne</groupId>
     <artifactId>thumbnailAnnotator.parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>thumbnailAnnotator.parent</name>
     <description>ThumbnailAnnotator parent project</description>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.0.3.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
-    </parent>
-
     <modules>
-        <module>../thumbnailAnnotator.core</module>
-        <module>../thumbnailAnnotator.db</module>
-        <module>../thumbnailAnnotator.web</module>
+        <module>thumbnailAnnotator.core</module>
+        <module>thumbnailAnnotator.db</module>
+        <module>thumbnailAnnotator.web</module>
     </modules>
 
     <properties>
@@ -33,20 +26,10 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <version>1.18.0</version>
         </dependency>
 
         <dependency>
@@ -78,21 +61,18 @@
                 </plugin>
 
                 <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>1.5.9.RELEASE</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>repackage</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.7.0</version>
+                    <configuration>
+                        <source>1.8</source>
+                        <target>1.8</target>
+                    </configuration>
                 </plugin>
-
             </plugins>
         </pluginManagement>
     </build>
+
 
 
 </project>

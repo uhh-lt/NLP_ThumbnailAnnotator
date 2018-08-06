@@ -1,0 +1,4 @@
+nlp/floschne/thumbnailAnnotator/db/util/EmbeddedRedisServer.class
+nlp/floschne/thumbnailAnnotator/db/repository/DepictionRepositoryTests.class
+nlp/floschne/thumbnailAnnotator/db/util/ManagedClientResources.class
+nlp/floschne/thumbnailAnnotator/db/util/RequiresRedisServer.class

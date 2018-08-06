@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+    <imports>
+        <import location="file:/home/p0w3r/gitrepos/NLP_ThumbnailAnnotator/thumbnailAnnotator.parent/thumbnailAnnotator.core/src/main/resources/desc/type/ViewMappingToken.xml"/>
+        <import location="file:/home/p0w3r/gitrepos/NLP_ThumbnailAnnotator/thumbnailAnnotator.parent/thumbnailAnnotator.core/src/main/resources/desc/type/CaptionTokenAnnotation.xml"/>
+        <import location="file:/home/p0w3r/gitrepos/NLP_ThumbnailAnnotator/thumbnailAnnotator.parent/thumbnailAnnotator.core/src/main/resources/desc/type/PosExclusionFlagToken.xml"/>
+    </imports>
+</typeSystemDescription>
