@@ -3,10 +3,13 @@ package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler;
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
+import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrlList;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.IThumbnailSource;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.ShutterstockSource;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -14,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * Crawls for Thumbnails that match to a list of CaptionTokens and stores it in a DB
+ * Crawls for Thumbnails that match to a list of CaptionTokens
  */
 public class ThumbnailCrawler {
     private static final Integer MAX_PARALLEL_THREADS = 16;
@@ -31,7 +34,8 @@ public class ThumbnailCrawler {
         /**
          * @param captionToken the input {@link CaptionToken}
          */
-        public CrawlerAgent(CaptionToken captionToken) {
+        // package private by intention
+        CrawlerAgent(CaptionToken captionToken) {
             this.captionToken = captionToken;
         }
 
@@ -43,7 +47,7 @@ public class ThumbnailCrawler {
         @Override
         public CrawlerResult call() throws IOException {
             // TODO replace dummy implementation
-            List<String> thumbnailURLs = thumbnailSource.queryThumbnailURLs(this.captionToken.getValue(), 100);
+            ThumbnailUrlList thumbnailURLs = thumbnailSource.queryThumbnailURLs(this.captionToken.getValue(), 100);
             return new CrawlerResult(this.captionToken, thumbnailURLs);
         }
     }

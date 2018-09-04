@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
+import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrlList;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -70,7 +72,7 @@ public class ShutterstockSource implements IThumbnailSource {
 
     public ShutterstockSource() {
         this.sortBy = SortBy.RELEVANCE;
-        this.per_page = 5;
+        this.per_page = 10;
     }
 
     private String generateApiCall(String queryParameter) throws UnsupportedEncodingException {
@@ -80,14 +82,14 @@ public class ShutterstockSource implements IThumbnailSource {
                 PER_PAGE_PARAMETER + per_page.toString();
     }
 
-    private List<String> extractURLsFromJsonResponse(JsonObject response, Integer limit) {
-        List<String> result = new ArrayList<>();
+    private ThumbnailUrlList extractURLsFromJsonResponse(JsonObject response, Integer limit) {
+        ThumbnailUrlList result = new ThumbnailUrlList();
         for (JsonElement obj : response.getAsJsonArray("data")) {
             if (obj != null) {
                 String url = getElementByPath(obj.getAsJsonObject(), "assets.huge_thumb.url").toString();
                 // remove "
                 url = url.substring(1, url.length() - 1);
-                result.add(url);
+                result.add(new ThumbnailUrl(url, 1));
                 if (result.size() == limit)
                     break;
             }
@@ -113,7 +115,7 @@ public class ShutterstockSource implements IThumbnailSource {
 
 
     @Override
-    public List<String> queryThumbnailURLs(String queryParameter, Integer limit) throws IOException {
+    public ThumbnailUrlList queryThumbnailURLs(String queryParameter, Integer limit) throws IOException {
         String apiCall = generateApiCall(queryParameter);
 
         // Set host & credentials

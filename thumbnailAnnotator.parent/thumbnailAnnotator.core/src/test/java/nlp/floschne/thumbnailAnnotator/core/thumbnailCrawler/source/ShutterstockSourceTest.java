@@ -1,5 +1,6 @@
 package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source;
 
+import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -14,15 +15,15 @@ public class ShutterstockSourceTest {
     public void basicQueryTest() throws IOException {
         String query = "water";
         IThumbnailSource shutterstockSource = new ShutterstockSource();
-        List<String> response = shutterstockSource.queryThumbnailURLs(query, 20);
+        List<ThumbnailUrl> response = shutterstockSource.queryThumbnailURLs(query, 20);
         assertNotNull(response);
         assertFalse(response.isEmpty());
 
         System.out.println("Query: '" + query + "'");
         System.out.println("Response:");
 
-        for (String url : response)
-            System.out.println(url);
+        for (ThumbnailUrl url : response)
+            System.out.println(url.getUrl());
 
     }
 
@@ -31,15 +32,15 @@ public class ShutterstockSourceTest {
     public void multiWordQueryTest() throws IOException {
         String query = "red water";
         IThumbnailSource shutterstockSource = new ShutterstockSource();
-        List<String> response = shutterstockSource.queryThumbnailURLs(query, 20);
+        List<ThumbnailUrl> response = shutterstockSource.queryThumbnailURLs(query, 20);
         assertNotNull(response);
         assertFalse(response.isEmpty());
 
         System.out.println("Query: '" + query + "'");
         System.out.println("Response:");
 
-        for (String url : response)
-            System.out.println(url);
+        for (ThumbnailUrl url : response)
+            System.out.println(url.getUrl());
 
     }
 }

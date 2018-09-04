@@ -1,10 +1,12 @@
 package nlp.floschne.thumbnailAnnotator.web.api;
 
+import junit.framework.TestCase;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
-import nlp.floschne.thumbnailAnnotator.web.api.Application;
+import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
+import nlp.floschne.thumbnailAnnotator.db.repository.CrawlerResultEntityRepository;
+import nlp.floschne.thumbnailAnnotator.db.RedisConfig;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +25,16 @@ import org.springframework.web.context.WebApplicationContext;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Optional;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertNotNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = Application.class)
+@SpringBootTest(classes = {Application.class, RedisConfig.class})
 @WebAppConfiguration
-@Ignore
 public class ApiControllerTest {
 
     private MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
@@ -59,6 +60,9 @@ public class ApiControllerTest {
                 this.mappingJackson2HttpMessageConverter);
     }
 
+    @Autowired
+    CrawlerResultEntityRepository repository;
+
     @Before
     public void setup() {
     }
@@ -69,6 +73,29 @@ public class ApiControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string("Hello from ThumbnailAnnotator REST API! Swagger-UI available under <host>:<port>/swagger-ui.html"));
+    }
+
+    @Test
+    public void whenSavingDepictionInRedis_thenAvailableOnRetrieval() throws Exception {
+        String expectedHelloWorldResult = "Hello from ThumbnailAnnotator REST API! Swagger-UI available under <host>:<port>/swagger-ui.html";
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        String result = (String) mockMvc.perform(MockMvcRequestBuilders.get("/api/"))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().string(expectedHelloWorldResult))
+                .andReturn().getResponse().getContentAsString();
+
+
+        CrawlerResultEntity a = new CrawlerResultEntity(result, null, null);
+        repository.save(a);
+
+        final Optional<CrawlerResultEntity> o = repository.findById(a.getCaptionTokenValue());
+        assertTrue(o.isPresent());
+
+        CrawlerResultEntity b = o.get();
+        TestCase.assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
+        TestCase.assertEquals(a.getCaptionToken(), b.getCaptionToken());
+        TestCase.assertEquals(a.getThumbnailUrlList(), b.getThumbnailUrlList());
     }
 
     @Test

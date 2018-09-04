@@ -1,5 +1,8 @@
 package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source;
 
+import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
+import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrlList;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -16,5 +19,5 @@ public interface IThumbnailSource {
      * @return a list of URLs (as Strings) to Thumbnails
      * @throws IOException if there was an error while querying
      */
-    List<String> queryThumbnailURLs(String queryParameter, Integer limit) throws IOException;
+    ThumbnailUrlList queryThumbnailURLs(String queryParameter, Integer limit) throws IOException;
 }

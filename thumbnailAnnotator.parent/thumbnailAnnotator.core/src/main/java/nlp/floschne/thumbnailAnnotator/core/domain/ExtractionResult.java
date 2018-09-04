@@ -3,8 +3,6 @@ package nlp.floschne.thumbnailAnnotator.core.domain;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +19,10 @@ public class ExtractionResult {
     private List<CaptionToken> captionTokens;
     private UserInput userInput;
 
-    public boolean addCaptionToken(CaptionToken captionToken) {
+    public void addCaptionToken(CaptionToken captionToken) {
         if (this.captionTokens == null)
             this.captionTokens = new ArrayList<>();
-        return this.captionTokens.add(captionToken);
+        this.captionTokens.add(captionToken);
     }
 
 }

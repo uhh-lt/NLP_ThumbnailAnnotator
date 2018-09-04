@@ -1,6 +1,5 @@
 package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor;
 
-import captionTokenExtractor.type.CaptionTokenAnnotation;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.consumer.CaptionTokenExtractorDebugConsolePrinter;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.reader.LeipzigCorporaReader;
 import nlp.floschne.thumbnailAnnotator.core.domain.ExtractionResult;
@@ -23,9 +22,7 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class CaptionTokenExtractorTests {
 
