@@ -11,5 +11,5 @@ import java.util.List;
 @NoArgsConstructor
 public class CrawlerResult {
     private CaptionToken captionToken;
-    private ThumbnailUrlList thumbnailURLs;
+    private List<ThumbnailUrl> thumbnailURLs;
 }

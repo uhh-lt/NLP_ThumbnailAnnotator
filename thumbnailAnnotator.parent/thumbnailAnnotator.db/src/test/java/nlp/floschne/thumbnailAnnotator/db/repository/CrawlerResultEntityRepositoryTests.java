@@ -2,10 +2,8 @@ package nlp.floschne.thumbnailAnnotator.db.repository;
 
 import junit.framework.TestCase;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
-import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
-import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrlList;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailUrlEntity;
 import nlp.floschne.thumbnailAnnotator.db.util.RepositoryTestsBase;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,19 +21,15 @@ public class CrawlerResultEntityRepositoryTests extends RepositoryTestsBase {
 
     private static CrawlerResultEntity createDummyCrawlerResultEntity() {
         CaptionToken captionToken = new CaptionToken("big ship", CaptionToken.Type.COMPOUND, 0, 4, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
-        ThumbnailUrlList urls = new ThumbnailUrlList();
-        urls.add(new ThumbnailUrl("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1));
-        urls.add(new ThumbnailUrl("https://image.shutterstock.com/image-photo/tugboats-assisting-container-cargo-ship-harbor-260nw-326359325.jpg", 2));
-        CrawlerResult crawlerResult = new CrawlerResult(captionToken, urls);
+        List<ThumbnailUrlEntity> urls = new ArrayList<>();
+        urls.add(new ThumbnailUrlEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1));
+        urls.add(new ThumbnailUrlEntity("https://image.shutterstock.com/image-photo/tugboats-assisting-container-cargo-ship-harbor-260nw-326359325.jpg", 2));
 
-        return new CrawlerResultEntity(crawlerResult);
+        return new CrawlerResultEntity(captionToken.getValue(), captionToken, urls);
     }
 
     @Autowired
     private CrawlerResultEntityRepository crawlerResultEntityRepository;
-
-    @Autowired
-    private ThumbnailUrlListEntityRepository thumbnailUrlListEntityRepository;
 
     @Autowired
     private ThumbnailUrlEntityRepository thumbnailUrlEntityRepository;
@@ -43,14 +37,12 @@ public class CrawlerResultEntityRepositoryTests extends RepositoryTestsBase {
     @Before
     public void flushRepository() {
         crawlerResultEntityRepository.deleteAll();
-        thumbnailUrlListEntityRepository.deleteAll();
         thumbnailUrlEntityRepository.deleteAll();
     }
 
 
     private void saveCrawlerResultEntityRecursivly(CrawlerResultEntity cre) {
-        thumbnailUrlEntityRepository.saveAll(cre.getThumbnailUrlList().getThumbnailUrlEntities());
-        thumbnailUrlListEntityRepository.save(cre.getThumbnailUrlList());
+        thumbnailUrlEntityRepository.saveAll(cre.getThumbnailUrlList());
         crawlerResultEntityRepository.save(cre);
     }
 
@@ -58,7 +50,7 @@ public class CrawlerResultEntityRepositoryTests extends RepositoryTestsBase {
         final CrawlerResultEntity a = createDummyCrawlerResultEntity();
         saveCrawlerResultEntityRecursivly(a);
 
-        final Optional<CrawlerResultEntity> o = crawlerResultEntityRepository.findById(a.getCaptionTokenValue());
+        final Optional<CrawlerResultEntity> o = crawlerResultEntityRepository.findByCaptionTokenValue(a.getCaptionTokenValue());
         assertTrue(o.isPresent());
 
         CrawlerResultEntity b = o.get();
@@ -75,7 +67,7 @@ public class CrawlerResultEntityRepositoryTests extends RepositoryTestsBase {
         a.setCaptionTokenValue("updated");
         saveCrawlerResultEntityRecursivly(a);
 
-        final Optional<CrawlerResultEntity> o = crawlerResultEntityRepository.findById(a.getCaptionTokenValue());
+        final Optional<CrawlerResultEntity> o = crawlerResultEntityRepository.findByCaptionTokenValue(a.getCaptionTokenValue());
         assertTrue(o.isPresent());
         CrawlerResultEntity b = o.get();
         TestCase.assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
@@ -107,8 +99,9 @@ public class CrawlerResultEntityRepositoryTests extends RepositoryTestsBase {
     public void whenDeleting_thenNotAvailableOnRetrieval() {
         final CrawlerResultEntity a = createDummyCrawlerResultEntity();
         saveCrawlerResultEntityRecursivly(a);
-        crawlerResultEntityRepository.deleteById(a.getCaptionTokenValue());
-        TestCase.assertFalse(crawlerResultEntityRepository.findById(a.getCaptionTokenValue()).isPresent());
+        TestCase.assertTrue(crawlerResultEntityRepository.findById(a.getId()).isPresent());
+        crawlerResultEntityRepository.deleteById(a.getId());
+        TestCase.assertFalse(crawlerResultEntityRepository.findById(a.getId()).isPresent());
     }
 
 }

@@ -5,34 +5,23 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.TimeToLive;
+import org.springframework.data.redis.core.index.Indexed;
+
+import java.util.List;
 
 @Data
-@EqualsAndHashCode
-@RedisHash("crawler_result_entity")
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class CrawlerResultEntity {
-
-    @TimeToLive
-    private final static long TIME_TO_LIVE = 60 * 60 * 24;
-
-    @Id
+@RedisHash("crawler_result_entity")
+public class CrawlerResultEntity extends Entity {
+    @Indexed
     private String captionTokenValue;
 
     private CaptionToken captionToken;
 
     @Reference
-    private ThumbnailUrlListEntity thumbnailUrlList;
-
-    public CrawlerResultEntity(@NotNull CrawlerResult crawlerResult) {
-        this.captionTokenValue = crawlerResult.getCaptionToken().getValue();
-        this.captionToken = crawlerResult.getCaptionToken();
-        this.thumbnailUrlList = new ThumbnailUrlListEntity(crawlerResult.getThumbnailURLs());
-    }
+    private List<ThumbnailUrlEntity> thumbnailUrlList;
 }

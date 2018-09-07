@@ -14,14 +14,6 @@ public class ThumbnailUrl implements Comparable<ThumbnailUrl> {
 
     protected Integer priority;
 
-    public void incrementPriority() {
-        this.priority++;
-    }
-
-    public void decrementPriority() {
-        this.priority--;
-    }
-
     @Override
     public int compareTo(ThumbnailUrl o) {
         if (o == null || o.priority == null)

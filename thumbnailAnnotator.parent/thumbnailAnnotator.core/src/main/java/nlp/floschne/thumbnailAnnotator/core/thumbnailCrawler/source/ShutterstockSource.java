@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
-import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrlList;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -82,8 +81,8 @@ public class ShutterstockSource implements IThumbnailSource {
                 PER_PAGE_PARAMETER + per_page.toString();
     }
 
-    private ThumbnailUrlList extractURLsFromJsonResponse(JsonObject response, Integer limit) {
-        ThumbnailUrlList result = new ThumbnailUrlList();
+    private List<ThumbnailUrl> extractURLsFromJsonResponse(JsonObject response, Integer limit) {
+        List<ThumbnailUrl> result = new ArrayList<ThumbnailUrl>();
         for (JsonElement obj : response.getAsJsonArray("data")) {
             if (obj != null) {
                 String url = getElementByPath(obj.getAsJsonObject(), "assets.huge_thumb.url").toString();
@@ -115,7 +114,7 @@ public class ShutterstockSource implements IThumbnailSource {
 
 
     @Override
-    public ThumbnailUrlList queryThumbnailURLs(String queryParameter, Integer limit) throws IOException {
+    public List<ThumbnailUrl> queryThumbnailURLs(String queryParameter, Integer limit) throws IOException {
         String apiCall = generateApiCall(queryParameter);
 
         // Set host & credentials

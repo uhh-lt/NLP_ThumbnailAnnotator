@@ -20,7 +20,7 @@ public class ThumbnailUrlEntityRepositoryTests extends RepositoryTestsBase {
     ThumbnailUrlEntityRepository repository;
 
     private static ThumbnailUrlEntity createDummyThumbnailUrlEntity() {
-        return new ThumbnailUrlEntity(new ThumbnailUrl("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1));
+        return new ThumbnailUrlEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1);
     }
 
     @Before
