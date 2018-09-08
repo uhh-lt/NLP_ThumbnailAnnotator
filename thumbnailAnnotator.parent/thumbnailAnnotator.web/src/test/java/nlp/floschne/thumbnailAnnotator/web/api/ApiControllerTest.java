@@ -76,29 +76,6 @@ public class ApiControllerTest {
     }
 
     @Test
-    public void whenSavingDepictionInRedis_thenAvailableOnRetrieval() throws Exception {
-        String expectedHelloWorldResult = "Hello from ThumbnailAnnotator REST API! Swagger-UI available under <host>:<port>/swagger-ui.html";
-
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        String result = (String) mockMvc.perform(MockMvcRequestBuilders.get("/api/"))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string(expectedHelloWorldResult))
-                .andReturn().getResponse().getContentAsString();
-
-
-        CrawlerResultEntity a = new CrawlerResultEntity(result, null, null);
-        repository.save(a);
-
-        final Optional<CrawlerResultEntity> o = repository.findById(a.getCaptionTokenValue());
-        assertTrue(o.isPresent());
-
-        CrawlerResultEntity b = o.get();
-        TestCase.assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
-        TestCase.assertEquals(a.getCaptionToken(), b.getCaptionToken());
-        TestCase.assertEquals(a.getThumbnailUrls(), b.getThumbnailUrls());
-    }
-
-    @Test
     public void extractCaptionTokensITest() throws Exception {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         String value = "The red, broken and big car control system is great.";
