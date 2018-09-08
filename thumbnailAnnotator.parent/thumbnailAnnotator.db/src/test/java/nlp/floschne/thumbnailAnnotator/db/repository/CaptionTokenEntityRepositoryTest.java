@@ -1,17 +1,29 @@
 package nlp.floschne.thumbnailAnnotator.db.repository;
 
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
-public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase {
+public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<CaptionTokenEntity> {
 
-    private void assertEqual(CaptionTokenEntity a, CaptionTokenEntity b) {
+    public CaptionTokenEntityRepositoryTest() {
+        super(RepoType.CAPTION_TOKEN);
+    }
+
+    @NotNull
+    @Override
+    protected CaptionTokenEntity createDummyEntity() {
+        return new CaptionTokenEntity("big ship", "COMPOUND", 0, 7, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+    }
+
+    @Override
+    protected void assertEqual(CaptionTokenEntity a, CaptionTokenEntity b) {
         assertEquals(a.getType(), a.getType());
         assertEquals(a.getValue(), a.getValue());
         assertEquals(a.getId(), b.getId());
@@ -22,70 +34,19 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase {
         assertEquals(a, b);
     }
 
+    @Override
+    protected void saveEntity(CaptionTokenEntity entity) {
+        this.repo.save(entity);
+    }
+
     @Test
     public void findByValue() {
-        CaptionTokenEntity a = createDummyCaptionTokenEntity();
-        this.captionTokenEntityRepository.save(a);
+        CaptionTokenEntity a = createDummyEntity();
+        this.saveEntity(a);
         final Optional<CaptionTokenEntity> o = this.captionTokenEntityRepository.findByValue(a.getValue());
         assertTrue(o.isPresent());
 
         CaptionTokenEntity b = o.get();
         assertEqual(a, b);
-    }
-
-
-    @Override
-    public void whenSaving_thenAvailableOnRetrieval() {
-        CaptionTokenEntity a = createDummyCaptionTokenEntity();
-        this.captionTokenEntityRepository.save(a);
-        final Optional<CaptionTokenEntity> o = this.captionTokenEntityRepository.findById(a.getId());
-        assertTrue(o.isPresent());
-
-        CaptionTokenEntity b = o.get();
-        assertEqual(a, b);
-
-    }
-
-    @Override
-    public void whenSavingMultiple_thenAllShouldAvailableOnRetrieval() {
-        CaptionTokenEntity a = createDummyCaptionTokenEntity();
-        CaptionTokenEntity b = createDummyCaptionTokenEntity();
-        CaptionTokenEntity c = createDummyCaptionTokenEntity();
-        this.captionTokenEntityRepository.save(a);
-        this.captionTokenEntityRepository.save(b);
-        this.captionTokenEntityRepository.save(c);
-
-        List<CaptionTokenEntity> captionTokenEntities = new ArrayList<>();
-        this.captionTokenEntityRepository.findAll().forEach(captionTokenEntities::add);
-        assertEquals(3, captionTokenEntities.size());
-
-    }
-
-    @Override
-    public void whenUpdating_thenAvailableOnRetrieval() {
-
-        CaptionTokenEntity a = createDummyCaptionTokenEntity();
-        this.captionTokenEntityRepository.save(a);
-        Optional<CaptionTokenEntity> o = this.captionTokenEntityRepository.findById(a.getId());
-        assertTrue(o.isPresent());
-
-        a.setValue("updated");
-        this.captionTokenEntityRepository.save(a);
-        o = this.captionTokenEntityRepository.findById(a.getId());
-        assertTrue(o.isPresent());
-
-        CaptionTokenEntity b = o.get();
-        assertEqual(a, b);
-    }
-
-    @Override
-    public void whenDeleting_thenNotAvailableOnRetrieval() {
-
-        CaptionTokenEntity a = createDummyCaptionTokenEntity();
-        this.captionTokenEntityRepository.save(a);
-        assertTrue(this.captionTokenEntityRepository.findById(a.getId()).isPresent());
-
-        this.captionTokenEntityRepository.deleteById(a.getId());
-        assertFalse(this.captionTokenEntityRepository.findById(a.getId()).isPresent());
     }
 }

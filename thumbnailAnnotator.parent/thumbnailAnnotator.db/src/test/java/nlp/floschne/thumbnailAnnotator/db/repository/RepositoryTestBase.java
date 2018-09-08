@@ -1,12 +1,7 @@
 package nlp.floschne.thumbnailAnnotator.db.repository;
 
 import nlp.floschne.thumbnailAnnotator.db.RedisConfig;
-import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
-import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
-import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailUrlEntity;
-import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
-import nlp.floschne.thumbnailAnnotator.db.repository.CrawlerResultEntityRepository;
-import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailUrlEntityRepository;
+import nlp.floschne.thumbnailAnnotator.db.entity.Entity;
 import nlp.floschne.thumbnailAnnotator.db.util.EmbeddedRedisServer;
 import nlp.floschne.thumbnailAnnotator.db.util.RequiresRedisServer;
 import org.jetbrains.annotations.NotNull;
@@ -17,15 +12,19 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {RedisConfig.class, EmbeddedRedisServer.class})
-public abstract class RepositoryTestBase {
+public abstract class RepositoryTestBase<E extends Entity> {
 
     /**
      * We need to have a Redis server instance available. <br />
@@ -47,51 +46,103 @@ public abstract class RepositoryTestBase {
     @Autowired
     protected CaptionTokenEntityRepository captionTokenEntityRepository;
 
+
+    public enum RepoType {
+        THUMBNAIL_URL, CRAWLER_RESULT, CAPTION_TOKEN;
+    }
+
+    protected CrudRepository<E, String> repo;
+
+    private RepoType type;
+
+    public RepositoryTestBase(@NotNull RepoType type) {
+        this.type = type;
+    }
+
+    private void setRepo() {
+        switch (type) {
+            case THUMBNAIL_URL:
+                this.repo = (CrudRepository<E, String>) thumbnailUrlEntityRepository;
+                break;
+            case CRAWLER_RESULT:
+                this.repo = (CrudRepository<E, String>) crawlerResultEntityRepository;
+                break;
+            case CAPTION_TOKEN:
+                this.repo = (CrudRepository<E, String>) captionTokenEntityRepository;
+                break;
+        }
+    }
+
     @Before
     public void flushRepository() {
+        this.setRepo();
         this.crawlerResultEntityRepository.deleteAll();
         this.thumbnailUrlEntityRepository.deleteAll();
         this.captionTokenEntityRepository.deleteAll();
     }
 
-
     @NotNull
-    protected static CrawlerResultEntity createDummyCrawlerResultEntity() {
-        CaptionTokenEntity captionTokenEntity = createDummyCaptionTokenEntity();
+    protected abstract E createDummyEntity();
 
-        List<ThumbnailUrlEntity> urls = new ArrayList<>();
+    protected abstract void assertEqual(E a, E b);
 
-        urls.add(createDummyThumbnailUrlEntity(1));
-        urls.add(createDummyThumbnailUrlEntity(2));
+    protected abstract void saveEntity(E entity);
 
-        return new CrawlerResultEntity(captionTokenEntity.getValue(), captionTokenEntity, urls);
-    }
+    @Test
+    public void whenSaving_thenAvailableOnRetrieval() {
+        E a = createDummyEntity();
+        this.saveEntity(a);
+        final Optional<E> o = this.repo.findById(a.getId());
+        assertTrue(o.isPresent());
 
-    @NotNull
-    protected static ThumbnailUrlEntity createDummyThumbnailUrlEntity(Integer i) {
-        return new ThumbnailUrlEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", i);
-    }
-
-    @NotNull
-    protected static CaptionTokenEntity createDummyCaptionTokenEntity() {
-        return new CaptionTokenEntity("big ship", "COMPOUND", 0, 4, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
-    }
-
-    protected void saveCrawlerResultEntity(CrawlerResultEntity cre) {
-        this.thumbnailUrlEntityRepository.saveAll(cre.getThumbnailUrls());
-        this.captionTokenEntityRepository.save(cre.getCaptionToken());
-        this.crawlerResultEntityRepository.save(cre);
+        E b = o.get();
+        this.assertEqual(a, b);
     }
 
     @Test
-    public abstract void whenSaving_thenAvailableOnRetrieval();
+    public void whenSavingMultiple_thenAllShouldAvailableOnRetrieval() {
+
+        final E a = createDummyEntity();
+        final E b = createDummyEntity();
+        final E c = createDummyEntity();
+
+        this.saveEntity(a);
+        this.saveEntity(b);
+        this.saveEntity(c);
+
+        List<E> saved = new ArrayList<>();
+        saved.add(a);
+        saved.add(b);
+        saved.add(c);
+
+        List<E> entities = new ArrayList<>();
+        this.repo.findAll().forEach(entities::add);
+        entities.containsAll(saved);
+    }
 
     @Test
-    public abstract void whenSavingMultiple_thenAllShouldAvailableOnRetrieval();
+    public void whenUpdating_thenAvailableOnRetrieval() {
+        final E a = createDummyEntity();
+        this.saveEntity(a);
+
+        Optional<E> o = this.repo.findById(a.getId());
+        assertTrue(o.isPresent());
+
+        a.setId("updated");
+        this.saveEntity(a);
+
+        o = this.repo.findById(a.getId());
+        assertTrue(o.isPresent());
+        E b = o.get();
+        this.assertEqual(a, b);
+    }
 
     @Test
-    public abstract void whenUpdating_thenAvailableOnRetrieval();
-
-    @Test
-    public abstract void whenDeleting_thenNotAvailableOnRetrieval();
+    public void whenDeleting_thenNotAvailableOnRetrieval() {
+        final E a = createDummyEntity();
+        this.saveEntity(a);
+        assertTrue(this.repo.findById(a.getId()).isPresent());
+        this.repo.deleteById(a.getId());
+        assertFalse(this.repo.findById(a.getId()).isPresent());
+    }
 }

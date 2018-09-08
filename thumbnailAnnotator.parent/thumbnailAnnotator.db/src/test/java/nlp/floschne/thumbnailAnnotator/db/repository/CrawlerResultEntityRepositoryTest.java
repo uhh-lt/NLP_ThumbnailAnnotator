@@ -1,104 +1,56 @@
 package nlp.floschne.thumbnailAnnotator.db.repository;
 
+import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
-import org.junit.Test;
+import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailUrlEntity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertSame;
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
 
-public class CrawlerResultEntityRepositoryTest extends RepositoryTestBase {
+public class CrawlerResultEntityRepositoryTest extends RepositoryTestBase<CrawlerResultEntity> {
 
-    @Test
-    public void findByCaptionTokenValue() {
+    public CrawlerResultEntityRepositoryTest() {
+        super(RepoType.CRAWLER_RESULT);
+    }
 
-        final CrawlerResultEntity a = createDummyCrawlerResultEntity();
-        saveCrawlerResultEntity(a);
+    @NotNull
+    @Override
+    protected CrawlerResultEntity createDummyEntity() {
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", 0, 7, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
 
-        final Optional<CrawlerResultEntity> o = this.crawlerResultEntityRepository.findByCaptionTokenValue(a.getCaptionTokenValue());
-        assertTrue(o.isPresent());
+        List<ThumbnailUrlEntity> urls = new ArrayList<>();
 
-        CrawlerResultEntity b = o.get();
+        ThumbnailUrlEntity entity = new ThumbnailUrlEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1);
+        entity.setId("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg");
+
+        urls.add(entity);
+        entity = new ThumbnailUrlEntity("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 2);
+        entity.setId("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg");
+
+        urls.add(entity);
+
+        return new CrawlerResultEntity(captionTokenEntity.getValue(), captionTokenEntity, urls);
+    }
+
+    @Override
+    protected void assertEqual(CrawlerResultEntity a, CrawlerResultEntity b) {
         assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
         assertEquals(a.getCaptionToken(), b.getCaptionToken());
-        assertEquals(a.getThumbnailUrls(), b.getThumbnailUrls());
-    }
-
-    @Test
-    public void existsByCaptionTokenValue() {
-
-        final CrawlerResultEntity a = createDummyCrawlerResultEntity();
-        saveCrawlerResultEntity(a);
-
-        assertTrue(this.crawlerResultEntityRepository.existsById(a.getId()));
+        assertTrue(a.getThumbnailUrls().containsAll(b.getThumbnailUrls()));
+        assertTrue(b.getThumbnailUrls().containsAll(a.getThumbnailUrls()));
     }
 
     @Override
-    public void whenSaving_thenAvailableOnRetrieval() {
-        final CrawlerResultEntity a = createDummyCrawlerResultEntity();
-        saveCrawlerResultEntity(a);
+    protected void saveEntity(CrawlerResultEntity entity) {
+        this.thumbnailUrlEntityRepository.saveAll(entity.getThumbnailUrls());
+        this.captionTokenEntityRepository.save(entity.getCaptionToken());
+        this.crawlerResultEntityRepository.save(entity);
 
-        final Optional<CrawlerResultEntity> o = this.crawlerResultEntityRepository.findById(a.getId());
-        assertTrue(o.isPresent());
-
-        CrawlerResultEntity b = o.get();
-        assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
-        assertEquals(a.getCaptionToken(), b.getCaptionToken());
-        assertEquals(a.getThumbnailUrls(), b.getThumbnailUrls());
     }
-
-
-    @Override
-    public void whenUpdating_thenAvailableOnRetrieval() {
-        final CrawlerResultEntity a = createDummyCrawlerResultEntity();
-        saveCrawlerResultEntity(a);
-
-        Optional<CrawlerResultEntity> o = this.crawlerResultEntityRepository.findByCaptionTokenValue(a.getCaptionTokenValue());
-        assertTrue(o.isPresent());
-
-        a.setCaptionTokenValue("updated");
-        saveCrawlerResultEntity(a);
-
-        o = this.crawlerResultEntityRepository.findByCaptionTokenValue(a.getCaptionTokenValue());
-        assertTrue(o.isPresent());
-        CrawlerResultEntity b = o.get();
-        assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
-        assertEquals(a.getCaptionToken(), b.getCaptionToken());
-        assertEquals(a.getThumbnailUrls(), b.getThumbnailUrls());
-    }
-
-
-    //    @Ignore
-    @Override
-    // not working when running with mvn test .. in IntelliJ everything works fine (maybe due to parallel execution of tests with surefire)
-    public void whenSavingMultiple_thenAllShouldAvailableOnRetrieval() {
-        final CrawlerResultEntity a = createDummyCrawlerResultEntity();
-        final CrawlerResultEntity b = createDummyCrawlerResultEntity();
-        b.setCaptionTokenValue("b");
-        final CrawlerResultEntity c = createDummyCrawlerResultEntity();
-        c.setCaptionTokenValue("c");
-
-        saveCrawlerResultEntity(a);
-        saveCrawlerResultEntity(b);
-        saveCrawlerResultEntity(c);
-
-        List<CrawlerResultEntity> crawlerResultEntities = new ArrayList<>();
-        this.crawlerResultEntityRepository.findAll().forEach(crawlerResultEntities::add);
-        assertEquals(3, crawlerResultEntities.size());
-    }
-
-    @Override
-    public void whenDeleting_thenNotAvailableOnRetrieval() {
-        final CrawlerResultEntity a = createDummyCrawlerResultEntity();
-        saveCrawlerResultEntity(a);
-        assertTrue(this.crawlerResultEntityRepository.findById(a.getId()).isPresent());
-
-        this.crawlerResultEntityRepository.deleteById(a.getId());
-        assertFalse(this.crawlerResultEntityRepository.findById(a.getId()).isPresent());
-    }
-
 }
