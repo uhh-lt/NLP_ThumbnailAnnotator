@@ -10,12 +10,10 @@ import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
+import nlp.floschne.thumbnailAnnotator.web.api.service.DomainSevice;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,10 +29,12 @@ public class ApiController {
 
 
     private final DBService dbService;
+    private final DomainSevice domainSevice;
 
     @Autowired
-    public ApiController(DBService dbService) {
+    public ApiController(DBService dbService, DomainSevice domainSevice) {
         this.dbService = dbService;
+        this.domainSevice = domainSevice;
         log.info("API Controller instantiated!");
     }
 
@@ -46,17 +46,17 @@ public class ApiController {
 
 
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
-    public List<CrawlerResult> crawlThumbnails(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException {
+    public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException {
         Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
 
         List<CaptionToken> captionTokens = extractionResultFuture.get().getCaptionTokens();
         List<Future<nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult>> crawlingResultFutures = new ArrayList<>();
-        List<CrawlerResult> crawlerResults = new ArrayList<>();
+        List<CrawlerResultEntity> crawlerResults = new ArrayList<>();
         for (CaptionToken captionToken : captionTokens) {
             // check if captionToken is cached in repo and skip new crawling if so
             if (this.dbService.crawlerResultExistsByCaptionToken(captionToken)) {
                 log.info("Using cached results for '" + captionToken.getValue() + "'");
-                crawlerResults.add(this.dbService.findCrawlerResultById(captionToken.getValue()));
+                crawlerResults.add(this.dbService.findCrawlerResultByCaptionToken(captionToken));
                 continue;
             }
             crawlingResultFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
@@ -65,20 +65,27 @@ public class ApiController {
 
         for (Future<nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult> crawlerResultFuture : crawlingResultFutures) {
             CrawlerResult crawlerResult = crawlerResultFuture.get();
-            crawlerResults.add(crawlerResult);
             // save the results in repo
             log.info("Caching results for '" + crawlerResult.getCaptionToken().getValue() + "'");
             this.dbService.saveCrawlerResult(crawlerResult);
+            crawlerResults.add(this.dbService.findCrawlerResultByCaptionToken(crawlerResult.getCaptionToken()));
         }
         return crawlerResults;
     }
 
+    @RequestMapping(value = "/incrementThumbnailUrlPriority/{id}", method = RequestMethod.PUT)
+    public void incrementThumbnailUrlPriority(@PathVariable String id) {
+        this.dbService.incrementThumbnailUrlPriorityById(id);
+    }
+
+    @RequestMapping(value = "/decrementThumbnailUrlPriority/{id}", method = RequestMethod.PUT)
+    public void decrementThumbnailUrlPriority(@PathVariable String id) {
+        this.dbService.decrementThumbnailUrlPriorityById(id);
+    }
 
     @RequestMapping(value = "/getCachedCrawlerResults", method = RequestMethod.GET)
-    public List<CrawlerResult> getCachedCrawlerResults() {
-        List<CrawlerResult> crawlerResults = new ArrayList<>();
-        crawlerResults.addAll(this.dbService.findAllCrawlerResult());
-        return crawlerResults;
+    public List<CrawlerResultEntity> getCachedCrawlerResults() {
+        return new ArrayList<>(this.dbService.findAllCrawlerResult());
     }
 
     @RequestMapping(value = "/flushCache", method = RequestMethod.DELETE)

@@ -37,6 +37,8 @@ public class DBService {
         this.thumbnailUrlEntityRepository = thumbnailUrlEntityRepository;
         this.crawlerResultMapper = crawlerResultMapper;
         this.captionTokenEntityRepository = captionTokenEntityRepository;
+
+        log.info("DB Service ready!");
     }
 
     public void saveCrawlerResult(@NotNull CrawlerResult cre) {
@@ -51,12 +53,12 @@ public class DBService {
         this.crawlerResultEntityRepository.save(entity);
     }
 
-    public CrawlerResult findCrawlerResultById(@NotNull String id) {
-        return this.crawlerResultMapper.mapFromEntity(this.crawlerResultEntityRepository.findById(id).get());
+    public CrawlerResultEntity findCrawlerResultById(@NotNull String id) {
+        return this.crawlerResultEntityRepository.findById(id).get();
     }
 
-    public CrawlerResult findCrawlerResultByCaptionToken(@NotNull CaptionToken captionToken) {
-        return this.crawlerResultMapper.mapFromEntity(this.crawlerResultEntityRepository.findByCaptionTokenValue(captionToken.getValue()).get());
+    public CrawlerResultEntity findCrawlerResultByCaptionToken(@NotNull CaptionToken captionToken) {
+        return this.crawlerResultEntityRepository.findByCaptionTokenValue(captionToken.getValue()).get();
     }
 
     public Boolean crawlerResultExistsById(@NotNull String id) {
@@ -82,8 +84,8 @@ public class DBService {
     }
 
 
-    public List<CrawlerResult> findAllCrawlerResult() {
-        return this.crawlerResultMapper.mapFromEntityList((List<CrawlerResultEntity>) this.crawlerResultEntityRepository.findAll());
+    public List<CrawlerResultEntity> findAllCrawlerResult() {
+        return (List<CrawlerResultEntity>) this.crawlerResultEntityRepository.findAll();
     }
 
     public void deleteAllCrawlerResultEntities() {
