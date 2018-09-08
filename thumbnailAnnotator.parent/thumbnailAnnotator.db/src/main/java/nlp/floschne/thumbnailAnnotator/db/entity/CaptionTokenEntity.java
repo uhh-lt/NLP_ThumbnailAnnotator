@@ -1,11 +1,10 @@
 package nlp.floschne.thumbnailAnnotator.db.entity;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
@@ -15,14 +14,15 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash("crawler_result_entity")
-public class CrawlerResultEntity extends Entity {
+@RedisHash("caption_token_entity")
+public class CaptionTokenEntity extends Entity {
+
     @Indexed
-    private String captionTokenValue;
+    private String value;
+    private String type;
+    private Integer beginPosition;
+    private Integer endPosition;
 
-    @Reference
-    private CaptionTokenEntity captionToken;
-
-    @Reference
-    private List<ThumbnailUrlEntity> thumbnailUrls;
+    private List<String> posTags;
+    private List<String> tokens;
 }

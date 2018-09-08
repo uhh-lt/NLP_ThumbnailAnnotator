@@ -1,16 +1,27 @@
 package nlp.floschne.thumbnailAnnotator.db.mapper;
 
-import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
-import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailUrlEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface ThumbnailUrlMapper {
-    ThumbnailUrlEntity map(ThumbnailUrl ulr);
+@Component
+public interface ThumbnailUrlMapper extends IMapper<ThumbnailUrlEntity, ThumbnailUrl> {
 
-    ThumbnailUrl map(ThumbnailUrlEntity ulrEntity);
+    @Override
+    @Mapping(target = "id", ignore = true)
+    ThumbnailUrlEntity mapToEntity(ThumbnailUrl ulr);
+
+    @Override
+    ThumbnailUrl mapFromEntity(ThumbnailUrlEntity ulrEntity);
+
+    @Override
+    List<ThumbnailUrlEntity> mapToEntityList(List<ThumbnailUrl> urlList);
+
+    @Override
+    List<ThumbnailUrl> mapFromEntityList(List<ThumbnailUrlEntity> urlEntityList);
 }

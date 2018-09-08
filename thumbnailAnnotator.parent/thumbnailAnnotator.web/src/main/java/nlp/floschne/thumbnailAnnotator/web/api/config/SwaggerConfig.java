@@ -1,5 +1,6 @@
-package nlp.floschne.thumbnailAnnotator.web.api;
+package nlp.floschne.thumbnailAnnotator.web.api.config;
 
+import nlp.floschne.thumbnailAnnotator.web.api.controller.ApiController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

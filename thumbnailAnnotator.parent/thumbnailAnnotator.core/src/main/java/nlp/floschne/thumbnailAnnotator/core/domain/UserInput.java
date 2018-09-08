@@ -1,17 +1,15 @@
 package nlp.floschne.thumbnailAnnotator.core.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 
 /**
  * The input text of a User (i.e. just a wrapper of a String)
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInput {
+public class UserInput extends DomainObject {
     @NonNull
     private String value;
 }

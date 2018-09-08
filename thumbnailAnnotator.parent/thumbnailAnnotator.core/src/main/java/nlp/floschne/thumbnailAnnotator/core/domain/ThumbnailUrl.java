@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
-public class ThumbnailUrl implements Comparable<ThumbnailUrl> {
+@EqualsAndHashCode(callSuper = false)
+public class ThumbnailUrl extends DomainObject implements Comparable<ThumbnailUrl> {
     protected String url;
 
     protected Integer priority;

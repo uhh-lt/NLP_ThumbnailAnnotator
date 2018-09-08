@@ -16,5 +16,5 @@ public class ThumbnailUrlEntity extends Entity {
     @Indexed
     private String url;
 
-    private int priority;
+    private Integer priority;
 }

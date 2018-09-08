@@ -95,7 +95,7 @@ public class ApiControllerTest {
         CrawlerResultEntity b = o.get();
         TestCase.assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
         TestCase.assertEquals(a.getCaptionToken(), b.getCaptionToken());
-        TestCase.assertEquals(a.getThumbnailUrlList(), b.getThumbnailUrlList());
+        TestCase.assertEquals(a.getThumbnailUrls(), b.getThumbnailUrls());
     }
 
     @Test

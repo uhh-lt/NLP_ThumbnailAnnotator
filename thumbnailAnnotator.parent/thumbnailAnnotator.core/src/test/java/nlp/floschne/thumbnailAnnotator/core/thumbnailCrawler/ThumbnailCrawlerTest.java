@@ -19,7 +19,7 @@ public class ThumbnailCrawlerTest {
         Future<CrawlerResult> resultFuture = ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken);
         CrawlerResult crawlerResult = resultFuture.get();
         assertNotNull(crawlerResult);
-        assertFalse(crawlerResult.getThumbnailURLs().isEmpty());
+        assertFalse(crawlerResult.getThumbnailUrls().isEmpty());
         assertEquals(crawlerResult.getCaptionToken(), captionToken);
     }
 }

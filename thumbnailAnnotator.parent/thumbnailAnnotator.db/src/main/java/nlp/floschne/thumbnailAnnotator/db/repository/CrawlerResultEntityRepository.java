@@ -1,6 +1,7 @@
 package nlp.floschne.thumbnailAnnotator.db.repository;
 
 
+import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import org.springframework.data.repository.CrudRepository;
 
