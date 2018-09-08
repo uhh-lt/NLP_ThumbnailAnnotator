@@ -1,3 +1,0 @@
-classpath*:desc/type/PosExclusionFlagToken.xml
-classpath*:desc/type/ViewMappingToken.xml
-classpath*:desc/type/CaptionTokenAnnotation.xml
