@@ -1,11 +1,9 @@
-package nlp.floschne.thumbnailAnnotator.web.api;
+package nlp.floschne.thumbnailAnnotator.api;
 
-import junit.framework.TestCase;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
-import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
-import nlp.floschne.thumbnailAnnotator.db.repository.CrawlerResultEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.RedisConfig;
+import nlp.floschne.thumbnailAnnotator.db.repository.CrawlerResultEntityRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,9 +23,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Optional;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;

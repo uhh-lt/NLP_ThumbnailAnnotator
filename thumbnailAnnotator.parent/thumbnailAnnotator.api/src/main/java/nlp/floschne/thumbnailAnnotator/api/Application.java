@@ -1,10 +1,9 @@
-package nlp.floschne.thumbnailAnnotator.web.api;
+package nlp.floschne.thumbnailAnnotator.api;
 
-import nlp.floschne.thumbnailAnnotator.db.RedisConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {"nlp.floschne.thumbnailAnnotator.web.api", "nlp.floschne.thumbnailAnnotator.db"})
+@SpringBootApplication(scanBasePackages = {"nlp.floschne.thumbnailAnnotator.api", "nlp.floschne.thumbnailAnnotator.db"})
 public class Application {
 
     public static void main(String[] args) {

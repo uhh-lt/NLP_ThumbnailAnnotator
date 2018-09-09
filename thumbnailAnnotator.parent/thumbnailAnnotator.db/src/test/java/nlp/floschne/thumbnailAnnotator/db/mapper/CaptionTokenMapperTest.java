@@ -2,13 +2,12 @@ package nlp.floschne.thumbnailAnnotator.db.mapper;
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
-import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, CaptionToken> {
 

@@ -1,7 +1,8 @@
-package nlp.floschne.thumbnailAnnotator.web.api.controller;
+package nlp.floschne.thumbnailAnnotator.api.controller;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import nlp.floschne.thumbnailAnnotator.api.service.DomainSevice;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.CaptionTokenExtractor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
@@ -10,7 +11,6 @@ import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
-import nlp.floschne.thumbnailAnnotator.web.api.service.DomainSevice;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +35,7 @@ public class ApiController {
     public ApiController(DBService dbService, DomainSevice domainSevice) {
         this.dbService = dbService;
         this.domainSevice = domainSevice;
-        log.info("API Controller instantiated!");
+        log.info("API Controller ready!");
     }
 
     @RequestMapping(value = "/extractCaptionTokens", method = RequestMethod.POST)
