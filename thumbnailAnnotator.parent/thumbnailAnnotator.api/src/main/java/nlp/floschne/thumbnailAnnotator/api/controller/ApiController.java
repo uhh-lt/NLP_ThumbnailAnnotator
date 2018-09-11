@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 @RestController
+@CrossOrigin
 @RequestMapping(value = "/api/")
 @Api(tags = "Thumbnail Annotator API", description = "REST API to access the functionality of the Thumbnail Annotator Service!")
 @Slf4j
@@ -42,6 +43,7 @@ public class ApiController {
     public ExtractionResult extractCaptionTokens(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException {
         Future<ExtractionResult> resultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
         return resultFuture.get();
+        //TODO use entities!
     }
 
 
