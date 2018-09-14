@@ -20,8 +20,6 @@ public class CaptionTokenEntity extends Entity {
     @Indexed
     private String value;
     private String type;
-    private Integer beginPosition;
-    private Integer endPosition;
 
     private List<String> posTags;
     private List<String> tokens;

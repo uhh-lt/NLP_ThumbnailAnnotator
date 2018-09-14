@@ -19,7 +19,7 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
     @NotNull
     @Override
     protected CaptionTokenEntity createDummyEntity() {
-        return new CaptionTokenEntity("big ship", "COMPOUND", 0, 7, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+        return new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
     }
 
     @Override
@@ -27,8 +27,6 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
         assertEquals(a.getType(), a.getType());
         assertEquals(a.getValue(), a.getValue());
         assertEquals(a.getId(), b.getId());
-        assertEquals(a.getBeginPosition(), b.getBeginPosition());
-        assertEquals(a.getEndPosition(), b.getEndPosition());
         assertEquals(a.getPosTags(), b.getPosTags());
         assertEquals(a.getTokens(), b.getTokens());
         assertEquals(a, b);

@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
@@ -24,5 +23,5 @@ public class CrawlerResultEntity extends Entity {
     private CaptionTokenEntity captionToken;
 
     @Reference
-    private List<ThumbnailUrlEntity> thumbnailUrls;
+    private List<ThumbnailEntity> thumbnails;
 }

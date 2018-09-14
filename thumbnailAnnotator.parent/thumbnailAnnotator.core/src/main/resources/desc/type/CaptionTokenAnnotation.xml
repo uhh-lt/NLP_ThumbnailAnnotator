@@ -17,7 +17,7 @@
                 </featureDescription>
                 <featureDescription>
                     <name>TypeOf</name>
-                    <description>(Compound)Noun or NamedEntity</description>
+                    <description>(Compound)Noun or NamedEntity or Location etc</description>
                     <rangeTypeName>uima.cas.String</rangeTypeName>
                 </featureDescription>
                 <featureDescription>

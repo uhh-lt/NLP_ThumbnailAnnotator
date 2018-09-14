@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -48,12 +50,12 @@ public class ApiController {
 
 
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
-    public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException {
+    public Set<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException {
         Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
 
         List<CaptionToken> captionTokens = extractionResultFuture.get().getCaptionTokens();
         List<Future<nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult>> crawlingResultFutures = new ArrayList<>();
-        List<CrawlerResultEntity> crawlerResults = new ArrayList<>();
+        Set<CrawlerResultEntity> crawlerResults = new HashSet<>();
         for (CaptionToken captionToken : captionTokens) {
             // check if captionToken is cached in repo and skip new crawling if so
             if (this.dbService.crawlerResultExistsByCaptionToken(captionToken)) {
@@ -75,14 +77,14 @@ public class ApiController {
         return crawlerResults;
     }
 
-    @RequestMapping(value = "/incrementThumbnailUrlPriority/{id}", method = RequestMethod.PUT)
-    public void incrementThumbnailUrlPriority(@PathVariable String id) {
-        this.dbService.incrementThumbnailUrlPriorityById(id);
+    @RequestMapping(value = "/incrementThumbnailPriority/{id}", method = RequestMethod.PUT)
+    public void incrementThumbnailPriority(@PathVariable String id) {
+        this.dbService.incrementThumbnailPriorityById(id);
     }
 
-    @RequestMapping(value = "/decrementThumbnailUrlPriority/{id}", method = RequestMethod.PUT)
-    public void decrementThumbnailUrlPriority(@PathVariable String id) {
-        this.dbService.decrementThumbnailUrlPriorityById(id);
+    @RequestMapping(value = "/decrementThumbnailPriority/{id}", method = RequestMethod.PUT)
+    public void decrementThumbnailPriority(@PathVariable String id) {
+        this.dbService.decrementThumbnailPriorityById(id);
     }
 
     @RequestMapping(value = "/getCachedCrawlerResults", method = RequestMethod.GET)

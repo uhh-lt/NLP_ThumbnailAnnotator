@@ -2,10 +2,10 @@ package nlp.floschne.thumbnailAnnotator.db.mapper;
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
-import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
+import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
-import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailUrlEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,15 +23,15 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
 
     @Override
     public CrawlerResultEntity createDummyEntity() {
-        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", 0, 7, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
 
-        List<ThumbnailUrlEntity> urls = new ArrayList<>();
+        List<ThumbnailEntity> urls = new ArrayList<>();
 
-        ThumbnailUrlEntity entity = new ThumbnailUrlEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1);
+        ThumbnailEntity entity = new ThumbnailEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1);
         entity.setId("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg");
 
         urls.add(entity);
-        entity = new ThumbnailUrlEntity("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 2);
+        entity = new ThumbnailEntity("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 2);
         entity.setId("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg");
 
         urls.add(entity);
@@ -41,12 +41,12 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
 
     @Override
     public CrawlerResult createDummyDomainObject() {
-        CaptionToken captionToken = new CaptionToken("car", CaptionToken.Type.NOUN, 0, 3, Collections.singletonList("NN"), Collections.singletonList("car"));
+        CaptionToken captionToken = new CaptionToken("car", CaptionToken.Type.NOUN, Collections.singletonList("NN"), Collections.singletonList("car"));
 
-        List<ThumbnailUrl> urls = new ArrayList<>();
+        List<Thumbnail> urls = new ArrayList<>();
 
-        urls.add(new ThumbnailUrl("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 1));
-        urls.add(new ThumbnailUrl("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 2));
+        urls.add(new Thumbnail("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 1));
+        urls.add(new Thumbnail("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 2));
 
         return new CrawlerResult(captionToken, urls);
     }
@@ -55,9 +55,9 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
     public void assertEqual(CrawlerResultEntity entity, CrawlerResult domain) {
         assertEquals(entity.getCaptionTokenValue(), domain.getCaptionToken().getValue());
         assertEquals(captionTokenMapper.mapFromEntity(entity.getCaptionToken()), domain.getCaptionToken());
-        assertEquals(thumbnailUrlMapper.mapFromEntityList(entity.getThumbnailUrls()), domain.getThumbnailUrls());
+        assertEquals(thumbnailMapper.mapFromEntityList(entity.getThumbnails()), domain.getThumbnails());
 
         assertEquals(entity.getCaptionToken(), captionTokenMapper.mapToEntity(domain.getCaptionToken()));
-        assertEquals(entity.getThumbnailUrls(), thumbnailUrlMapper.mapToEntityList(domain.getThumbnailUrls()));
+        assertEquals(entity.getThumbnails(), thumbnailMapper.mapToEntityList(domain.getThumbnails()));
     }
 }

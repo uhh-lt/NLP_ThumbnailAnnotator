@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.index.Indexed;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @RedisHash("thumbnail_url_entity")
-public class ThumbnailUrlEntity extends Entity {
+public class ThumbnailEntity extends Entity {
     @Indexed
     private String url;
 

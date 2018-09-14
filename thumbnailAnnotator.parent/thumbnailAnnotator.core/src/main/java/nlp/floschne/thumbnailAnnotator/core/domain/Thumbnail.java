@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class ThumbnailUrl extends DomainObject implements Comparable<ThumbnailUrl> {
+public class Thumbnail extends DomainObject implements Comparable<Thumbnail> {
     protected String url;
 
     protected Integer priority;
 
     @Override
-    public int compareTo(ThumbnailUrl o) {
+    public int compareTo(Thumbnail o) {
         if (o == null || o.priority == null)
             return this.priority;
         return o.priority - this.priority;

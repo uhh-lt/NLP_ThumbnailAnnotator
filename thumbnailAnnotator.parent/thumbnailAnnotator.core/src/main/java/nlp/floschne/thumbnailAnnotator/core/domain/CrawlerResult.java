@@ -13,5 +13,5 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class CrawlerResult extends DomainObject {
     private CaptionToken captionToken;
-    private List<ThumbnailUrl> thumbnailUrls;
+    private List<Thumbnail> thumbnails;
 }

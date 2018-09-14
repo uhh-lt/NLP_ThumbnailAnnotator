@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
-import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailUrlEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.mapper.CrawlerResultMapper;
-import nlp.floschne.thumbnailAnnotator.db.mapper.ThumbnailUrlMapper;
+import nlp.floschne.thumbnailAnnotator.db.mapper.ThumbnailMapper;
 import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.CrawlerResultEntityRepository;
-import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailUrlEntityRepository;
+import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailEntityRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
@@ -24,7 +24,7 @@ public class DBService {
 
     private final CrawlerResultEntityRepository crawlerResultEntityRepository;
 
-    private final ThumbnailUrlEntityRepository thumbnailUrlEntityRepository;
+    private final ThumbnailEntityRepository thumbnailEntityRepository;
 
     private final CaptionTokenEntityRepository captionTokenEntityRepository;
 
@@ -32,9 +32,9 @@ public class DBService {
 
     @Autowired
     public DBService(CrawlerResultEntityRepository crawlerResultEntityRepository,
-                     ThumbnailUrlEntityRepository thumbnailUrlEntityRepository, CrawlerResultMapper crawlerResultMapper, ThumbnailUrlMapper thumbnailUrlMapper, CaptionTokenEntityRepository captionTokenEntityRepository) {
+                     ThumbnailEntityRepository thumbnailEntityRepository, CrawlerResultMapper crawlerResultMapper, ThumbnailMapper thumbnailMapper, CaptionTokenEntityRepository captionTokenEntityRepository) {
         this.crawlerResultEntityRepository = crawlerResultEntityRepository;
-        this.thumbnailUrlEntityRepository = thumbnailUrlEntityRepository;
+        this.thumbnailEntityRepository = thumbnailEntityRepository;
         this.crawlerResultMapper = crawlerResultMapper;
         this.captionTokenEntityRepository = captionTokenEntityRepository;
 
@@ -48,7 +48,7 @@ public class DBService {
         else
             entity = this.crawlerResultMapper.mapToEntity(cre);
 
-        this.thumbnailUrlEntityRepository.saveAll(entity.getThumbnailUrls());
+        this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
         this.captionTokenEntityRepository.save(entity.getCaptionToken());
         this.crawlerResultEntityRepository.save(entity);
     }
@@ -70,17 +70,17 @@ public class DBService {
     }
 
 
-    public void incrementThumbnailUrlPriorityById(@NotNull String id) {
-        ThumbnailUrlEntity thumbnailUrlEntity = this.thumbnailUrlEntityRepository.findById(id).get();
-        thumbnailUrlEntity.setPriority(thumbnailUrlEntity.getPriority() + 1);
-        this.thumbnailUrlEntityRepository.save(thumbnailUrlEntity);
+    public void incrementThumbnailPriorityById(@NotNull String id) {
+        ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
+        thumbnailEntity.setPriority(thumbnailEntity.getPriority() + 1);
+        this.thumbnailEntityRepository.save(thumbnailEntity);
     }
 
 
-    public void decrementThumbnailUrlPriorityById(@NotNull String id) {
-        ThumbnailUrlEntity thumbnailUrlEntity = this.thumbnailUrlEntityRepository.findById(id).get();
-        thumbnailUrlEntity.setPriority(thumbnailUrlEntity.getPriority() - 1);
-        this.thumbnailUrlEntityRepository.save(thumbnailUrlEntity);
+    public void decrementThumbnailPriorityById(@NotNull String id) {
+        ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
+        thumbnailEntity.setPriority(thumbnailEntity.getPriority() - 1);
+        this.thumbnailEntityRepository.save(thumbnailEntity);
     }
 
 

@@ -200,7 +200,7 @@ public class CaptionTokenExtractor {
     private static CaptionToken createCaptionTokenFromAnnotation(CaptionTokenAnnotation cta) {
         List<String> posTags = Arrays.asList(cta.getPOSList().split(";"));
         List<String> tokens = Arrays.asList(cta.getTokenList().split(";"));
-        return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), cta.getBegin(), cta.getEnd(), posTags, tokens);
+        return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens);
     }
 
 }

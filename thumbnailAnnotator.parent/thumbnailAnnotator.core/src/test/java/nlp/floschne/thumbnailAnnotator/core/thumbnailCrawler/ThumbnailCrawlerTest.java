@@ -15,11 +15,11 @@ public class ThumbnailCrawlerTest {
 
     @Test
     public void crawlThumbnails() throws IOException, ExecutionException, InterruptedException {
-        CaptionToken captionToken = new CaptionToken("ship", CaptionToken.Type.NOUN, 0, 4, Collections.singletonList("NN"), Collections.singletonList("ship"));
+        CaptionToken captionToken = new CaptionToken("ship", CaptionToken.Type.NOUN, Collections.singletonList("NN"), Collections.singletonList("ship"));
         Future<CrawlerResult> resultFuture = ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken);
         CrawlerResult crawlerResult = resultFuture.get();
         assertNotNull(crawlerResult);
-        assertFalse(crawlerResult.getThumbnailUrls().isEmpty());
+        assertFalse(crawlerResult.getThumbnails().isEmpty());
         assertEquals(crawlerResult.getCaptionToken(), captionToken);
     }
 }

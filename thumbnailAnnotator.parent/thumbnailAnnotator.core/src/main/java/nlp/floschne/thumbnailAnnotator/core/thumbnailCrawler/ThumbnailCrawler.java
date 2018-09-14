@@ -3,7 +3,7 @@ package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler;
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
-import nlp.floschne.thumbnailAnnotator.core.domain.ThumbnailUrl;
+import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.IThumbnailSource;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.ShutterstockSource;
 
@@ -45,8 +45,8 @@ public class ThumbnailCrawler {
         @Override
         public CrawlerResult call() throws IOException {
             // TODO replace dummy implementation
-            List<ThumbnailUrl> thumbnailURLs = thumbnailSource.queryThumbnailURLs(this.captionToken.getValue(), 100);
-            return new CrawlerResult(this.captionToken, thumbnailURLs);
+            List<Thumbnail> thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), 100);
+            return new CrawlerResult(this.captionToken, thumbnails);
         }
     }
 

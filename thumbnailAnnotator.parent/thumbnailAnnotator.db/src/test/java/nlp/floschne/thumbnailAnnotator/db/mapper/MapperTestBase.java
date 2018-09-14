@@ -32,7 +32,7 @@ public abstract class MapperTestBase<E extends Entity, D extends DomainObject> {
     protected CrawlerResultMapper crawlerResultMapper;
 
     @Autowired
-    protected ThumbnailUrlMapper thumbnailUrlMapper;
+    protected ThumbnailMapper thumbnailMapper;
 
     @Autowired
     protected CaptionTokenMapper captionTokenMapper;
@@ -53,7 +53,7 @@ public abstract class MapperTestBase<E extends Entity, D extends DomainObject> {
     public void setMapper() {
         switch (type) {
             case THUMBNAIL_URL:
-                this.mapper = (IMapper<E, D>) thumbnailUrlMapper;
+                this.mapper = (IMapper<E, D>) thumbnailMapper;
                 break;
             case CRAWLER_RESULT:
                 this.mapper = (IMapper<E, D>) crawlerResultMapper;

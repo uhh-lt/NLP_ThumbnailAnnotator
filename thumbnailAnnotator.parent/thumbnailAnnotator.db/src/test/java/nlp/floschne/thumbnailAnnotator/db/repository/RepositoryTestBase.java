@@ -41,7 +41,7 @@ public abstract class RepositoryTestBase<E extends Entity> {
     protected CrawlerResultEntityRepository crawlerResultEntityRepository;
 
     @Autowired
-    protected ThumbnailUrlEntityRepository thumbnailUrlEntityRepository;
+    protected ThumbnailEntityRepository thumbnailEntityRepository;
 
     @Autowired
     protected CaptionTokenEntityRepository captionTokenEntityRepository;
@@ -62,7 +62,7 @@ public abstract class RepositoryTestBase<E extends Entity> {
     private void setRepo() {
         switch (type) {
             case THUMBNAIL_URL:
-                this.repo = (CrudRepository<E, String>) thumbnailUrlEntityRepository;
+                this.repo = (CrudRepository<E, String>) thumbnailEntityRepository;
                 break;
             case CRAWLER_RESULT:
                 this.repo = (CrudRepository<E, String>) crawlerResultEntityRepository;
@@ -77,7 +77,7 @@ public abstract class RepositoryTestBase<E extends Entity> {
     public void flushRepository() {
         this.setRepo();
         this.crawlerResultEntityRepository.deleteAll();
-        this.thumbnailUrlEntityRepository.deleteAll();
+        this.thumbnailEntityRepository.deleteAll();
         this.captionTokenEntityRepository.deleteAll();
     }
 

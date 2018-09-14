@@ -35,8 +35,6 @@ public class CaptionToken extends DomainObject{
 
     private String value;
     private Type type;
-    private Integer beginPosition;
-    private Integer endPosition;
 
     private List<String> posTags;
     private List<String> tokens;

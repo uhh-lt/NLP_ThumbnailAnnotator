@@ -2,7 +2,7 @@ package nlp.floschne.thumbnailAnnotator.db.repository;
 
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
-import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailUrlEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -22,15 +22,15 @@ public class CrawlerResultEntityRepositoryTest extends RepositoryTestBase<Crawle
     @NotNull
     @Override
     protected CrawlerResultEntity createDummyEntity() {
-        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", 0, 7, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
 
-        List<ThumbnailUrlEntity> urls = new ArrayList<>();
+        List<ThumbnailEntity> urls = new ArrayList<>();
 
-        ThumbnailUrlEntity entity = new ThumbnailUrlEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1);
+        ThumbnailEntity entity = new ThumbnailEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1);
         entity.setId("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg");
 
         urls.add(entity);
-        entity = new ThumbnailUrlEntity("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 2);
+        entity = new ThumbnailEntity("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 2);
         entity.setId("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg");
 
         urls.add(entity);
@@ -42,13 +42,13 @@ public class CrawlerResultEntityRepositoryTest extends RepositoryTestBase<Crawle
     protected void assertEqual(CrawlerResultEntity a, CrawlerResultEntity b) {
         assertEquals(a.getCaptionTokenValue(), b.getCaptionTokenValue());
         assertEquals(a.getCaptionToken(), b.getCaptionToken());
-        assertTrue(a.getThumbnailUrls().containsAll(b.getThumbnailUrls()));
-        assertTrue(b.getThumbnailUrls().containsAll(a.getThumbnailUrls()));
+        assertTrue(a.getThumbnails().containsAll(b.getThumbnails()));
+        assertTrue(b.getThumbnails().containsAll(a.getThumbnails()));
     }
 
     @Override
     protected void saveEntity(CrawlerResultEntity entity) {
-        this.thumbnailUrlEntityRepository.saveAll(entity.getThumbnailUrls());
+        this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
         this.captionTokenEntityRepository.save(entity.getCaptionToken());
         this.crawlerResultEntityRepository.save(entity);
 

@@ -29,11 +29,11 @@ public class DBServiceTest {
     }
 
     @Test
-    public void incrementThumbnailUrlPriorityById() {
+    public void incrementThumbnailPriorityById() {
     }
 
     @Test
-    public void decrementThumbnailUrlPriorityById() {
+    public void decrementThumbnailPriorityById() {
     }
 
     @Test

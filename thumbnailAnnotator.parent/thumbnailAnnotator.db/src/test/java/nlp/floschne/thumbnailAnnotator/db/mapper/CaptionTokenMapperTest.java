@@ -17,14 +17,14 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
 
     @Override
     public CaptionTokenEntity createDummyEntity() {
-        CaptionTokenEntity entity = new CaptionTokenEntity("big ship", "COMPOUND", 0, 7, Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+        CaptionTokenEntity entity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
         entity.setId("id");
         return entity;
     }
 
     @Override
     public CaptionToken createDummyDomainObject() {
-        return new CaptionToken("car", CaptionToken.Type.NOUN, 0, 4, Collections.singletonList("NN"), Collections.singletonList("car"));
+        return new CaptionToken("car", CaptionToken.Type.NOUN, Collections.singletonList("NN"), Collections.singletonList("car"));
     }
 
     @Override
@@ -32,8 +32,6 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
         assertEquals(entity.getValue(), domain.getValue());
         assertEquals(entity.getTokens(), domain.getTokens());
         assertEquals(entity.getPosTags(), domain.getPosTags());
-        assertEquals(entity.getEndPosition(), domain.getEndPosition());
-        assertEquals(entity.getBeginPosition(), domain.getBeginPosition());
         assertTrue(entity.getType().equalsIgnoreCase(domain.getType().toString()));
     }
 }

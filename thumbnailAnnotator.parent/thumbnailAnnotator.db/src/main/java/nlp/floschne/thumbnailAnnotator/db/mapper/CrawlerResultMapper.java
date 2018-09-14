@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Mapper(uses = {ThumbnailUrlMapper.class, CaptionTokenMapper.class}, componentModel = "spring")
+@Mapper(uses = {ThumbnailMapper.class, CaptionTokenMapper.class}, componentModel = "spring")
 @Component
 public interface CrawlerResultMapper extends IMapper<CrawlerResultEntity, CrawlerResult> {
 
