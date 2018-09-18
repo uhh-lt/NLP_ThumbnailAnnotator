@@ -33,7 +33,6 @@
     },
     methods: {
       showResultsHandler() {
-        console.log("App::resultsReady")
         this.resultsReady = true;
       }
     },

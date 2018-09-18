@@ -93,9 +93,8 @@
       submitSuccess(response) {
         if (response.status === 200) {
           this.isSubmitted = true;
-
-          console.log("UserInputCard::submitSuccess")
-          EventBus.$emit("resultDataReceived_event", response.data)
+          EventBus.$emit("sendResultData_event", response.data);
+          EventBus.$emit("sendUserInput_event", this.form.value)
         } else {
           this.isSubmitted = true;
           this.isError = true;

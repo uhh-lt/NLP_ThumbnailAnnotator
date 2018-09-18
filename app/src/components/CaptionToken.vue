@@ -1,8 +1,11 @@
 <template>
-  <div>
-    <span class="badge badge-warning">{{ this.captionTokenInstance.value }}</span>
-    <span class="badge badge-dark card-title">[{{ this.captionTokenInstance.beginPosition }}, {{ this.captionTokenInstance.endPosition }}] </span>
-    <span class="badge badge-dark">{{ this.captionTokenInstance.type }}</span>
+  <div class="clearfix">
+    <h4><span class="badge badge-warning text-monospace float-left">{{ this.captionTokenInstance.value }}</span></h4>
+    <h4><span class="badge badge-dark text-monospace float-right">{{ this.captionTokenInstance.type }}</span></h4>
+    <br/>
+    <hr>
+    <code>{{this.captionTokenInstance.posTags}}</code>
+    <code>{{this.captionTokenInstance.tokens}}</code>
   </div>
 </template>
 
@@ -23,5 +26,11 @@
 </script>
 
 <style scoped>
+  code {
+    font-weight: bold;
+    text-align: left;
+    font-size: medium;
+    display: block;
+  }
 
 </style>

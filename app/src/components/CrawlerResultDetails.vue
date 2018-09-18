@@ -1,11 +1,13 @@
 <template>
-  <div class="card text-white bg-primary d-inline-block p-1 m-1">
+  <div class="card text-white bg-primary">
     <div class="card-body">
       <caption-token
         v-bind:captionTokenInstance="crawlerResult.captionToken"
       />
+      <hr>
       <thumbnail v-for="thumbnail in crawlerResult.thumbnails"
-                 v-bind:key="thumbnail.id"
+                 v-bind:key="thumbnail.id + '_' + id"
+                 v-bind:id="thumbnail.id + '_' + id"
                  v-bind:thumbnail="thumbnail"
       />
     </div>
@@ -13,6 +15,8 @@
 </template>
 
 <script>
+  import {EventBus} from "../main";
+
   import CaptionToken from "./CaptionToken";
   import Thumbnail from "./Thumbnail";
 
@@ -23,7 +27,27 @@
       crawlerResult: {
         type: Object,
         required: true
+      },
+      id: {
+        required: true
       }
+    },
+    methods: {
+      sortThumbnailList() {
+        function compare(a, b) {
+          if (a.priority < b.priority)
+            return 1;
+          if (a.priority > b.priority)
+            return -1;
+          return 0;
+        }
+
+        this.crawlerResult.thumbnails.sort(compare);
+        this.$forceUpdate();
+      }
+    },
+    created() {
+      EventBus.$on('thumbnailPriorityChanged_event', this.sortThumbnailList);
     }
   }
 </script>
