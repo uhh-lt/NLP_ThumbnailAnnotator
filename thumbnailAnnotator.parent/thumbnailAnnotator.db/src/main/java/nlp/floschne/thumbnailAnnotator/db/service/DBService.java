@@ -69,18 +69,19 @@ public class DBService {
         return this.crawlerResultEntityRepository.findByCaptionTokenValue(captionToken.getValue()).isPresent();
     }
 
-
-    public void incrementThumbnailPriorityById(@NotNull String id) {
+    public ThumbnailEntity incrementThumbnailPriorityById(@NotNull String id) {
         ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
         thumbnailEntity.setPriority(thumbnailEntity.getPriority() + 1);
         this.thumbnailEntityRepository.save(thumbnailEntity);
+        return thumbnailEntity;
     }
 
 
-    public void decrementThumbnailPriorityById(@NotNull String id) {
+    public ThumbnailEntity decrementThumbnailPriorityById(@NotNull String id) {
         ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
         thumbnailEntity.setPriority(thumbnailEntity.getPriority() - 1);
         this.thumbnailEntityRepository.save(thumbnailEntity);
+        return thumbnailEntity;
     }
 
 

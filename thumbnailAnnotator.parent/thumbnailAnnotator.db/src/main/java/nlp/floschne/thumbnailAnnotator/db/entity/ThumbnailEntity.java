@@ -12,9 +12,17 @@ import org.springframework.data.redis.core.index.Indexed;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @RedisHash("thumbnail_url_entity")
-public class ThumbnailEntity extends Entity {
+public class ThumbnailEntity extends Entity implements Comparable<ThumbnailEntity> {
     @Indexed
     private String url;
 
     private Integer priority;
+
+
+    @Override
+    public int compareTo(ThumbnailEntity o) {
+        if (o == null || o.priority == null)
+            return this.priority;
+        return o.priority - this.priority;
+    }
 }
