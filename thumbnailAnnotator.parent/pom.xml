@@ -25,6 +25,8 @@
         <org.projectlombok.version>1.18.0</org.projectlombok.version>
         <org.springframework.boot.version>2.0.3.RELEASE</org.springframework.boot.version>
         <org.springframework.version>5.0.6.RELEASE</org.springframework.version>
+        <docker.image.prefix>nlp.floschne</docker.image.prefix>
+
     </properties>
 
     <dependencies>
@@ -78,6 +80,9 @@
                     <configuration>
                         <parallel>methods</parallel>
                         <threadCount>16</threadCount>
+
+                        <reuseForks>false</reuseForks>
+                        <forkCount>1</forkCount>
                     </configuration>
                 </plugin>
 
@@ -90,6 +95,19 @@
                         <target>1.8</target>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>com.spotify</groupId>
+                    <artifactId>dockerfile-maven-plugin</artifactId>
+                    <version>1.4.3</version>
+                    <configuration>
+                        <repository>${docker.image.prefix}/${project.artifactId}</repository>
+                        <buildArgs>
+                            <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
+                        </buildArgs>
+                    </configuration>
+                </plugin>
+
             </plugins>
         </pluginManagement>
     </build>
