@@ -5,6 +5,7 @@ import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.db.RedisConfig;
 import nlp.floschne.thumbnailAnnotator.db.repository.CrawlerResultEntityRepository;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,7 @@ public class ApiControllerTest {
     }
 
     @Test
+    @Ignore
     public void extractCaptionTokensITest() throws Exception {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         String value = "The red, broken and big car control system is great.";

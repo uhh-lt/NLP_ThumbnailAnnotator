@@ -39,13 +39,12 @@ public class ApiController {
         log.info("API Controller ready!");
     }
 
-    @RequestMapping(value = "/extractCaptionTokens", method = RequestMethod.POST)
-    public ExtractionResult extractCaptionTokens(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException {
-        Future<ExtractionResult> resultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
-        return resultFuture.get();
-        //TODO use entities!
-    }
-
+//    @RequestMapping(value = "/extractCaptionTokens", method = RequestMethod.POST)
+//    public ExtractionResult extractCaptionTokens(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException {
+//        Future<ExtractionResult> resultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
+//        return resultFuture.get();
+//        //TODO use entities!
+//    }
 
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
     public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException {
