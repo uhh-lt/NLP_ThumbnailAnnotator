@@ -3,6 +3,7 @@
     <div class="card-body">
       <caption-token
         v-bind:captionTokenInstance="crawlerResult.captionToken"
+        v-bind:id="id"
       />
       <hr>
       <thumbnail v-for="thumbnail in crawlerResult.thumbnails"

@@ -42,6 +42,7 @@
                 {{ errorMessage }}
               </code>
             </div>
+            <b-btn class="btn-primary w-100" @click="reload">Retry</b-btn>
           </div>
         </div>
       </div>
@@ -105,6 +106,9 @@
         this.isSubmitted = true;
         this.isError = true;
         this.errorMessage = error;
+      },
+      reload() {
+        window.location = ''
       }
     }
   }
