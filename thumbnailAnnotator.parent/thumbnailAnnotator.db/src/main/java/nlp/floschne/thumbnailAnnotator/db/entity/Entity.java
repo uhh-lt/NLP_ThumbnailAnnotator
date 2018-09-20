@@ -8,9 +8,6 @@ import java.io.Serializable;
 
 @Data
 public abstract class Entity implements Serializable {
-    @TimeToLive
-    private final static long TIME_TO_LIVE = 60 * 60 * 24;
-
     @Id
     private String id;
 }
