@@ -1,5 +1,6 @@
 package nlp.floschne.thumbnailAnnotator.db.repository;
 
+import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
@@ -22,7 +23,9 @@ public class CrawlerResultEntityRepositoryTest extends RepositoryTestBase<Crawle
     @NotNull
     @Override
     protected CrawlerResultEntity createDummyEntity() {
-        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+        List<UDependency> udContext = new ArrayList<>();
+        udContext.add(new UDependency("amod", "big", "ship"));
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext);
 
         List<ThumbnailEntity> urls = new ArrayList<>();
 

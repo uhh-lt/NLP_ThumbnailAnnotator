@@ -22,6 +22,18 @@
         <java.version>1.8</java.version>
     </properties>
 
+    <repositories>
+        <!--<repository>-->
+        <!--<id>ukp-oss-releases</id>-->
+        <!--<url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>-->
+        <!--</repository>-->
+
+        <!--<repository>-->
+            <!--<id>ukp-oss-model-releases</id>-->
+            <!--<url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-model-releases-local</url>-->
+        <!--</repository>-->
+    </repositories>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -31,6 +43,15 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!--<dependency>-->
+                <!--<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>-->
+                <!--<artifactId>de.tudarmstadt.ukp.dkpro.core-gpl</artifactId>-->
+                <!--<version>1.9.2</version>-->
+                <!--<type>pom</type>-->
+                <!--<scope>import</scope>-->
+            <!--</dependency>-->
+
         </dependencies>
     </dependencyManagement>
 
@@ -53,7 +74,11 @@
         <dependency>
             <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
             <artifactId>de.tudarmstadt.ukp.dkpro.core.opennlp-asl</artifactId>
-            <version>1.9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+            <artifactId>de.tudarmstadt.ukp.dkpro.core.clearnlp-asl</artifactId>
         </dependency>
 
         <dependency>

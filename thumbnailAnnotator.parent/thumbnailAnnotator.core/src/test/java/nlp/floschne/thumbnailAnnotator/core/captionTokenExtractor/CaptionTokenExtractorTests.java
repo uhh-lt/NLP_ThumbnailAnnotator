@@ -1,11 +1,14 @@
 package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor;
 
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.consumer.CaptionTokenExtractorDebugConsolePrinter;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.reader.LeipzigCorporaReader;
+import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.ExtractionResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
+import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
@@ -17,6 +20,8 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
@@ -29,6 +34,7 @@ public class CaptionTokenExtractorTests {
 
     /**
      * In this test all implemented components are used. If it runs without an Exception or Error it's considered to run correctly.
+     *
      * @throws UIMAException
      * @throws IOException
      */
@@ -87,7 +93,6 @@ public class CaptionTokenExtractorTests {
         Matcher m = complexCaptionTokenMatcher.matcher(out.getDocumentText());
 
         assertTrue(m.find());
-
     }
 
     @Test
@@ -112,6 +117,27 @@ public class CaptionTokenExtractorTests {
         ExtractionResult extractionResult = extractionResultFuture.get();
         assertNotNull(extractionResult);
         assertEquals(input.getValue(), extractionResult.getUserInput().getValue());
-        assertEquals(4, extractionResult.getCaptionTokens().size());
+        assertEquals(3, extractionResult.getCaptionTokens().size());
+    }
+
+
+    @Test
+    public void dependencyContextTest() throws ResourceInitializationException, AnalysisEngineProcessException, ExecutionException, InterruptedException {
+
+        UserInput input = new UserInput("I have a mouse and a keyboard.");
+        Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
+        assertNotNull(extractionResultFuture);
+        ExtractionResult extractionResult = extractionResultFuture.get();
+        assertNotNull(extractionResult);
+        assertEquals(input.getValue(), extractionResult.getUserInput().getValue());
+        assertEquals(2, extractionResult.getCaptionTokens().size());
+
+        for (CaptionToken t : extractionResult.getCaptionTokens()) {
+            if (t.getValue().equals("mouse")) {
+                assertEquals(4, t.getUdContext().size());
+            } else if (t.getValue().equals("keyboard")) {
+                assertEquals(2, t.getUdContext().size());
+            }
+        }
     }
 }

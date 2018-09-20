@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
@@ -23,4 +24,5 @@ public class CaptionTokenEntity extends Entity {
 
     private List<String> posTags;
     private List<String> tokens;
+    private List<UDependency> udContext;
 }

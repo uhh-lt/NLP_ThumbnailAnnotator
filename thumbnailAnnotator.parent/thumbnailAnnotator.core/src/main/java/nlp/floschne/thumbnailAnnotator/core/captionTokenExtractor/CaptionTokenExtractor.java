@@ -1,6 +1,10 @@
 package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor;
 
 import captionTokenExtractor.type.CaptionTokenAnnotation;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpLemmatizer;
+import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpParser;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
@@ -11,6 +15,7 @@ import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosE
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosViewCreator;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.ExtractionResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
@@ -21,6 +26,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -81,15 +87,18 @@ public class CaptionTokenExtractor {
             ExtractionResult extractionResult = new ExtractionResult();
             extractionResult.setUserInput(userInput);
             // get the CaptionTokenAnnotations
-            for (CaptionTokenAnnotation cta : JCasUtil.select(userInputJCas, CaptionTokenAnnotation.class))
-                // transform them into CaptionTokens and add them to the extractionResult
-                extractionResult.addCaptionToken(createCaptionTokenFromAnnotation(cta));
+            for (CaptionTokenAnnotation cta : JCasUtil.select(userInputJCas, CaptionTokenAnnotation.class)) {
+                // transform them into CaptionTokens
+                CaptionToken ct = createCaptionToken(userInputJCas, cta);
+                // and add them to the extractionResult
+                extractionResult.addCaptionToken(ct);
+            }
 
             return extractionResult;
         }
     }
 
-    private static final Integer MAX_PARALLEL_THREADS = 16;
+    private static final int MAX_PARALLEL_THREADS = 16;
     private static String LANGUAGE = "en";
 
     /**
@@ -144,6 +153,15 @@ public class CaptionTokenExtractor {
                 ClearNlpPosTagger.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(pos);
 
+        AnalysisEngineDescription lemma = AnalysisEngineFactory.createEngineDescription(ClearNlpLemmatizer.class,
+                ClearNlpLemmatizer.PARAM_LANGUAGE, LANGUAGE);
+        aggregateBuilder.add(lemma);
+
+        AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(ClearNlpParser.class,
+                ClearNlpParser.PARAM_LANGUAGE, LANGUAGE,
+                ClearNlpParser.PARAM_VARIANT, "mayo");
+        aggregateBuilder.add(parse);
+
         AnalysisEngineDescription nerLoc = AnalysisEngineFactory.createEngineDescription(OpenNlpNamedEntityRecognizer.class,
                 OpenNlpNamedEntityRecognizer.PARAM_LANGUAGE, LANGUAGE,
                 OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "location");
@@ -159,10 +177,10 @@ public class CaptionTokenExtractor {
                 OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "organization");
         aggregateBuilder.add(nerOrg);
 
-        AnalysisEngineDescription nerDate = AnalysisEngineFactory.createEngineDescription(OpenNlpNamedEntityRecognizer.class,
-                OpenNlpNamedEntityRecognizer.PARAM_LANGUAGE, LANGUAGE,
-                OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "date");
-        aggregateBuilder.add(nerDate);
+//        AnalysisEngineDescription nerDate = AnalysisEngineFactory.createEngineDescription(OpenNlpNamedEntityRecognizer.class,
+//                OpenNlpNamedEntityRecognizer.PARAM_LANGUAGE, LANGUAGE,
+//                OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "date");
+//        aggregateBuilder.add(nerDate);
 
         AnalysisEngineDescription pefta = AnalysisEngineFactory.createEngineDescription(PosExclusionFlagTokenAnnotator.class);
         aggregateBuilder.add(pefta);
@@ -197,10 +215,29 @@ public class CaptionTokenExtractor {
      * @param cta a {@link CaptionTokenAnnotation} instance
      * @return a {@link CaptionToken} instance
      */
-    private static CaptionToken createCaptionTokenFromAnnotation(CaptionTokenAnnotation cta) {
+    private CaptionToken createCaptionToken(JCas userInputJCas, CaptionTokenAnnotation cta) {
         List<String> posTags = Arrays.asList(cta.getPOSList().split(";"));
         List<String> tokens = Arrays.asList(cta.getTokenList().split(";"));
-        return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens);
+
+        // create UDependency context
+        List<UDependency> context = new ArrayList<>();
+
+        // the target is always the last noun of the caption token since all tokens before are modifiers
+        String targetToken = tokens.get(tokens.size() - 1);
+        // has to be a noun
+        assert posTags.get(tokens.size() - 1).contains("NN");
+
+        // get context in sentence
+        for (Sentence s : JCasUtil.select(userInputJCas, Sentence.class)) {
+            for (Dependency d : JCasUtil.selectCovered(userInputJCas, Dependency.class, s))
+                if (cta.getBegin() >= s.getBegin() && cta.getEnd() <= s.getEnd())
+                    if (d.getGovernor().getCoveredText().equals(targetToken)
+                            || d.getDependent().getCoveredText().equals(targetToken)
+                            || d.getCoveredText().equals(targetToken) && !d.getDependencyType().equals("punct"))
+                        context.add(new UDependency(d.getDependencyType(), d.getGovernor().getCoveredText(), d.getDependent().getCoveredText()));
+        }
+
+        return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens, context);
     }
 
 }

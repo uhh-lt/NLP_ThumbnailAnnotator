@@ -1,10 +1,13 @@
 package nlp.floschne.thumbnailAnnotator.db.mapper;
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
+import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -17,14 +20,18 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
 
     @Override
     public CaptionTokenEntity createDummyEntity() {
-        CaptionTokenEntity entity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+        List<UDependency> udContext = new ArrayList<>();
+        udContext.add(new UDependency("amod", "big", "ship"));
+        CaptionTokenEntity entity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext);
         entity.setId("id");
         return entity;
     }
 
     @Override
     public CaptionToken createDummyDomainObject() {
-        return new CaptionToken("car", CaptionToken.Type.NOUN, Collections.singletonList("NN"), Collections.singletonList("car"));
+        List<UDependency> udContext = new ArrayList<>();
+        udContext.add(new UDependency("amod", "small", "car"));
+        return new CaptionToken("small car", CaptionToken.Type.NOUN, Arrays.asList("JJ", "NN"), Arrays.asList("small", "car"), udContext);
     }
 
     @Override
@@ -32,6 +39,7 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
         assertEquals(entity.getValue(), domain.getValue());
         assertEquals(entity.getTokens(), domain.getTokens());
         assertEquals(entity.getPosTags(), domain.getPosTags());
+        assertEquals(entity.getUdContext(), domain.getUdContext());
         assertTrue(entity.getType().equalsIgnoreCase(domain.getType().toString()));
     }
 }

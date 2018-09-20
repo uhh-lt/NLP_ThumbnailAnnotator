@@ -12,11 +12,13 @@ import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
+import org.apache.coyote.http2.ConnectionException;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -62,7 +64,11 @@ public class ApiController {
                     crawlerResults.add(this.dbService.findCrawlerResultByCaptionToken(captionToken));
                 continue;
             }
-            crawlingResultFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
+            try {
+                crawlingResultFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
+            } catch (Exception e) {
+                throw new ConnectException("There was an error while Crawling for Thumbnails!");
+            }
         }
 
 
@@ -83,7 +89,7 @@ public class ApiController {
     }
 
     private void sortThumbnails(List<CrawlerResultEntity> crawlerResults) {
-        for(CrawlerResultEntity cr : crawlerResults) {
+        for (CrawlerResultEntity cr : crawlerResults) {
             Collections.sort(cr.getThumbnails());
         }
     }

@@ -3,6 +3,7 @@ package nlp.floschne.thumbnailAnnotator.db.mapper;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
+import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
@@ -23,7 +24,9 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
 
     @Override
     public CrawlerResultEntity createDummyEntity() {
-        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"));
+        List<UDependency> udContext = new ArrayList<>();
+        udContext.add(new UDependency("amod", "big", "ship"));
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext);
 
         List<ThumbnailEntity> urls = new ArrayList<>();
 
@@ -41,7 +44,9 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
 
     @Override
     public CrawlerResult createDummyDomainObject() {
-        CaptionToken captionToken = new CaptionToken("car", CaptionToken.Type.NOUN, Collections.singletonList("NN"), Collections.singletonList("car"));
+        List<UDependency> udContext = new ArrayList<>();
+        udContext.add(new UDependency("amod", "small", "car"));
+        CaptionToken captionToken = new CaptionToken("small car", CaptionToken.Type.NOUN, Arrays.asList("JJ", "NN"), Arrays.asList("small", "car"), udContext);
 
         List<Thumbnail> urls = new ArrayList<>();
 

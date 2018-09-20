@@ -24,6 +24,7 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -140,7 +141,12 @@ public class ShutterstockSource implements IThumbnailSource {
             HttpGet httpget = new HttpGet(apiCall);
             try (CloseableHttpResponse response = httpclient.execute(target, httpget, localContext)) {
                 JsonObject jsonResponse = new GsonBuilder().create().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
+                if(jsonResponse == null) {
+                    throw new ConnectException("Got no response from Thumbnail Source!");
+                }
                 return extractURLsFromJsonResponse(jsonResponse, limit);
+            } catch (Exception e) {
+                throw new ConnectException("There was an error connecting to the Thumbnail Source! " + e.getMessage());
             }
         }
     }

@@ -18,8 +18,8 @@ public class CaptionToken extends DomainObject{
         COMPOUND("Compound"),
         PERSON("Person"),
         ORGANIZATION("Organization"),
-        LOCATION("Location"),
-        DATE("Date");
+        LOCATION("Location");
+//        DATE("Date");
 
         private final String type;
 
@@ -38,4 +38,5 @@ public class CaptionToken extends DomainObject{
 
     private List<String> posTags;
     private List<String> tokens;
+    private List<UDependency> udContext;
 }

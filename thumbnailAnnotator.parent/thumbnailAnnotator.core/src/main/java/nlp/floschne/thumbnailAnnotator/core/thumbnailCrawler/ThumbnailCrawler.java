@@ -8,6 +8,7 @@ import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.IThumbnailSo
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.ShutterstockSource;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -72,7 +73,11 @@ public class ThumbnailCrawler {
     }
 
     public Future<CrawlerResult> startCrawlingThumbnails(CaptionToken captionToken) throws IOException {
-        return this.threadPool.submit(new CrawlerAgent(captionToken));
+        try {
+            return this.threadPool.submit(new CrawlerAgent(captionToken));
+        } catch (Exception e) {
+            throw new ConnectException("There was an error while Crawling for Thumbnails!");
+        }
     }
 
 }

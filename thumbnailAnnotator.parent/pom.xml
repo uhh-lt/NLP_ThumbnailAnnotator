@@ -25,7 +25,6 @@
         <org.projectlombok.version>1.18.0</org.projectlombok.version>
         <org.springframework.boot.version>2.0.3.RELEASE</org.springframework.boot.version>
         <org.springframework.version>5.0.6.RELEASE</org.springframework.version>
-        <docker.image.prefix>nlp.floschne</docker.image.prefix>
 
     </properties>
 
@@ -73,18 +72,6 @@
     <build>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.0</version>
-                    <configuration>
-                        <parallel>methods</parallel>
-                        <threadCount>16</threadCount>
-
-                        <reuseForks>false</reuseForks>
-                        <forkCount>1</forkCount>
-                    </configuration>
-                </plugin>
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -97,15 +84,55 @@
                 </plugin>
 
                 <plugin>
-                    <groupId>com.spotify</groupId>
-                    <artifactId>dockerfile-maven-plugin</artifactId>
-                    <version>1.4.3</version>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.22.0</version>
                     <configuration>
-                        <repository>${docker.image.prefix}/${project.artifactId}</repository>
-                        <buildArgs>
-                            <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
-                        </buildArgs>
+                        <reuseForks>false</reuseForks>
+                        <forkCount>1</forkCount>
                     </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${org.springframework.boot.version}</version>
+                </plugin>
+
+
+                <!-- Set up JAR manifest -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.1.0</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addClasspath>true</addClasspath>
+                                <classpathPrefix>lib/</classpathPrefix>
+                                <mainClass>nlp.floschne.thumbnailAnnotator.api.Application</mainClass>
+                            </manifest>
+                        </archive>
+                    </configuration>
+                </plugin>
+                <!-- Copy Maven dependencies into target/lib/ -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.8</version>
+                    <executions>
+                        <execution>
+                            <phase>initialize</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <overWriteReleases>false</overWriteReleases>
+                                <includeScope>runtime</includeScope>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
 
             </plugins>
