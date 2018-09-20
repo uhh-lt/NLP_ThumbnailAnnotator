@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -54,11 +55,15 @@ public class DBService {
     }
 
     public CrawlerResultEntity findCrawlerResultById(@NotNull String id) {
-        return this.crawlerResultEntityRepository.findById(id).get();
+        CrawlerResultEntity cr = this.crawlerResultEntityRepository.findById(id).get();
+        Collections.sort(cr.getThumbnails());
+        return cr;
     }
 
     public CrawlerResultEntity findCrawlerResultByCaptionToken(@NotNull CaptionToken captionToken) {
-        return this.crawlerResultEntityRepository.findByCaptionTokenValue(captionToken.getValue()).get();
+        CrawlerResultEntity cr = this.crawlerResultEntityRepository.findByCaptionTokenValue(captionToken.getValue()).get();
+        Collections.sort(cr.getThumbnails());
+        return cr;
     }
 
     public Boolean crawlerResultExistsById(@NotNull String id) {

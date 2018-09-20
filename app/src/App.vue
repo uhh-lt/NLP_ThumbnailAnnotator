@@ -38,6 +38,7 @@
     },
     created() {
       EventBus.$on('resultDataReady_event', this.showResultsHandler);
+      console.log('API Hostname: ' + this.$hostname)
     }
   }
 </script>

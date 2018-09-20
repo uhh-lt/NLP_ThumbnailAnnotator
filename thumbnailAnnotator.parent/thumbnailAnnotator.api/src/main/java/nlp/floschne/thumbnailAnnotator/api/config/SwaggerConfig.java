@@ -1,5 +1,6 @@
 package nlp.floschne.thumbnailAnnotator.api.config;
 
+import com.google.common.base.Predicates;
 import nlp.floschne.thumbnailAnnotator.api.controller.ApiController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,7 +26,7 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
                 .apis(RequestHandlerSelectors.any())
-                .paths(PathSelectors.regex(".*api.*"))
+                .paths(Predicates.not(PathSelectors.regex(".*error.*")))
                 .build()
                 .tags(new Tag("Thumbnail Annotator API", "REST API to access the functionality of the Thumbnail Annotator Service!"))
                 .apiInfo(apiInfo());

@@ -5,6 +5,8 @@
       <div class="card-body">
         <form class="form-group" v-if="!isSubmitted" @submit.prevent="submit" novalidate>
           <textarea
+            :disabled="isSubmitted === true"
+            :style="textAreaCursor"
             class="form-control"
             rows="14"
             name="user_input"
@@ -65,6 +67,7 @@
         isSubmitted: false,
         isError: false,
         submitting: false,
+        textAreaCursor: 'cursor: text',
         form: {
           value: ''
         },
@@ -77,13 +80,15 @@
       },
       enableSubmitLoader() {
         this.submitting = true;
+        this.textAreaCursor = 'cursor: not-allowed';
       },
       disableSubmitLoader() {
         this.submitting = false;
+        this.textAreaCursor = 'cursor: text';
       },
       crawlThumbnails() {
         this.enableSubmitLoader();
-        axios.post("http://localhost:8081/api/crawlThumbnails", this.form).then(response => {
+        axios.post(this.$hostname + "/crawlThumbnails", this.form).then(response => {
           this.submitSuccess(response);
           this.disableSubmitLoader();
         }).catch(error => {
@@ -116,7 +121,7 @@
 
 <style scoped>
   #loader {
-    max-height: 1rem;
-    max-width: 1rem;
+    max-height: 2rem;
+    max-width: 2rem;
   }
 </style>

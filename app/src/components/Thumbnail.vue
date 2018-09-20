@@ -5,7 +5,10 @@
            :id="thumbnail_large_image_popover_target_id">
     </div>
 
-    <b-popover :target="thumbnail_details_popover_target_id" triggers="click focus" placement="right">
+    <b-popover :target="thumbnail_details_popover_target_id" triggers="click blur" placement="right" :show.sync="popoverShow">
+      <b-btn @click="popoverShow = false" class="close" aria-label="Close">
+        <span class="d-inline-block" aria-hidden="true">&times;</span>
+      </b-btn>
       <thumbnail-priority-panel
         v-bind:thumbnail="thumbnail"/>
     </b-popover>
@@ -24,7 +27,8 @@
     data: function () {
       return {
         thumbnail_details_popover_target_id: "thumbail-details-popver-target-" + this.id,
-        thumbnail_large_image_popover_target_id: "thumbail-large-image-popver-target" + this.id
+        thumbnail_large_image_popover_target_id: "thumbail-large-image-popver-target" + this.id,
+        popoverShow: false
       }
     },
     components: {ThumbnailPriorityPanel},

@@ -16,7 +16,9 @@ import org.apache.coyote.http2.ConnectionException;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.*;
@@ -25,7 +27,7 @@ import java.util.concurrent.Future;
 
 @RestController
 @CrossOrigin
-@RequestMapping(value = "/api/")
+@RequestMapping(value = "/")
 @Api(tags = "Thumbnail Annotator API", description = "REST API to access the functionality of the Thumbnail Annotator Service!")
 @Slf4j
 public class ApiController {
@@ -48,8 +50,15 @@ public class ApiController {
 //        //TODO use entities!
 //    }
 
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    void home(HttpServletResponse response) throws IOException {
+        response.sendRedirect("/swagger-ui.html");
+    }
+
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
     public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException {
+        if(input.getValue().isEmpty())
+            throw new InputMismatchException("Must input at least a Token!");
         Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
 
         List<CaptionToken> captionTokens = extractionResultFuture.get().getCaptionTokens();
@@ -83,15 +92,12 @@ public class ApiController {
                 crawlerResults.add(this.dbService.findCrawlerResultByCaptionToken(crawlerResult.getCaptionToken()));
         }
 
-        this.sortThumbnails(crawlerResults);
-
         return crawlerResults;
     }
 
-    private void sortThumbnails(List<CrawlerResultEntity> crawlerResults) {
-        for (CrawlerResultEntity cr : crawlerResults) {
-            Collections.sort(cr.getThumbnails());
-        }
+    @RequestMapping(value = "/getCrawlerResult/{id}", method = RequestMethod.GET)
+    public CrawlerResultEntity getCrawlerResult(@PathVariable String id) {
+        return this.dbService.findCrawlerResultById(id);
     }
 
     @RequestMapping(value = "/incrementThumbnailPriority/{id}", method = RequestMethod.PUT)
@@ -113,10 +119,5 @@ public class ApiController {
     public void flushCache() {
         log.warn("Flushed Cache!");
         this.dbService.deleteAllCrawlerResultEntities();
-    }
-
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String helloWorld() {
-        return "Hello from ThumbnailAnnotator REST API! Swagger-UI available under <host>:<port>/swagger-ui.html";
     }
 }

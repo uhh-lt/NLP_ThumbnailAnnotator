@@ -1,18 +1,18 @@
 <template>
   <span>
     <div class="badge badge-warning m-1 float-left">
-      <a href="#" class="text-body" :id="thumbnail_carousel_popover_target_id" v-b-modal="crawler_result_details_collapse_target_id">{{ this.crawlerResult.captionTokenValue }}</a>
+      <a href="#" class="text-body" :id="thumbnail_carousel_popover_target_id" v-b-modal="crawler_result_details_modal_target_id">{{ this.crawlerResultObject.captionTokenValue }}</a>
 
-      <b-modal centered hide-header hide-footer :id="crawler_result_details_collapse_target_id" :title="this.crawlerResult.captionTokenValue">
+      <b-modal centered hide-header hide-footer :body-class="'details-modal'" :id="crawler_result_details_modal_target_id" :title="crawlerResultObject.captionTokenValue">
         <crawler-result-details v-bind:key="id"
-                                v-bind:crawler-result="crawlerResult"
+                                v-bind:crawler-result="crawlerResultObject"
                                 v-bind:id="id"/>
       </b-modal>
     </div>
 
 
     <b-popover :target="thumbnail_carousel_popover_target_id" triggers="hover">
-      <thumbnail-carousel v-bind:thumbnails="crawlerResult.thumbnails"
+      <thumbnail-carousel v-bind:thumbnails="crawlerResultObject.thumbnails"
                           v-bind:id="id"/>
     </b-popover>
   </span>
@@ -24,6 +24,9 @@
   import ThumbnailCarousel from "./ThumbnailCarousel";
   import CrawlerResultDetails from "./CrawlerResultDetails";
 
+  import {EventBus} from "../main";
+
+  import axios from 'axios';
 
   export default {
     name: "CrawlerResult",
@@ -37,15 +40,32 @@
         required: true
       }
     },
-    data: function () {
+    data() {
       return {
-        crawler_result_details_collapse_target_id: "crawler-result-details-collapse-target-" + this.id,
-        thumbnail_carousel_popover_target_id: "thumbnail-carousel-popover-target-" + this.id
+        crawler_result_details_modal_target_id: "crawler-result-details-modal-target-" + this.id,
+        thumbnail_carousel_popover_target_id: "thumbnail-carousel-popover-target-" + this.id,
+        crawlerResultObject: null
       }
+    },
+    methods: {
+      updateCrawlerResult() {
+        axios.get(this.$hostname + "/getCrawlerResult/" + this.crawlerResultObject.id).then(response => {
+          this.submitSuccess(response);
+        }).catch(error => {
+          console.log(error);
+        });
+      },
+      submitSuccess(response) {
+        if (response.status === 200)
+          this.crawlerResultObject = response.data;
+      }
+    },
+    created() {
+      this.crawlerResultObject = this.crawlerResult;
+      EventBus.$on('thumbnailPriorityChanged_event', this.updateCrawlerResult)
     }
   }
 </script>
-
 <style scoped>
   a:link {
     text-decoration: none;

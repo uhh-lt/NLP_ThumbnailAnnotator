@@ -8,7 +8,7 @@
         </span>
       </a>
       <span class="badge badge-danger badge-pill float-left" data-toggle="tooltip" data-placement="top" title="Priority">
-            {{ this.thumbnail.priority }}
+        {{ this.thumbnailObj.priority }}
       </span>
       <a href="#" v-on:click="decPrio">
         <span class="badge badge-dark badge-pill" title="Decrement priority">
@@ -32,9 +32,14 @@
         required: true
       }
     },
+    data() {
+      return {
+        thumbnailObj: null
+      }
+    },
     methods: {
       incPrio() {
-        axios.put("http://127.0.0.1:8081/api/incrementThumbnailPriority/" + this.thumbnail.id).then(response => {
+        axios.put(this.$hostname + "/incrementThumbnailPriority/" + this.thumbnail.id).then(response => {
           this.submitSuccess(response);
         }).catch(error => {
           this.submitError(error);
@@ -42,7 +47,7 @@
         });
       },
       decPrio() {
-        axios.put("http://127.0.0.1:8081/api/decrementThumbnailPriority/" + this.thumbnail.id).then(response => {
+        axios.put(this.$hostname + "/decrementThumbnailPriority/" + this.thumbnailObj.id).then(response => {
           this.submitSuccess(response);
         }).catch(error => {
           console.log(error);
@@ -50,9 +55,12 @@
       },
       submitSuccess(response) {
         if (response.status === 200)
-          this.thumbnail = response.data;
+          this.thumbnailObj = response.data;
         EventBus.$emit('thumbnailPriorityChanged_event')
       }
+    },
+    created() {
+      this.thumbnailObj = this.thumbnail;
     }
   }
 </script>
