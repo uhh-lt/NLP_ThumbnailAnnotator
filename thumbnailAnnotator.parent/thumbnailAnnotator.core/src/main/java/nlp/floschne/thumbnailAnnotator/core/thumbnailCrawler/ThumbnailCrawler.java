@@ -29,6 +29,7 @@ public class ThumbnailCrawler {
          * The {@link CaptionToken}  that is processed by this {@link CrawlerAgent}
          */
         private CaptionToken captionToken;
+        private int limit;
 
         /**
          * @param captionToken the input {@link CaptionToken}
@@ -36,6 +37,7 @@ public class ThumbnailCrawler {
         // package private by intention
         CrawlerAgent(CaptionToken captionToken) {
             this.captionToken = captionToken;
+            this.limit = 10;
         }
 
         /**
@@ -46,7 +48,11 @@ public class ThumbnailCrawler {
         @Override
         public CrawlerResult call() throws IOException {
             // TODO replace dummy implementation
-            List<Thumbnail> thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), 100);
+
+            List<Thumbnail> thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), limit);
+            if (thumbnails.size() < limit / 2) {
+                thumbnails.addAll(thumbnailSource.queryThumbnails(this.captionToken.getTokens().get(this.captionToken.getTokens().size() - 1), limit));
+            }
             return new CrawlerResult(this.captionToken, thumbnails);
         }
     }
