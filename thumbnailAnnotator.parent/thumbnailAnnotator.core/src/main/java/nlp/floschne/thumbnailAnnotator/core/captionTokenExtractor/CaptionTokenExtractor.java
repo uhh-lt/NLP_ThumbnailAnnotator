@@ -4,8 +4,9 @@ import captionTokenExtractor.type.CaptionTokenAnnotation;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpLemmatizer;
-import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpParser;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpPosTagger;
+import de.tudarmstadt.ukp.dkpro.core.maltparser.MaltParser;
+import de.tudarmstadt.ukp.dkpro.core.matetools.MateParser;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
 import lombok.Data;
@@ -25,6 +26,10 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.dkpro.core.udpipe.UDPipeParser;
+import org.dkpro.core.udpipe.UDPipePosTagger;
+import org.dkpro.core.udpipe.UDPipeSegmenter;
+import org.dkpro.core.udpipe.internal.UDPipeUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -148,18 +153,35 @@ public class CaptionTokenExtractor {
         AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(OpenNlpSegmenter.class,
                 OpenNlpSegmenter.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(seg);
+//        AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(UDPipeSegmenter.class,
+//                UDPipeSegmenter.PARAM_LANGUAGE, LANGUAGE);
+//        aggregateBuilder.add(seg);
 
         AnalysisEngineDescription pos = AnalysisEngineFactory.createEngineDescription(ClearNlpPosTagger.class,
                 ClearNlpPosTagger.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(pos);
 
+//        AnalysisEngineDescription pos = AnalysisEngineFactory.createEngineDescription(UDPipePosTagger.class,
+//                UDPipePosTagger.PARAM_LANGUAGE, LANGUAGE,
+//                UDPipePosTagger.PARAM_VARIANT, "ud");
+//        aggregateBuilder.add(pos);
+
+
         AnalysisEngineDescription lemma = AnalysisEngineFactory.createEngineDescription(ClearNlpLemmatizer.class,
                 ClearNlpLemmatizer.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(lemma);
 
-        AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(ClearNlpParser.class,
-                ClearNlpParser.PARAM_LANGUAGE, LANGUAGE,
-                ClearNlpParser.PARAM_VARIANT, "mayo");
+//        AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(UDPipeParser.class,
+//                UDPipeParser.PARAM_LANGUAGE, LANGUAGE);
+//        aggregateBuilder.add(parse);
+
+//        AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(ClearNlpParser.class,
+//                ClearNlpParser.PARAM_LANGUAGE, LANGUAGE,
+//                ClearNlpParser.PARAM_VARIANT, "mayo");
+//        aggregateBuilder.add(parse);
+        AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(MaltParser.class,
+                MaltParser.PARAM_LANGUAGE, LANGUAGE,
+                MaltParser.PARAM_VARIANT, "poly");
         aggregateBuilder.add(parse);
 
         AnalysisEngineDescription nerLoc = AnalysisEngineFactory.createEngineDescription(OpenNlpNamedEntityRecognizer.class,

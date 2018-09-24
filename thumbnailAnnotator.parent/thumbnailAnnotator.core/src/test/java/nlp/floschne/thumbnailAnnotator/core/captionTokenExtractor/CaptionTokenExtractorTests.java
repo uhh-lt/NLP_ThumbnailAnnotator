@@ -1,6 +1,5 @@
 package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor;
 
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.consumer.CaptionTokenExtractorDebugConsolePrinter;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.reader.LeipzigCorporaReader;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
@@ -20,8 +19,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
