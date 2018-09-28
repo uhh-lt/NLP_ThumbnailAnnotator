@@ -8,8 +8,13 @@ RUN npm run build
 
 # production stage
 FROM nginx:1.13.12-alpine as production-stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY --from=build-stage /app/dist /usr/share/nginx/html/dist
 COPY --from=build-stage /app/index.html /usr/share/nginx/html
-EXPOSE 8080
 
-CMD ["nginx", "-g", "daemon off;"]
+# proxy settings
+ENV http_proxy "http://127.0.0.1:3001"
+ENV https_proxy "http://127.0.0.1:3001"
+
+EXPOSE 80
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

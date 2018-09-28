@@ -37,7 +37,7 @@ public class ThumbnailCrawler {
         // package private by intention
         CrawlerAgent(CaptionToken captionToken) {
             this.captionToken = captionToken;
-            this.limit = 10;
+            this.limit = 16;
         }
 
         /**

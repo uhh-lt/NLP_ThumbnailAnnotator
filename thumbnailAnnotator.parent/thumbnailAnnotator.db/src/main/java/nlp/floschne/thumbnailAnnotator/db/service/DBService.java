@@ -3,6 +3,7 @@ package nlp.floschne.thumbnailAnnotator.db.service;
 import lombok.extern.slf4j.Slf4j;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.mapper.CrawlerResultMapper;
@@ -42,7 +43,7 @@ public class DBService {
         log.info("DB Service ready!");
     }
 
-    public void saveCrawlerResult(@NotNull CrawlerResult cre) {
+    public CrawlerResultEntity saveCrawlerResult(@NotNull CrawlerResult cre) {
         CrawlerResultEntity entity;
         if (this.crawlerResultExistsByCaptionToken(cre.getCaptionToken()))
             entity = this.crawlerResultEntityRepository.findByCaptionTokenValue(cre.getCaptionToken().getValue()).get();
@@ -52,6 +53,8 @@ public class DBService {
         this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
         this.captionTokenEntityRepository.save(entity.getCaptionToken());
         this.crawlerResultEntityRepository.save(entity);
+
+        return entity;
     }
 
     public CrawlerResultEntity findCrawlerResultById(@NotNull String id) {
@@ -61,9 +64,25 @@ public class DBService {
     }
 
     public CrawlerResultEntity findCrawlerResultByCaptionToken(@NotNull CaptionToken captionToken) {
-        CrawlerResultEntity cr = this.crawlerResultEntityRepository.findByCaptionTokenValue(captionToken.getValue()).get();
-        Collections.sort(cr.getThumbnails());
+        // first, find all CrawlerResultEntities with the CaptionToken's value
+        List<CrawlerResultEntity> crs = this.crawlerResultEntityRepository.findAllByCaptionTokenValue(captionToken.getValue());
+
+        // second, find the (best) matching CrawlerResultEntity by the CaptionToken's UDContext
+        CrawlerResultEntity cr = this.getCrawlerResultEntityByUdContext(crs, captionToken.getUdContext());
+        if (cr != null)
+            Collections.sort(cr.getThumbnails());
         return cr;
+    }
+
+    private CrawlerResultEntity getCrawlerResultEntityByUdContext(@NotNull List<CrawlerResultEntity> crs, @NotNull List<UDependency> udContext) {
+        // TODO find a metric for similarity of UDContexts to find not only exactly matching but similar UDContexts and then return the best!
+
+        for (CrawlerResultEntity cr : crs)
+            if (cr.getCaptionToken().getUdContext().containsAll(udContext))
+                return cr;
+
+
+        return null;
     }
 
     public Boolean crawlerResultExistsById(@NotNull String id) {
@@ -71,7 +90,8 @@ public class DBService {
     }
 
     public Boolean crawlerResultExistsByCaptionToken(@NotNull CaptionToken captionToken) {
-        return this.crawlerResultEntityRepository.findByCaptionTokenValue(captionToken.getValue()).isPresent();
+        List<CrawlerResultEntity> crs = this.crawlerResultEntityRepository.findAllByCaptionTokenValue(captionToken.getValue());
+        return this.getCrawlerResultEntityByUdContext(crs, captionToken.getUdContext()) != null;
     }
 
     public ThumbnailEntity incrementThumbnailPriorityById(@NotNull String id) {
@@ -97,4 +117,5 @@ public class DBService {
     public void deleteAllCrawlerResultEntities() {
         this.crawlerResultEntityRepository.deleteAll();
     }
+
 }

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div class='float-left' :id="thumbnail_details_popover_target_id">
-      <img :src="thumbnail.url" class='img-thumbnail' :alt="thumbnail.url"
+    <div class="float-left" :id="thumbnail_details_popover_target_id">
+      <img :src="thumbnail.url" v-bind:class="{'img-thumbnail': true, 'highestPriority': hasHighestPriority}" :alt="thumbnail.url"
            :id="thumbnail_large_image_popover_target_id">
     </div>
 
@@ -28,7 +28,7 @@
       return {
         thumbnail_details_popover_target_id: "thumbail-details-popver-target-" + this.id,
         thumbnail_large_image_popover_target_id: "thumbail-large-image-popver-target" + this.id,
-        popoverShow: false
+        popoverShow: false,
       }
     },
     components: {ThumbnailPriorityPanel},
@@ -39,9 +39,9 @@
       },
       id: {
         required: true
-      }
-    },
-    methods: {}
+      },
+      hasHighestPriority: false
+    }
   }
 </script>
 
@@ -56,5 +56,11 @@
   img {
     max-width: 250px;
     max-height: 250px;
+  }
+
+  .highestPriority {
+    border-color: red !important;
+    border-radius: 0.25rem;
+    border-width: 2px;
   }
 </style>

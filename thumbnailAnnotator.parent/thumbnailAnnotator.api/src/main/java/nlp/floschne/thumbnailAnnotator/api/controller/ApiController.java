@@ -2,7 +2,7 @@ package nlp.floschne.thumbnailAnnotator.api.controller;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import nlp.floschne.thumbnailAnnotator.api.service.DomainSevice;
+import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.CaptionTokenExtractor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
@@ -12,18 +12,19 @@ import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
-import org.apache.coyote.http2.ConnectionException;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @CrossOrigin
@@ -34,21 +35,12 @@ public class ApiController {
 
 
     private final DBService dbService;
-    private final DomainSevice domainSevice;
 
     @Autowired
-    public ApiController(DBService dbService, DomainSevice domainSevice) {
+    public ApiController(DBService dbService) {
         this.dbService = dbService;
-        this.domainSevice = domainSevice;
         log.info("API Controller ready!");
     }
-
-//    @RequestMapping(value = "/extractCaptionTokens", method = RequestMethod.POST)
-//    public ExtractionResult extractCaptionTokens(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException {
-//        Future<ExtractionResult> resultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
-//        return resultFuture.get();
-//        //TODO use entities!
-//    }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     void home(HttpServletResponse response) throws IOException {
@@ -56,40 +48,57 @@ public class ApiController {
     }
 
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
-    public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException {
-        if(input.getValue().isEmpty())
+    public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ExecutionException, InterruptedException, IOException, ResourceInitializationException, JWNLException {
+        if (input.getValue().isEmpty())
             throw new InputMismatchException("Must input at least a Token!");
-        Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
 
+        // extract the CaptionTokens from UserInput
+        Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
         List<CaptionToken> captionTokens = extractionResultFuture.get().getCaptionTokens();
-        List<Future<nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult>> crawlingResultFutures = new ArrayList<>();
+
+        // list of futures of CrawlerResults
+        List<Future<CrawlerResult>> crawlingResultFutures = new ArrayList<>();
+
+        // list of CrawlerResultEntities that are already cached or get cached and will be returned
         List<CrawlerResultEntity> crawlerResults = new ArrayList<>();
+
+        // for every extracted CaptionToken
         for (CaptionToken captionToken : captionTokens) {
-            // check if captionToken is cached in repo and skip new crawling if so
-            if (this.dbService.crawlerResultExistsByCaptionToken(captionToken)) {
-                log.info("Using cached results for '" + captionToken.getValue() + "'");
-                CrawlerResultEntity result = this.dbService.findCrawlerResultByCaptionToken(captionToken);
+            // check if CrawlerResultEntity that matches the captionToken is cached in repo and skip new crawling if so
+            CrawlerResultEntity result = this.dbService.findCrawlerResultByCaptionToken(captionToken);
+            if (result != null) {
+                log.info("Using cached results for '" + captionToken + "'");
                 if (!crawlerResults.contains(result))
-                    crawlerResults.add(this.dbService.findCrawlerResultByCaptionToken(captionToken));
+                    crawlerResults.add(result);
                 continue;
             }
+
+            // no cached CrawlerResultEntity for the CaptionToken -> start crawling
             try {
                 crawlingResultFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
             } catch (Exception e) {
-                throw new ConnectException("There was an error while Crawling for Thumbnails!");
+                throw e;
             }
         }
 
 
-        for (Future<nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult> crawlerResultFuture : crawlingResultFutures) {
-            CrawlerResult crawlerResult = crawlerResultFuture.get();
-            // save the results in repo
-            log.info("Caching results for '" + crawlerResult.getCaptionToken().getValue() + "'");
-            this.dbService.saveCrawlerResult(crawlerResult);
+        // get the CrawlerResults from the Futures, cache them and add them to the final results
+        for (Future<CrawlerResult> crawlerResultFuture : crawlingResultFutures) {
 
-            CrawlerResultEntity result = this.dbService.findCrawlerResultByCaptionToken(crawlerResult.getCaptionToken());
-            if (!crawlerResults.contains(result))
-                crawlerResults.add(this.dbService.findCrawlerResultByCaptionToken(crawlerResult.getCaptionToken()));
+            try {
+                // wait no longer than 5 second
+                CrawlerResult crawlerResult = crawlerResultFuture.get(5, TimeUnit.SECONDS);
+
+                // save the results in repo
+                log.info("Caching results for '" + crawlerResult.getCaptionToken() + "'");
+                CrawlerResultEntity result = this.dbService.saveCrawlerResult(crawlerResult);
+
+                if (!crawlerResults.contains(result))
+                    crawlerResults.add(result);
+            } catch (Exception e) {
+                throw new ConnectException("It too long time (5s) to finish crawling of Thumbnails!");
+            }
+
         }
 
         return crawlerResults;

@@ -26,7 +26,7 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
     public CrawlerResultEntity createDummyEntity() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "big", "ship"));
-        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext);
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext, null);
 
         List<ThumbnailEntity> urls = new ArrayList<>();
 
@@ -46,7 +46,7 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
     public CrawlerResult createDummyDomainObject() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "small", "car"));
-        CaptionToken captionToken = new CaptionToken("small car", CaptionToken.Type.NOUN, Arrays.asList("JJ", "NN"), Arrays.asList("small", "car"), udContext);
+        CaptionToken captionToken = new CaptionToken("small car", CaptionToken.Type.NOUN, Arrays.asList("JJ", "NN"), Arrays.asList("small", "car"), udContext, null);
 
         List<Thumbnail> urls = new ArrayList<>();
 

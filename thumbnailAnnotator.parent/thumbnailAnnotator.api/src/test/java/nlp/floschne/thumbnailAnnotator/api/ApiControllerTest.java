@@ -67,9 +67,8 @@ public class ApiControllerTest {
     @Test
     public void helloWorldITest() throws Exception {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/"))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string("Hello from ThumbnailAnnotator REST API! Swagger-UI available under <host>:<port>/swagger-ui.html"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/"))
+                .andExpect(status().is3xxRedirection());
     }
 
     @Test
@@ -78,7 +77,7 @@ public class ApiControllerTest {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         String value = "The red, broken and big car control system is great.";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/extractCaptionTokens/")
+        mockMvc.perform(MockMvcRequestBuilders.post("/extractCaptionTokens/")
                 .content(this.asJson(new UserInput(value)))
                 .contentType(contentType))
                 .andExpect(status().isOk())

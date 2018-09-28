@@ -24,7 +24,7 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
     protected CaptionTokenEntity createDummyEntity() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "big", "ship"));
-        CaptionTokenEntity entity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext);
+        CaptionTokenEntity entity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext, null);
         return entity;
     }
 

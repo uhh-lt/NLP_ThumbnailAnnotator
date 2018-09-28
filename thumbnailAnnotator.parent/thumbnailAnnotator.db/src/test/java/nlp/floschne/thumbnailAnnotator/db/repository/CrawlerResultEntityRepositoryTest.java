@@ -25,7 +25,7 @@ public class CrawlerResultEntityRepositoryTest extends RepositoryTestBase<Crawle
     protected CrawlerResultEntity createDummyEntity() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "big", "ship"));
-        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext);
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext, null);
 
         List<ThumbnailEntity> urls = new ArrayList<>();
 

@@ -72,7 +72,7 @@ public class ShutterstockSource implements IThumbnailSource {
 
     public ShutterstockSource() {
         this.sortBy = SortBy.RELEVANCE;
-        this.per_page = 10;
+        this.per_page = 20;
     }
 
     private String generateApiCall(String queryParameter) throws UnsupportedEncodingException {

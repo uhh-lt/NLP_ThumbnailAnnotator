@@ -1,5 +1,13 @@
 package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor;
 
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.algorithm.SimplifiedExtendedLesk;
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.normalization.NoNormalization;
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.overlap.SetOverlap;
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.tokenization.StringSplit;
+import de.tudarmstadt.ukp.dkpro.wsd.si.POS;
+import de.tudarmstadt.ukp.dkpro.wsd.si.SenseInventoryException;
+import de.tudarmstadt.ukp.dkpro.wsd.si.wordnet.WordNetSynsetSenseInventory;
+import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.consumer.CaptionTokenExtractorDebugConsolePrinter;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.reader.LeipzigCorporaReader;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
@@ -19,6 +27,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
@@ -59,6 +68,22 @@ public class CaptionTokenExtractorTests {
 
 
         SimplePipeline.runPipeline(reader, cteAnalysisEngine, debugPrinter);
+    }
+
+    @Test
+    public void dummyLeskFunctionallityTest() throws IOException, JWNLException, SenseInventoryException {
+
+        WordNetSynsetSenseInventory si = new WordNetSynsetSenseInventory(new URL("file:///home/p0w3r/Downloads/WordNet-3.0/extjwnl_properties.xml"));
+
+        SimplifiedExtendedLesk l = new SimplifiedExtendedLesk(si,
+                new SetOverlap(),
+                new NoNormalization(),
+                new StringSplit(),
+                new StringSplit()
+        );
+
+
+        l.getDisambiguation("dog", POS.NOUN, "I like my mouse and my dog.");
     }
 
     @Test
@@ -107,7 +132,7 @@ public class CaptionTokenExtractorTests {
     }
 
     @Test
-    public void startExtractionOfCaptionTokens() throws ResourceInitializationException, ExecutionException, InterruptedException {
+    public void startExtractionOfCaptionTokens() throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException {
         UserInput input = new UserInput("Benazech is said to have been born in London about the year 1744.");
         Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
         assertNotNull(extractionResultFuture);
@@ -119,7 +144,7 @@ public class CaptionTokenExtractorTests {
 
 
     @Test
-    public void dependencyContextTest() throws ResourceInitializationException, AnalysisEngineProcessException, ExecutionException, InterruptedException {
+    public void dependencyContextTest() throws ResourceInitializationException, AnalysisEngineProcessException, ExecutionException, InterruptedException, IOException, JWNLException {
 
         UserInput input = new UserInput("I have a mouse and a keyboard.");
         Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);

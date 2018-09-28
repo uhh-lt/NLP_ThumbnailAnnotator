@@ -5,10 +5,20 @@
         v-bind:captionTokenInstance="crawlerResultObject.captionToken"
         v-bind:id="id"
       />
+
       <hr>
-      <thumbnail v-for="thumbnail in crawlerResultObject.thumbnails"
+
+      <thumbnail v-if="highestPriorityThumbnail != null"
+                 v-bind:key="highestPriorityThumbnail.id + '_' + id"
+                 v-bind:id="highestPriorityThumbnail.id + '_' + id"
+                 v-bind:hasHighestPriority="true"
+                 v-bind:thumbnail="highestPriorityThumbnail"
+      />
+
+      <thumbnail v-for="thumbnail in lowPriorityThumbnails"
                  v-bind:key="thumbnail.id + '_' + id"
                  v-bind:id="thumbnail.id + '_' + id"
+                 v-bind:hasHighestPriority="false"
                  v-bind:thumbnail="thumbnail"
       />
     </div>
@@ -28,7 +38,8 @@
     components: {CaptionToken, Thumbnail},
     data() {
       return {
-        crawlerResultObject: null
+        crawlerResultObject: null,
+        highestPriorityIndex: -1
       }
     },
     props: {
@@ -56,6 +67,31 @@
     created() {
       this.crawlerResultObject = this.crawlerResult;
       EventBus.$on('thumbnailPriorityChanged_event', this.updateCrawlerResult)
+    },
+    computed: {
+      highestPriorityThumbnail: function () {
+        let highestPrio = -100; //TODO bad style!
+        let i = 0;
+        for (i in this.crawlerResultObject.thumbnails) {
+          if (this.crawlerResultObject.thumbnails[i].priority > highestPrio) {
+            highestPrio = this.crawlerResultObject.thumbnails[i].priority;
+            this.highestPriorityIndex = i;
+          }
+        }
+
+        return this.crawlerResultObject.thumbnails[this.highestPriorityIndex];
+      },
+
+      lowPriorityThumbnails: function () {
+        let thumbs = [];
+        let i = 0;
+        for (i in this.crawlerResultObject.thumbnails) {
+          if (i !== this.highestPriorityIndex)
+            thumbs.push(this.crawlerResultObject.thumbnails[i]);
+        }
+
+        return thumbs;
+      }
     }
   }
 </script>

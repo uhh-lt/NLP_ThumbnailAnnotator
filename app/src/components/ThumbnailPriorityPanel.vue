@@ -1,6 +1,6 @@
 <template>
   <div class="card text-white bg-primary d-inline-block m-1 clearfix">
-    <div class="card-header card-title text-md-center">Edit Priority</div>
+    <div class="card-header card-title text-md-center"><b>Edit Priority</b></div>
     <div class="card-body justify-content-center">
       <a class="float-left" href="#" v-on:click="incPrio">
         <span class="badge badge-dark badge-pill" title="Increment priority">

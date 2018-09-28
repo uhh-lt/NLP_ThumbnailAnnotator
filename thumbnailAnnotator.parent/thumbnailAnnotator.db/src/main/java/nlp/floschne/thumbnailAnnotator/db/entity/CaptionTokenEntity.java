@@ -25,4 +25,5 @@ public class CaptionTokenEntity extends Entity {
     private List<String> posTags;
     private List<String> tokens;
     private List<UDependency> udContext;
+    private String wordNetSense;
 }

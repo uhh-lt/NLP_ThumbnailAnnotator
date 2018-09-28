@@ -15,7 +15,7 @@ public class ThumbnailCrawlerTest {
 
     @Test
     public void crawlThumbnails() throws IOException, ExecutionException, InterruptedException {
-        CaptionToken captionToken = new CaptionToken("ship", CaptionToken.Type.NOUN, Collections.singletonList("NN"), Collections.singletonList("ship"), null);
+        CaptionToken captionToken = new CaptionToken("ship", CaptionToken.Type.NOUN, Collections.singletonList("NN"), Collections.singletonList("ship"), null, null);
         Future<CrawlerResult> resultFuture = ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken);
         CrawlerResult crawlerResult = resultFuture.get();
         assertNotNull(crawlerResult);

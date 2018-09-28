@@ -6,10 +6,17 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpLemmatizer;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.maltparser.MaltParser;
-import de.tudarmstadt.ukp.dkpro.core.matetools.MateParser;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.algorithm.SimplifiedExtendedLesk;
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.normalization.NoNormalization;
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.overlap.SetOverlap;
+import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.tokenization.StringSplit;
+import de.tudarmstadt.ukp.dkpro.wsd.si.POS;
+import de.tudarmstadt.ukp.dkpro.wsd.si.SenseInventoryException;
+import de.tudarmstadt.ukp.dkpro.wsd.si.wordnet.WordNetSynsetSenseInventory;
 import lombok.Data;
+import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.NamedEntityCaptionTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.NounCaptionTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosExclusionFlagTokenAnnotator;
@@ -26,18 +33,15 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.dkpro.core.udpipe.UDPipeParser;
-import org.dkpro.core.udpipe.UDPipePosTagger;
-import org.dkpro.core.udpipe.UDPipeSegmenter;
-import org.dkpro.core.udpipe.internal.UDPipeUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * The main component to manage the extraction of {@link CaptionToken}s from {@link UserInput}s.
@@ -56,8 +60,27 @@ public class CaptionTokenExtractor {
          */
         private UserInput userInput;
 
-        public ExtractorAgent(UserInput userInput) {
+        private SimplifiedExtendedLesk simplifiedExtendedLesk;
+        private WordNetSynsetSenseInventory senseInventory;
+
+
+        public ExtractorAgent(UserInput userInput) throws IOException, JWNLException {
             this.userInput = userInput;
+
+            // Get file from resources folder
+            ClassLoader classLoader = getClass().getClassLoader();
+            URL wnProperiesUrl = classLoader.getResource("WordNet-3.0/extjwnl_properties.xml");
+            if (wnProperiesUrl == null)
+                throw new IOException("Cannot read WordNet Files from resources!");
+            this.senseInventory = new WordNetSynsetSenseInventory(wnProperiesUrl);
+
+            this.simplifiedExtendedLesk = new SimplifiedExtendedLesk(senseInventory,
+                    new SetOverlap(),
+                    new NoNormalization(),
+                    new StringSplit(),
+                    new StringSplit()
+            );
+
         }
 
         /**
@@ -83,7 +106,7 @@ public class CaptionTokenExtractor {
          * @throws ResourceInitializationException
          */
         @Override
-        public ExtractionResult call() throws AnalysisEngineProcessException, ResourceInitializationException {
+        public ExtractionResult call() throws AnalysisEngineProcessException, ResourceInitializationException, SenseInventoryException {
             // create userInputJCas
             JCas userInputJCas = createJCasFromUserInput(this.userInput);
             // process userInputJCas
@@ -100,6 +123,55 @@ public class CaptionTokenExtractor {
             }
 
             return extractionResult;
+        }
+
+        /**
+         * Creates a {@link CaptionToken} from a {@link CaptionTokenAnnotation} (which is a UIMA Type)
+         *
+         * @param cta a {@link CaptionTokenAnnotation} instance
+         * @return a {@link CaptionToken} instance
+         */
+        private CaptionToken createCaptionToken(JCas userInputJCas, CaptionTokenAnnotation cta) throws SenseInventoryException {
+            List<String> posTags = Arrays.asList(cta.getPOSList().split(";"));
+            List<String> tokens = Arrays.asList(cta.getTokenList().split(";"));
+
+            // create UDependency context
+            List<UDependency> context = new ArrayList<>();
+
+            // the target is always the last noun of the caption token since all tokens before are modifiers
+            String targetToken = tokens.get(tokens.size() - 1);
+            // has to be a noun
+            assert posTags.get(tokens.size() - 1).contains("NN");
+
+
+            // WNet Sense
+            String wnetSense = null;
+
+            // get UDContext and WordNetSense per sentence
+            for (Sentence s : JCasUtil.select(userInputJCas, Sentence.class)) {
+                // UDContext
+                for (Dependency d : JCasUtil.selectCovered(userInputJCas, Dependency.class, s))
+                    if (cta.getBegin() >= s.getBegin() && cta.getEnd() <= s.getEnd())
+                        if (d.getGovernor().getCoveredText().equals(targetToken)
+                                || d.getDependent().getCoveredText().equals(targetToken)
+                                || d.getCoveredText().equals(targetToken) && !d.getDependencyType().equals("punct"))
+                            context.add(new UDependency(d.getDependencyType(), d.getGovernor().getCoveredText(), d.getDependent().getCoveredText()));
+
+                // WNet Sense
+                Map<String, Double> disambiguation = this.simplifiedExtendedLesk.getDisambiguation(targetToken, POS.NOUN, s.getCoveredText());
+                if (disambiguation != null && !disambiguation.isEmpty()) {
+                    // sort the map by the Lesk Score
+                    Map<String, Double> result = disambiguation.entrySet().stream()
+                            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                                    (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+                    // get highest score sense id and resolve description with inventory
+                    wnetSense = this.senseInventory.getSenseDescription(result.entrySet().iterator().next().getKey());
+                }
+            }
+
+
+            return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens, context, wnetSense);
         }
     }
 
@@ -179,6 +251,7 @@ public class CaptionTokenExtractor {
 //                ClearNlpParser.PARAM_LANGUAGE, LANGUAGE,
 //                ClearNlpParser.PARAM_VARIANT, "mayo");
 //        aggregateBuilder.add(parse);
+
         AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(MaltParser.class,
                 MaltParser.PARAM_LANGUAGE, LANGUAGE,
                 MaltParser.PARAM_VARIANT, "poly");
@@ -227,39 +300,8 @@ public class CaptionTokenExtractor {
      * @param userInput the input from a user wrapped in a {@link UserInput}
      * @return a {@link Future} that holds the {@link ExtractionResult}
      */
-    public Future<ExtractionResult> startExtractionOfCaptionTokens(UserInput userInput) {
+    public Future<ExtractionResult> startExtractionOfCaptionTokens(UserInput userInput) throws IOException, JWNLException {
         return this.threadPool.submit(new ExtractorAgent(userInput));
-    }
-
-    /**
-     * Creates a {@link CaptionToken} from a {@link CaptionTokenAnnotation} (which is a UIMA Type)
-     *
-     * @param cta a {@link CaptionTokenAnnotation} instance
-     * @return a {@link CaptionToken} instance
-     */
-    private CaptionToken createCaptionToken(JCas userInputJCas, CaptionTokenAnnotation cta) {
-        List<String> posTags = Arrays.asList(cta.getPOSList().split(";"));
-        List<String> tokens = Arrays.asList(cta.getTokenList().split(";"));
-
-        // create UDependency context
-        List<UDependency> context = new ArrayList<>();
-
-        // the target is always the last noun of the caption token since all tokens before are modifiers
-        String targetToken = tokens.get(tokens.size() - 1);
-        // has to be a noun
-        assert posTags.get(tokens.size() - 1).contains("NN");
-
-        // get context in sentence
-        for (Sentence s : JCasUtil.select(userInputJCas, Sentence.class)) {
-            for (Dependency d : JCasUtil.selectCovered(userInputJCas, Dependency.class, s))
-                if (cta.getBegin() >= s.getBegin() && cta.getEnd() <= s.getEnd())
-                    if (d.getGovernor().getCoveredText().equals(targetToken)
-                            || d.getDependent().getCoveredText().equals(targetToken)
-                            || d.getCoveredText().equals(targetToken) && !d.getDependencyType().equals("punct"))
-                        context.add(new UDependency(d.getDependencyType(), d.getGovernor().getCoveredText(), d.getDependent().getCoveredText()));
-        }
-
-        return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens, context);
     }
 
 }

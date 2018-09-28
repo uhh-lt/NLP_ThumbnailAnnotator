@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class CaptionToken extends DomainObject{
+public class CaptionToken extends DomainObject {
 
     public enum Type {
         NOUN("Noun"),
@@ -39,4 +39,5 @@ public class CaptionToken extends DomainObject{
     private List<String> posTags;
     private List<String> tokens;
     private List<UDependency> udContext;
+    private String wordNetSense;
 }
