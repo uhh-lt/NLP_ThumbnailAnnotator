@@ -44,6 +44,7 @@ public class DBService {
     }
 
     public CrawlerResultEntity saveCrawlerResult(@NotNull CrawlerResult cre) {
+        //TODO also take UDContext into account!
         CrawlerResultEntity entity;
         if (this.crawlerResultExistsByCaptionToken(cre.getCaptionToken()))
             entity = this.crawlerResultEntityRepository.findByCaptionTokenValue(cre.getCaptionToken().getValue()).get();

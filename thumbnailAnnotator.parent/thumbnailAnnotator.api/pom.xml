@@ -144,6 +144,23 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${org.springframework.boot.version}</version>
+                <configuration>
+                    <skip>false</skip>
+
+                    <profiles>
+                        <profile>local</profile>
+                        <profile>docker</profile>
+                    </profiles>
+
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
 
@@ -162,6 +179,7 @@
                     </archive>
                 </configuration>
             </plugin>
+
             <!-- Copy Maven dependencies into target/lib/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -169,7 +187,7 @@
                 <version>2.8</version>
                 <executions>
                     <execution>
-                        <phase>initialize</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>unpack-dependencies</goal>
                             <goal>copy-dependencies</goal>
@@ -183,6 +201,7 @@
                 </executions>
             </plugin>
 
+            <!-- Build the docker image-->
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
