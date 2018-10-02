@@ -87,7 +87,11 @@
 
     /*word-wrap:break-word !important;*/
     /*word-break:break-word !important;*/
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
     border: 1px solid red;
-    overflow: scroll;
+    /*overflow: scroll;*/
   }
 </style>

@@ -7,6 +7,7 @@ import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.tokenization.StringSplit;
 import de.tudarmstadt.ukp.dkpro.wsd.si.POS;
 import de.tudarmstadt.ukp.dkpro.wsd.si.SenseInventoryException;
 import de.tudarmstadt.ukp.dkpro.wsd.si.wordnet.WordNetSynsetSenseInventory;
+import de.tudarmstadt.ukp.dkpro.wsd.si.wordnet.resource.WordNetSenseInventoryResourceBase;
 import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.consumer.CaptionTokenExtractorDebugConsolePrinter;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.reader.LeipzigCorporaReader;
@@ -73,7 +74,13 @@ public class CaptionTokenExtractorTests {
     @Test
     public void dummyLeskFunctionallityTest() throws IOException, JWNLException, SenseInventoryException {
 
-        WordNetSynsetSenseInventory si = new WordNetSynsetSenseInventory(new URL("file:///home/p0w3r/Downloads/WordNet-3.0/extjwnl_properties.xml"));
+
+        // Get file from resources folder
+        ClassLoader classLoader = getClass().getClassLoader();
+        URL wnProperiesUrl = classLoader.getResource("WordNet-3.0/extjwnl_properties.xml");
+        if (wnProperiesUrl == null)
+            throw new IOException("Cannot read WordNet Files from resources!");
+        WordNetSynsetSenseInventory si = new WordNetSynsetSenseInventory(wnProperiesUrl);
 
         SimplifiedExtendedLesk l = new SimplifiedExtendedLesk(si,
                 new SetOverlap(),
