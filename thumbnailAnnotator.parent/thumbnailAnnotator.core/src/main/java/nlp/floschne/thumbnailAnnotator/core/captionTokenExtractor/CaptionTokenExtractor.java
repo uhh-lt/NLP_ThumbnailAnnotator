@@ -1,6 +1,7 @@
 package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor;
 
 import captionTokenExtractor.type.CaptionTokenAnnotation;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpLemmatizer;
@@ -33,6 +34,8 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -89,9 +92,8 @@ public class CaptionTokenExtractor {
          * @param userInput the input from a user wrapped in a {@link UserInput}
          * @return the JCas that holds the {@link UserInput} as document text.
          * @throws ResourceInitializationException
-         * @throws AnalysisEngineProcessException
          */
-        private JCas createJCasFromUserInput(UserInput userInput) throws ResourceInitializationException, AnalysisEngineProcessException {
+        private JCas createJCasFromUserInput(@NotNull UserInput userInput) throws ResourceInitializationException {
             // create JCas containing userInput from the coreExtractorEngine
             JCas userInputJCas = CaptionTokenExtractor.getInstance().coreExtractorEngine.newJCas();
             userInputJCas.setDocumentText(userInput.getValue());
@@ -131,47 +133,66 @@ public class CaptionTokenExtractor {
          * @param cta a {@link CaptionTokenAnnotation} instance
          * @return a {@link CaptionToken} instance
          */
-        private CaptionToken createCaptionToken(JCas userInputJCas, CaptionTokenAnnotation cta) throws SenseInventoryException {
+        @NotNull
+        @Contract("_, _ -> new")
+        private CaptionToken createCaptionToken(JCas userInputJCas, @NotNull CaptionTokenAnnotation cta) throws SenseInventoryException {
             List<String> posTags = Arrays.asList(cta.getPOSList().split(";"));
             List<String> tokens = Arrays.asList(cta.getTokenList().split(";"));
 
-            // create UDependency context
-            List<UDependency> context = new ArrayList<>();
-
-            // the target is always the last noun of the caption token since all tokens before are modifiers
-            String targetToken = tokens.get(tokens.size() - 1);
-            // has to be a noun
-            assert posTags.get(tokens.size() - 1).contains("NN");
-
-
-            // WNet Sense
-            String wnetSense = null;
-
             // get UDContext and WordNetSense per sentence
-            for (Sentence s : JCasUtil.select(userInputJCas, Sentence.class)) {
-                // UDContext
-                for (Dependency d : JCasUtil.selectCovered(userInputJCas, Dependency.class, s))
-                    if (cta.getBegin() >= s.getBegin() && cta.getEnd() <= s.getEnd())
-                        if (d.getGovernor().getCoveredText().equals(targetToken)
-                                || d.getDependent().getCoveredText().equals(targetToken)
-                                || d.getCoveredText().equals(targetToken) && !d.getDependencyType().equals("punct"))
-                            context.add(new UDependency(d.getDependencyType(), d.getGovernor().getCoveredText(), d.getDependent().getCoveredText()));
-
-                // WNet Sense
-                Map<String, Double> disambiguation = this.simplifiedExtendedLesk.getDisambiguation(targetToken, POS.NOUN, s.getCoveredText());
-                if (disambiguation != null && !disambiguation.isEmpty()) {
-                    // sort the map by the Lesk Score
-                    Map<String, Double> result = disambiguation.entrySet().stream()
-                            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                                    (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-                    // get highest score sense id and resolve description with inventory
-                    wnetSense = this.senseInventory.getSenseDescription(result.entrySet().iterator().next().getKey());
+            List<String> wNetSenses = new ArrayList<>();
+            List<UDependency> udContext = new ArrayList<>();
+            for (Sentence context : JCasUtil.select(userInputJCas, Sentence.class)) {
+                // only take the parent sentence into account
+                if (cta.getBegin() >= context.getBegin() && cta.getEnd() <= context.getEnd()) {
+                    udContext = getUDContext(tokens, userInputJCas, context);
+                    wNetSenses = getWNetSenses(cta, userInputJCas, context);
                 }
             }
 
+            return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens, udContext, wNetSenses);
+        }
 
-            return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens, context, wnetSense);
+        private List<UDependency> getUDContext(@NotNull List<String> tokens, JCas userInputJCas, Sentence s) {
+            // the target token is always the last noun of the caption token since all tokens before are modifiers
+            String targetToken = tokens.get(tokens.size() - 1);
+            List<UDependency> context = new ArrayList<>();
+            for (Dependency d : JCasUtil.selectCovered(userInputJCas, Dependency.class, s))
+                if (d.getGovernor().getCoveredText().equals(targetToken)
+                        || d.getDependent().getCoveredText().equals(targetToken)
+                        || d.getCoveredText().equals(targetToken) && !d.getDependencyType().equals("punct"))
+                    context.add(new UDependency(d.getDependencyType(), d.getGovernor().getCoveredText(), d.getDependent().getCoveredText()));
+
+            return context;
+        }
+
+        private List<String> getWNetSenses(CaptionTokenAnnotation cta, JCas userInputJCas, @NotNull Sentence context) throws SenseInventoryException {
+            List<String> wNetSenses = new ArrayList<>();
+            // get the lemma of the target token to get the WNetSense
+            List<Lemma> lemmas = JCasUtil.selectCovered(userInputJCas, Lemma.class, cta);
+            String targetLemma = lemmas.get(lemmas.size() - 1).getValue();
+            Map<String, Double> disambiguation = this.simplifiedExtendedLesk.getDisambiguation(targetLemma, POS.NOUN, context.getCoveredText());
+
+            if (disambiguation != null && !disambiguation.isEmpty()) {
+                // sort the map by the Lesk Score
+                Map<String, Double> sortedDisambiguation = disambiguation.entrySet().stream()
+                        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                                (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+                // get highest score senses and resolve description with inventory
+                Iterator<Map.Entry<String, Double>> senseIt = sortedDisambiguation.entrySet().iterator();
+                Double highestScore = Double.MIN_VALUE;
+                while (senseIt.hasNext()) {
+                    Map.Entry<String, Double> currentSense = senseIt.next();
+                    if (currentSense.getValue().compareTo(highestScore) >= 0) {
+                        highestScore = currentSense.getValue();
+                        wNetSenses.add(this.senseInventory.getSenseDescription(currentSense.getKey()));
+                    } else
+                        break;
+                }
+            }
+            return wNetSenses;
         }
     }
 

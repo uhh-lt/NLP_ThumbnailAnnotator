@@ -17,7 +17,7 @@
       </div>
       <div class="col-2">
         <h6>
-          <b-btn v-b-toggle="sense_collapse_id" class="badge badge-secondary text-monospace pointer">Sense</b-btn>
+          <b-btn v-b-toggle="sense_collapse_id" class="badge badge-secondary text-monospace pointer">WSD</b-btn>
         </h6>
 
       </div>
@@ -41,9 +41,16 @@
     </b-collapse>
 
 
-    <b-collapse :id="sense_collapse_id" class="text-warning">
+    <b-collapse :id="sense_collapse_id" class="text-left text-warning">
       <hr>
-      <p class="sense">{{this.captionTokenInstance.wordNetSense}}</p>
+      <ul class="list-unstyled">
+        <li v-for="sense, n in this.captionTokenInstance.wordNetSenses" class="mb-1">
+          <code :id="sense_collapse_id + n" class="text-warning sense">{{sense}}</code>
+          <b-tooltip :target="sense_collapse_id + n">
+            {{sense}}
+          </b-tooltip>
+        </li>
+      </ul>
     </b-collapse>
   </div>
 </template>
@@ -74,8 +81,8 @@
   code {
     font-weight: bold;
     text-align: left;
-    font-size: medium;
     display: block;
+    font-size: small;
   }
 
   .pointer {
@@ -83,15 +90,7 @@
   }
 
   .sense {
-    /*overflow-wrap: break-word !important;*/
-
-    /*word-wrap:break-word !important;*/
-    /*word-break:break-word !important;*/
-
-    white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    border: 1px solid red;
-    /*overflow: scroll;*/
   }
 </style>

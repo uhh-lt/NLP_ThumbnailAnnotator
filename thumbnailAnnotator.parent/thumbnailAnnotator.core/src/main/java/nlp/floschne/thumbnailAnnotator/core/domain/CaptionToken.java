@@ -19,7 +19,6 @@ public class CaptionToken extends DomainObject {
         PERSON("Person"),
         ORGANIZATION("Organization"),
         LOCATION("Location");
-//        DATE("Date");
 
         private final String type;
 
@@ -39,5 +38,5 @@ public class CaptionToken extends DomainObject {
     private List<String> posTags;
     private List<String> tokens;
     private List<UDependency> udContext;
-    private String wordNetSense;
+    private List<String> wordNetSenses;
 }
