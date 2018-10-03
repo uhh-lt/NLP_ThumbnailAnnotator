@@ -3,18 +3,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>nlp.floschne</groupId>
+        <artifactId>thumbnailAnnotator.parent</artifactId>
+        <version>${thumbnailAnnotator.parent.version}</version>
+    </parent>
+
     <artifactId>thumbnailAnnotator.db</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${thumbnailAnnotator.parent.version}</version>
     <packaging>jar</packaging>
 
     <name>thumbnailAnnotator.db</name>
     <description>Database and persistence layer for ThumbnailAnnotator</description>
-
-    <parent>
-        <groupId>nlp.floschne</groupId>
-        <artifactId>thumbnailAnnotator.parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </parent>
 
     <dependencyManagement>
         <dependencies>
@@ -29,19 +29,12 @@
         </dependencies>
     </dependencyManagement>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.8</java.version>
-    </properties>
-
     <dependencies>
-
 
         <dependency>
             <groupId>nlp.floschne</groupId>
             <artifactId>thumbnailAnnotator.core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${thumbnailAnnotator.parent.version}</version>
             <scope>compile</scope>
         </dependency>
 

@@ -3,25 +3,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>nlp.floschne</groupId>
+        <artifactId>thumbnailAnnotator.parent</artifactId>
+        <version>${thumbnailAnnotator.parent.version}</version>
+    </parent>
+
     <artifactId>thumbnailAnnotator.core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${thumbnailAnnotator.parent.version}</version>
     <packaging>jar</packaging>
 
     <name>thumbnailAnnotator.core</name>
     <description>Domain classes and core components for ThumbnailAnnotator</description>
-
-    <parent>
-        <groupId>nlp.floschne</groupId>
-        <artifactId>thumbnailAnnotator.parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </parent>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.8</java.version>
-    </properties>
-
+    
     <repositories>
         <repository>
             <id>ukp-oss-releases</id>
