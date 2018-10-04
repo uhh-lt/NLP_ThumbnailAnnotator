@@ -1,1 +1,12 @@
 theme: jekyll-theme-midnight
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - README.md
+  - LICENSE.md
+  - ADMIN.md
+  - USER.md
+  - DEVELOPER.md
