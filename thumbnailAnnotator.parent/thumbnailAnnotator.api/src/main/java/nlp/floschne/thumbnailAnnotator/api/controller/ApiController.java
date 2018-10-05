@@ -6,7 +6,7 @@ import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.CaptionTokenExtractor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
-import nlp.floschne.thumbnailAnnotator.core.domain.ExtractionResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
@@ -53,7 +53,7 @@ public class ApiController {
             throw new InputMismatchException("Must input at least a Token!");
 
         // extract the CaptionTokens from UserInput
-        Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
+        Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
         List<CaptionToken> captionTokens = extractionResultFuture.get().getCaptionTokens();
 
         // list of futures of CrawlerResults
@@ -87,7 +87,8 @@ public class ApiController {
 
             try {
                 // wait no longer than 5 second
-                CrawlerResult crawlerResult = crawlerResultFuture.get(5, TimeUnit.SECONDS);
+                // TODO ConfigVariable
+                CrawlerResult crawlerResult = crawlerResultFuture.get(10, TimeUnit.SECONDS);
 
                 // save the results in repo
                 log.info("Caching results for '" + crawlerResult.getCaptionToken() + "'");
@@ -96,7 +97,7 @@ public class ApiController {
                 if (!crawlerResults.contains(result))
                     crawlerResults.add(result);
             } catch (Exception e) {
-                throw new ConnectException("It too long time (5s) to finish crawling of Thumbnails!");
+                throw new ConnectException("It too long time (10s) to finish crawling of Thumbnails!");
             }
 
         }

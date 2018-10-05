@@ -7,12 +7,11 @@ import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.tokenization.StringSplit;
 import de.tudarmstadt.ukp.dkpro.wsd.si.POS;
 import de.tudarmstadt.ukp.dkpro.wsd.si.SenseInventoryException;
 import de.tudarmstadt.ukp.dkpro.wsd.si.wordnet.WordNetSynsetSenseInventory;
-import de.tudarmstadt.ukp.dkpro.wsd.si.wordnet.resource.WordNetSenseInventoryResourceBase;
 import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.consumer.CaptionTokenExtractorDebugConsolePrinter;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.reader.LeipzigCorporaReader;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.ExtractionResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -46,7 +45,7 @@ public class CaptionTokenExtractorTests {
      * @throws IOException
      */
     @Test
-    public void highLevelFunctionalityTest() throws UIMAException, IOException {
+    public void highLevelFunctionalityTest() throws UIMAException, IOException, JWNLException {
         CaptionTokenExtractor cte = CaptionTokenExtractor.getInstance();
 
         AnalysisEngine cteAnalysisEngine = cte.buildCoreExtractorEngine();
@@ -94,7 +93,7 @@ public class CaptionTokenExtractorTests {
     }
 
     @Test
-    public void complexCaptionTokenTest() throws UIMAException {
+    public void complexCaptionTokenTest() throws UIMAException, IOException, JWNLException {
         String complexCaptionTokenText = "The red, broken and big car control system is great.";
         JCas cas = JCasFactory.createText(complexCaptionTokenText);
 
@@ -125,7 +124,7 @@ public class CaptionTokenExtractorTests {
     }
 
     @Test
-    public void getInstance() throws ResourceInitializationException {
+    public void getInstance() throws ResourceInitializationException, IOException, JWNLException {
         CaptionTokenExtractor cte1 = CaptionTokenExtractor.getInstance();
         assertNotNull(cte1);
         CaptionTokenExtractor cte2 = CaptionTokenExtractor.getInstance();
@@ -133,7 +132,7 @@ public class CaptionTokenExtractorTests {
     }
 
     @Test
-    public void buildCoreExtractorEngine() throws ResourceInitializationException {
+    public void buildCoreExtractorEngine() throws ResourceInitializationException, IOException, JWNLException {
         AnalysisEngine engine = CaptionTokenExtractor.getInstance().buildCoreExtractorEngine();
         assertNotNull(engine);
     }
@@ -141,12 +140,12 @@ public class CaptionTokenExtractorTests {
     @Test
     public void startExtractionOfCaptionTokens() throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException {
         UserInput input = new UserInput("Benazech is said to have been born in London about the year 1744.");
-        Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
+        Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
         assertNotNull(extractionResultFuture);
-        ExtractionResult extractionResult = extractionResultFuture.get();
-        assertNotNull(extractionResult);
-        assertEquals(input.getValue(), extractionResult.getUserInput().getValue());
-        assertEquals(3, extractionResult.getCaptionTokens().size());
+        ExtractorResult extractorResult = extractionResultFuture.get();
+        assertNotNull(extractorResult);
+        assertEquals(input.getValue(), extractorResult.getUserInput().getValue());
+        assertEquals(3, extractorResult.getCaptionTokens().size());
     }
 
 
@@ -154,14 +153,14 @@ public class CaptionTokenExtractorTests {
     public void dependencyContextTest() throws ResourceInitializationException, AnalysisEngineProcessException, ExecutionException, InterruptedException, IOException, JWNLException {
 
         UserInput input = new UserInput("I have a mouse and a keyboard.");
-        Future<ExtractionResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
+        Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
         assertNotNull(extractionResultFuture);
-        ExtractionResult extractionResult = extractionResultFuture.get();
-        assertNotNull(extractionResult);
-        assertEquals(input.getValue(), extractionResult.getUserInput().getValue());
-        assertEquals(2, extractionResult.getCaptionTokens().size());
+        ExtractorResult extractorResult = extractionResultFuture.get();
+        assertNotNull(extractorResult);
+        assertEquals(input.getValue(), extractorResult.getUserInput().getValue());
+        assertEquals(2, extractorResult.getCaptionTokens().size());
 
-        for (CaptionToken t : extractionResult.getCaptionTokens()) {
+        for (CaptionToken t : extractorResult.getCaptionTokens()) {
             if (t.getValue().equals("mouse")) {
                 assertEquals(4, t.getUdContext().size());
             } else if (t.getValue().equals("keyboard")) {

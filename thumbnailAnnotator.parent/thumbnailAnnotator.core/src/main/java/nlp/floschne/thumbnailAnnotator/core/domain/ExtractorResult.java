@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class ExtractionResult extends DomainObject {
+public class ExtractorResult extends DomainObject {
 
     private List<CaptionToken> captionTokens;
     private UserInput userInput;

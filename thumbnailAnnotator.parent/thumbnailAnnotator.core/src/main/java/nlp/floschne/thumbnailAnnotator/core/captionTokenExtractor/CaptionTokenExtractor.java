@@ -6,6 +6,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpLemmatizer;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpPosTagger;
+import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpSegmenter;
 import de.tudarmstadt.ukp.dkpro.core.maltparser.MaltParser;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
@@ -23,7 +24,7 @@ import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.Noun
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosExclusionFlagTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosViewCreator;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.ExtractionResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -53,37 +54,17 @@ import java.util.stream.Collectors;
 public class CaptionTokenExtractor {
 
     /**
-     * Agent that extracts the {@link CaptionToken}s  from a {@link UserInput} and wraps the result in a {@link ExtractionResult}.
+     * Agent that extracts the {@link CaptionToken}s  from a {@link UserInput} and wraps the result in a {@link ExtractorResult}.
      */
-    @Data
-    private class ExtractorAgent implements Callable<ExtractionResult> {
+    private class ExtractorAgent implements Callable<ExtractorResult> {
 
         /**
          * The {@link UserInput}  that is processed by this {@link ExtractorAgent}
          */
         private UserInput userInput;
 
-        private SimplifiedExtendedLesk simplifiedExtendedLesk;
-        private WordNetSynsetSenseInventory senseInventory;
-
-
         public ExtractorAgent(UserInput userInput) throws IOException, JWNLException {
             this.userInput = userInput;
-
-            // Get file from resources folder
-            ClassLoader classLoader = getClass().getClassLoader();
-            URL wnProperiesUrl = classLoader.getResource("WordNet-3.0/extjwnl_properties.xml");
-            if (wnProperiesUrl == null)
-                throw new IOException("Cannot read WordNet Files from resources!");
-            this.senseInventory = new WordNetSynsetSenseInventory(wnProperiesUrl);
-
-            this.simplifiedExtendedLesk = new SimplifiedExtendedLesk(senseInventory,
-                    new SetOverlap(),
-                    new NoNormalization(),
-                    new StringSplit(),
-                    new StringSplit()
-            );
-
         }
 
         /**
@@ -93,7 +74,7 @@ public class CaptionTokenExtractor {
          * @return the JCas that holds the {@link UserInput} as document text.
          * @throws ResourceInitializationException
          */
-        private JCas createJCasFromUserInput(@NotNull UserInput userInput) throws ResourceInitializationException {
+        private JCas createJCasFromUserInput(@NotNull UserInput userInput) throws ResourceInitializationException, IOException, JWNLException {
             // create JCas containing userInput from the coreExtractorEngine
             JCas userInputJCas = CaptionTokenExtractor.getInstance().coreExtractorEngine.newJCas();
             userInputJCas.setDocumentText(userInput.getValue());
@@ -103,28 +84,28 @@ public class CaptionTokenExtractor {
         /**
          * The main extraction happens here!
          *
-         * @return the result wrapped in a {@link ExtractionResult}
+         * @return the result wrapped in a {@link ExtractorResult}
          * @throws AnalysisEngineProcessException
          * @throws ResourceInitializationException
          */
         @Override
-        public ExtractionResult call() throws AnalysisEngineProcessException, ResourceInitializationException, SenseInventoryException {
+        public ExtractorResult call() throws AnalysisEngineProcessException, ResourceInitializationException, SenseInventoryException, IOException, JWNLException {
             // create userInputJCas
             JCas userInputJCas = createJCasFromUserInput(this.userInput);
             // process userInputJCas
             CaptionTokenExtractor.getInstance().coreExtractorEngine.process(userInputJCas);
 
-            ExtractionResult extractionResult = new ExtractionResult();
-            extractionResult.setUserInput(userInput);
+            ExtractorResult extractorResult = new ExtractorResult();
+            extractorResult.setUserInput(userInput);
             // get the CaptionTokenAnnotations
             for (CaptionTokenAnnotation cta : JCasUtil.select(userInputJCas, CaptionTokenAnnotation.class)) {
                 // transform them into CaptionTokens
                 CaptionToken ct = createCaptionToken(userInputJCas, cta);
-                // and add them to the extractionResult
-                extractionResult.addCaptionToken(ct);
+                // and add them to the extractorResult
+                extractorResult.addCaptionToken(ct);
             }
 
-            return extractionResult;
+            return extractorResult;
         }
 
         /**
@@ -171,7 +152,7 @@ public class CaptionTokenExtractor {
             // get the lemma of the target token to get the WNetSense
             List<Lemma> lemmas = JCasUtil.selectCovered(userInputJCas, Lemma.class, cta);
             String targetLemma = lemmas.get(lemmas.size() - 1).getValue();
-            Map<String, Double> disambiguation = this.simplifiedExtendedLesk.getDisambiguation(targetLemma, POS.NOUN, context.getCoveredText());
+            Map<String, Double> disambiguation = simplifiedExtendedLesk.getDisambiguation(targetLemma, POS.NOUN, context.getCoveredText());
 
             if (disambiguation != null && !disambiguation.isEmpty()) {
                 // sort the map by the Lesk Score
@@ -187,7 +168,7 @@ public class CaptionTokenExtractor {
                     Map.Entry<String, Double> currentSense = senseIt.next();
                     if (currentSense.getValue().compareTo(highestScore) >= 0) {
                         highestScore = currentSense.getValue();
-                        wNetSenses.add(this.senseInventory.getSenseDescription(currentSense.getKey()));
+                        wNetSenses.add(senseInventory.getSenseDescription(currentSense.getKey()));
                     } else
                         break;
                 }
@@ -209,15 +190,38 @@ public class CaptionTokenExtractor {
     private ExecutorService threadPool;
 
     /**
+     * The SimplifiedExtendedLesk Algorithm to perform WSD
+     */
+    SimplifiedExtendedLesk simplifiedExtendedLesk;
+    /**
+     * The WordNetSynsetSenseInventory for the SimplifiedExtendedLesk algorithm
+     */
+    WordNetSynsetSenseInventory senseInventory;
+    /**
      * singleton instance
      */
     private static CaptionTokenExtractor _singleton;
 
-    private CaptionTokenExtractor() throws ResourceInitializationException {
+    private CaptionTokenExtractor() throws ResourceInitializationException, IOException, JWNLException {
         //build CoreExtractorEngine
         this.coreExtractorEngine = buildCoreExtractorEngine();
         //create a managed thread threadPool with fixed size
         this.threadPool = Executors.newFixedThreadPool(MAX_PARALLEL_THREADS);
+
+        // Initialize the SenseInventory and file from resources folder
+        ClassLoader classLoader = getClass().getClassLoader();
+        URL wnProperiesUrl = classLoader.getResource("WordNet-3.0/extjwnl_properties.xml");
+        if (wnProperiesUrl == null)
+            throw new IOException("Cannot read WordNet Files from resources!");
+        this.senseInventory = new WordNetSynsetSenseInventory(wnProperiesUrl);
+
+        // Initialize the Lesk algorithm
+        this.simplifiedExtendedLesk = new SimplifiedExtendedLesk(senseInventory,
+                new SetOverlap(),
+                new NoNormalization(),
+                new StringSplit(),
+                new StringSplit()
+        );
     }
 
     /**
@@ -226,7 +230,7 @@ public class CaptionTokenExtractor {
      * @return
      * @throws ResourceInitializationException
      */
-    public static CaptionTokenExtractor getInstance() throws ResourceInitializationException {
+    public static CaptionTokenExtractor getInstance() throws ResourceInitializationException, IOException, JWNLException {
         if (_singleton == null)
             _singleton = new CaptionTokenExtractor();
         return _singleton;
@@ -243,35 +247,17 @@ public class CaptionTokenExtractor {
 
         AggregateBuilder aggregateBuilder = new AggregateBuilder();
 
-        AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(OpenNlpSegmenter.class,
+        AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(ClearNlpSegmenter.class,
                 OpenNlpSegmenter.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(seg);
-//        AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(UDPipeSegmenter.class,
-//                UDPipeSegmenter.PARAM_LANGUAGE, LANGUAGE);
-//        aggregateBuilder.add(seg);
 
         AnalysisEngineDescription pos = AnalysisEngineFactory.createEngineDescription(ClearNlpPosTagger.class,
                 ClearNlpPosTagger.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(pos);
 
-//        AnalysisEngineDescription pos = AnalysisEngineFactory.createEngineDescription(UDPipePosTagger.class,
-//                UDPipePosTagger.PARAM_LANGUAGE, LANGUAGE,
-//                UDPipePosTagger.PARAM_VARIANT, "ud");
-//        aggregateBuilder.add(pos);
-
-
         AnalysisEngineDescription lemma = AnalysisEngineFactory.createEngineDescription(ClearNlpLemmatizer.class,
                 ClearNlpLemmatizer.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(lemma);
-
-//        AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(UDPipeParser.class,
-//                UDPipeParser.PARAM_LANGUAGE, LANGUAGE);
-//        aggregateBuilder.add(parse);
-
-//        AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(ClearNlpParser.class,
-//                ClearNlpParser.PARAM_LANGUAGE, LANGUAGE,
-//                ClearNlpParser.PARAM_VARIANT, "mayo");
-//        aggregateBuilder.add(parse);
 
         AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(MaltParser.class,
                 MaltParser.PARAM_LANGUAGE, LANGUAGE,
@@ -292,11 +278,6 @@ public class CaptionTokenExtractor {
                 OpenNlpNamedEntityRecognizer.PARAM_LANGUAGE, LANGUAGE,
                 OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "organization");
         aggregateBuilder.add(nerOrg);
-
-//        AnalysisEngineDescription nerDate = AnalysisEngineFactory.createEngineDescription(OpenNlpNamedEntityRecognizer.class,
-//                OpenNlpNamedEntityRecognizer.PARAM_LANGUAGE, LANGUAGE,
-//                OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "date");
-//        aggregateBuilder.add(nerDate);
 
         AnalysisEngineDescription pefta = AnalysisEngineFactory.createEngineDescription(PosExclusionFlagTokenAnnotator.class);
         aggregateBuilder.add(pefta);
@@ -319,9 +300,9 @@ public class CaptionTokenExtractor {
      * and submitting it to a managed {@link sun.nio.ch.ThreadPool}.
      *
      * @param userInput the input from a user wrapped in a {@link UserInput}
-     * @return a {@link Future} that holds the {@link ExtractionResult}
+     * @return a {@link Future} that holds the {@link ExtractorResult}
      */
-    public Future<ExtractionResult> startExtractionOfCaptionTokens(UserInput userInput) throws IOException, JWNLException {
+    public Future<ExtractorResult> startExtractionOfCaptionTokens(UserInput userInput) throws IOException, JWNLException {
         return this.threadPool.submit(new ExtractorAgent(userInput));
     }
 
