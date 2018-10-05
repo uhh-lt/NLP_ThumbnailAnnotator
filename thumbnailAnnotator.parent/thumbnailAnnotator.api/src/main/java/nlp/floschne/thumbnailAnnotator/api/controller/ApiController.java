@@ -7,6 +7,7 @@ import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.CaptionTokenEx
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
@@ -42,11 +43,45 @@ public class ApiController {
         log.info("API Controller ready!");
     }
 
+    /**
+     * This does nothing but redirecting to the Swagger-UI
+     */
     @RequestMapping(value = "/", method = RequestMethod.GET)
     void home(HttpServletResponse response) throws IOException {
         response.sendRedirect("/swagger-ui.html");
     }
 
+
+    /**
+     * Extracts the CaptionTokens in the {@link UserInput}
+     * @param input the UserInput in form of JSON
+     * @return the {@link ExtractorResult} for the given {@link UserInput}
+     * @throws ResourceInitializationException
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws JWNLException
+     */
+    @RequestMapping(value = "/extractCaptionTokens", method = RequestMethod.POST)
+    public ExtractorResult extractCaptionTokens(@RequestBody UserInput input) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException {
+        Future<ExtractorResult> resultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
+        return resultFuture.get();
+        //TODO use entities!
+    }
+
+    /**
+     * This is the main method of the API it extracts {@link CaptionToken} from a {@link UserInput}, crawls the {@link Thumbnail} for the
+     * {@link CaptionToken} and returns a List of {@link CrawlerResultEntity} for each {@link CaptionToken}.
+     * It also caches the CrawlerResultEntities or returns the CrawlerResultEntities that are already cached.
+     *
+     * @param input The UserInput in form of JSON
+     * @return a List of CrawlerResultEntities for each CaptionToken that was extracted from the UserInput
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws ResourceInitializationException
+     * @throws JWNLException
+     */
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
     public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ExecutionException, InterruptedException, IOException, ResourceInitializationException, JWNLException {
         if (input.getValue().isEmpty())
@@ -105,26 +140,50 @@ public class ApiController {
         return crawlerResults;
     }
 
+    /**
+     * Get a single {@link CrawlerResultEntity} by it's ID
+     *
+     * @param id the ID of the {@link CrawlerResultEntity}
+     * @return the {@link CrawlerResultEntity} identified by the ID
+     */
     @RequestMapping(value = "/getCrawlerResult/{id}", method = RequestMethod.GET)
     public CrawlerResultEntity getCrawlerResult(@PathVariable String id) {
         return this.dbService.findCrawlerResultById(id);
     }
 
+    /**
+     * Increments the Priority of a {@link ThumbnailEntity} identified by the ID.
+     *
+     * @param id the ID of the {@link ThumbnailEntity}
+     * @return the {@link ThumbnailEntity}
+     */
     @RequestMapping(value = "/incrementThumbnailPriority/{id}", method = RequestMethod.PUT)
     public ThumbnailEntity incrementThumbnailPriority(@PathVariable String id) {
         return this.dbService.incrementThumbnailPriorityById(id);
     }
 
+    /**
+     * Decrements the Priority of a {@link ThumbnailEntity} identified by the ID.
+     *
+     * @param id the ID of the {@link ThumbnailEntity}
+     * @return the {@link ThumbnailEntity}
+     */
     @RequestMapping(value = "/decrementThumbnailPriority/{id}", method = RequestMethod.PUT)
     public ThumbnailEntity decrementThumbnailPriority(@PathVariable String id) {
         return this.dbService.decrementThumbnailPriorityById(id);
     }
 
+    /**
+     * @return All the {@link CrawlerResultEntity} that are saved in the Redis Cache
+     */
     @RequestMapping(value = "/getCachedCrawlerResults", method = RequestMethod.GET)
     public List<CrawlerResultEntity> getCachedCrawlerResults() {
         return new ArrayList<>(this.dbService.findAllCrawlerResult());
     }
 
+    /**
+     * Flushes the Redis Cache
+     */
     @RequestMapping(value = "/flushCache", method = RequestMethod.DELETE)
     public void flushCache() {
         log.warn("Flushed Cache!");

@@ -247,7 +247,7 @@ public class CaptionTokenExtractor {
 
         AggregateBuilder aggregateBuilder = new AggregateBuilder();
 
-        AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(ClearNlpSegmenter.class,
+        AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(OpenNlpSegmenter.class,
                 OpenNlpSegmenter.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(seg);
 
