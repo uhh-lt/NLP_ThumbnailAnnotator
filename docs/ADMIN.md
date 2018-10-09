@@ -1,5 +1,5 @@
 # Admin Guide
-Please note that an <b>internet connection is crucial mandatory!</b>
+Please note that an <b>internet connection is crucial mandatory!</b> Also be aware that this application (specially for testing) <b>needs a lot of heap space (~3-4 GB) </b> due to the models used in the UIMA Pipeline. 
 ## Install prerequisites
 - Java 8
 - Maven 3
@@ -8,12 +8,25 @@ Please note that an <b>internet connection is crucial mandatory!</b>
 - nginx
 - docker
 - docker-compose >= 3.0
+
 ```bash
 sudo apt update && sudo apt upgrade -y 
 sudo apt install -y oracle-java8-installer oracle-java8-set-default maven npm nginx redis-server docker docker-compose
 ```
 
+## Clone repository
+  ```bash
+  git clone https://github.com/floschne/NLP_ThumbnailAnnotator.git && cd NLP_ThumbnailAnnotator
+  ```
+
+## Apply JWNL Properties File 'Bugfix'
+When using WordNet with DKPro WSD, a hard coded, non-relative path to the WordNet files has to be set in a properties file. Since the absolute location of those WordNet files is not known at runtime, the temporary solution is to copy the files to /tmp/.
+  ```bash
+  cp -r thumbnailAnnotator.parent/thumbnailAnnotator.core/src/main/resources/WordNet-3.0 /tmp/
+  ```
+
 ## Run with docker-compose
+
 - ##### Package and the java-based REST API
   ```bash
   cd thumbnailAnnotator.parent
@@ -29,11 +42,7 @@ sudo apt install -y oracle-java8-installer oracle-java8-set-default maven npm ng
   - [localhost:8081](http://localhost:8081) for Swagger-UI 
 
 ## Run on a local (Debian based) machine (without Docker)
-- ##### Clone repository
-  ```bash
-  git clone https://github.com/floschne/NLP_ThumbnailAnnotator.git
-  ```
-  
+
 - ##### Start the redis-server  
   ```bash
   sudo service redis-server start
