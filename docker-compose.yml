@@ -5,28 +5,20 @@ services:
     image: 'bitnami/redis:latest'
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - '6379:6379'
     volumes:
-      - redis_data:/redis
+      - ${PWD/redis-data}:/redis
 
   api:
     depends_on:
       - "db"
-    build: ./thumbnailAnnotator.parent/thumbnailAnnotator.api/
+    image: 'uhhlt/nlp_thumbnailannotator_api:latest'
     ports:
-      - "8081:8081"
-    dns:
-      - 208.67.220.220
-      - 208.67.222.222 
+      - "${API_PORT}:8081"
   app:
     depends_on:
       - "api"
     build: ./app
+    image: 'uhhlt/nlp_thumbnailannotator_app:latest'
     ports:
-      - "8080:80"
+      - "${APP_PORT}:80"
     
-
-volumes:
-  redis_data:
-    driver: local

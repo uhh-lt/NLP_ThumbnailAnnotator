@@ -20,7 +20,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
-        <docker.image.prefix>nlp.floschne.thumbnail_annotator</docker.image.prefix>
+        <docker.image.prefix>uhhlt/nlp_thumbnailannotator_api</docker.image.prefix>
     </properties>
 
     <dependencyManagement>
@@ -178,7 +178,7 @@
                 </executions>
 
                 <configuration>
-                    <repository>${docker.image.prefix}/api</repository>
+                    <repository>${docker.image.prefix}</repository>
                     <tag>${thumbnailAnnotator.parent.version}</tag>
                     <buildArgs>
                         <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
