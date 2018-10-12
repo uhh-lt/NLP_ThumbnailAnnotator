@@ -6,7 +6,7 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     volumes:
-      - ${PWD/redis-data}:/redis
+      - ${PWD}/redis-data:/redis
 
   api:
     depends_on:
