@@ -1,3 +1,9 @@
+##
+# Example run: 
+#  
+#  API_PORT=10310 APP_PORT=10311 SERVER="http:\/\/ltdocker:10310" docker-compose up --build -d
+#
+##
 version: '3'
 
 services:
@@ -6,7 +12,7 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     volumes:
-      - ${PWD/redis-data}:/redis
+      - ${PWD}/redis-data:/redis
 
   api:
     depends_on:
@@ -17,7 +23,10 @@ services:
   app:
     depends_on:
       - "api"
-    build: ./app
+    build: 
+      context: ./app
+      args:
+        - SERVER=${SERVER}
     image: 'uhhlt/nlp_thumbnailannotator_app:latest'
     ports:
       - "${APP_PORT}:80"
