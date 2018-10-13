@@ -48,7 +48,7 @@ public class ApiController {
      */
     @RequestMapping(value = "/", method = RequestMethod.GET)
     void home(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/swagger-ui.html");
+        response.sendRedirect("./swagger-ui.html");
     }
 
 
