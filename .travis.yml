@@ -1,0 +1,18 @@
+sudo: required
+
+services:
+  - docker
+
+language: java
+
+jdk:
+  - oraclejdk8
+
+script:
+  - docker --version
+  - docker-compose --version
+  - cp -r ./thumbnailAnnotator.parent/thumbnailAnnotator.core/src/main/resources/WordNet-3.0 /tmp/WordNet-3.0/
+  - cd thumbnailAnnotator.parent
+  - mvn clean verify
+  - mvn package
+  - mvn install -Dmaven.javadoc.skip=true -B -V
