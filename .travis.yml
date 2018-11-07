@@ -12,6 +12,7 @@ script:
   - docker --version
   - docker-compose --version
   - cd thumbnailAnnotator.parent
+  - cp src/main/resources/WordNet-3.0 /tmp/WordNet-3.0/
   - mvn clean verify
   - mvn package
   - mvn install -Dmaven.javadoc.skip=true -B -V
