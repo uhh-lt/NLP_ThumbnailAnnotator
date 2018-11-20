@@ -21,6 +21,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,6 +29,7 @@ import java.net.ConnectException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -59,7 +61,8 @@ public class ShutterstockSource implements IThumbnailSource {
     private static final String CONSUMER_SECRET = "a4b74-ccd2c-a0fb2-c37ad-bface-75a3e";
 
     private static final String IMAGE_SEARCH_RESOURCE_URL = "https://api.shutterstock.com/v2/images/search";
-    private static final String QUERY_PARAMETER = "?query=";
+    private static final String IMAGE_DETAILS_RESOURCE_URL = "https://api.shutterstock.com/v2/images/";
+    private static final String IMAGE_QUERY_PARAMETER = "?query=";
     private static final String SORT_PARAMETER = "&sort=";
     private static final String PER_PAGE_PARAMETER = "&per_page=";
 
@@ -75,49 +78,19 @@ public class ShutterstockSource implements IThumbnailSource {
         this.per_page = 20;
     }
 
-    private String generateApiCall(String queryParameter) throws UnsupportedEncodingException {
+    private String generateSearchImagesApiUrl(String queryParameter) throws UnsupportedEncodingException {
         return IMAGE_SEARCH_RESOURCE_URL +
-                QUERY_PARAMETER + URLEncoder.encode(queryParameter, "UTF-8") +
+                IMAGE_QUERY_PARAMETER + URLEncoder.encode(queryParameter, "UTF-8") +
                 SORT_PARAMETER + sortBy.toString() +
                 PER_PAGE_PARAMETER + per_page.toString();
     }
 
-    private List<Thumbnail> extractURLsFromJsonResponse(JsonObject response, Integer limit) {
-        List<Thumbnail> result = new ArrayList<Thumbnail>();
-        for (JsonElement obj : response.getAsJsonArray("data")) {
-            if (obj != null) {
-                String url = getElementByPath(obj.getAsJsonObject(), "assets.huge_thumb.url").toString();
-                // remove "
-                url = url.substring(1, url.length() - 1);
-                result.add(new Thumbnail(url, 1));
-                if (result.size() == limit)
-                    break;
-            }
-        }
-        return result;
+
+    private String generateImageDetailsApiUrl(Long imageId) throws UnsupportedEncodingException {
+        return IMAGE_DETAILS_RESOURCE_URL + URLEncoder.encode(imageId.toString(), "UTF-8");
     }
 
-    private JsonElement getElementByPath(JsonObject obj, String path) {
-        String[] seg = path.split("\\.");
-        for (String element : seg) {
-            if (obj != null) {
-                JsonElement ele = obj.get(element);
-                if (!ele.isJsonObject())
-                    return ele;
-                else
-                    obj = ele.getAsJsonObject();
-            } else {
-                return null;
-            }
-        }
-        return obj;
-    }
-
-
-    @Override
-    public List<Thumbnail> queryThumbnails(String queryParameter, Integer limit) throws IOException {
-        String apiCall = generateApiCall(queryParameter);
-
+    private JsonObject makeGetRequest(String apiCall) throws IOException {
         // Set host & credentials
         HttpHost target = new HttpHost("api.shutterstock.com", 443, "https");
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
@@ -138,16 +111,116 @@ public class ShutterstockSource implements IThumbnailSource {
             HttpClientContext localContext = HttpClientContext.create();
             localContext.setAuthCache(authCache);
 
+            // execute the call
             HttpGet httpget = new HttpGet(apiCall);
             try (CloseableHttpResponse response = httpclient.execute(target, httpget, localContext)) {
                 JsonObject jsonResponse = new GsonBuilder().create().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
-                if(jsonResponse == null) {
+                if (jsonResponse == null) {
                     throw new ConnectException("Got no response from Thumbnail Source!");
                 }
-                return extractURLsFromJsonResponse(jsonResponse, limit);
+                return jsonResponse;
             } catch (Exception e) {
                 throw new ConnectException("There was an error connecting to the Thumbnail Source! " + e.getMessage());
             }
         }
     }
+
+    private JsonElement getElementByPath(JsonObject obj, String path) {
+        String[] seg = path.split("\\.");
+        for (String element : seg) {
+            if (obj != null) {
+                JsonElement ele = obj.get(element);
+                if (!ele.isJsonObject())
+                    return ele;
+                else
+                    obj = ele.getAsJsonObject();
+            } else {
+                return null;
+            }
+        }
+        return obj;
+    }
+
+    private List<Thumbnail> createThumbnailsFromJsonResponse(@NotNull JsonObject response, Integer limit) {
+        List<Thumbnail> result = new ArrayList<>();
+        for (JsonElement obj : response.getAsJsonArray("data")) {
+            if (obj != null) {
+
+                String idStr = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "id")).toString();
+                // remove quotes
+                Long id = Long.parseLong(idStr.substring(1, idStr.length() - 1));
+
+                String url = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "assets.huge_thumb.url")).toString();
+                // remove quotes
+                url = url.substring(1, url.length() - 1);
+
+                String desc = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "description")).toString();
+                // remove quotes
+                desc = desc.substring(1, desc.length() - 1);
+
+
+                result.add(new Thumbnail(url, 1, desc, id, null, null));
+                if (result.size() == limit)
+                    break;
+            }
+        }
+        return result;
+    }
+
+    private List<Thumbnail.Category> extractCategoriesFromJsonResponse(JsonObject response) {
+        List<Thumbnail.Category> categories = new ArrayList<>();
+        for (JsonElement obj : response.getAsJsonArray("categories")) {
+            if (obj != null) {
+                // remove quotes
+                String idStr = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "id")).toString();
+                int catId = Integer.parseInt(idStr.substring(1, idStr.length() - 1));
+
+                String name = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "name")).toString();
+                // remove quotes
+                name = name.substring(1, name.length() - 1);
+
+                categories.add(new Thumbnail.Category(catId, name));
+            }
+        }
+        return categories;
+    }
+
+    private List<String> extractKeywordsFromJsonResponse(JsonObject response) {
+        List<String> keywords = new ArrayList<>();
+        for (JsonElement obj : response.getAsJsonArray("keywords")) {
+            if (obj != null) {
+                String keyString = obj.toString();
+                keywords.add(keyString.substring(1, keyString.length() - 1));
+            }
+        }
+        return keywords;
+    }
+
+    private void setThumbnailDetails(Thumbnail t) throws IOException {
+        String imageDetailsApiUrl = generateImageDetailsApiUrl(t.getShutterstockId());
+        JsonObject imageDetailsResponse = this.makeGetRequest(imageDetailsApiUrl);
+
+        List<Thumbnail.Category> categories = extractCategoriesFromJsonResponse(imageDetailsResponse);
+        List<String> keywords = extractKeywordsFromJsonResponse(imageDetailsResponse);
+
+        t.setCategories(categories);
+        t.setKeywords(keywords);
+    }
+
+    @Override
+    public List<Thumbnail> queryThumbnails(String queryParameter, Integer limit) throws IOException {
+        String searchImagesApiUrl = generateSearchImagesApiUrl(queryParameter);
+
+        JsonObject searchImagesResponse = this.makeGetRequest(searchImagesApiUrl);
+        if (searchImagesResponse == null)
+            throw new ConnectException("Got no response from Thumbnail Source!");
+        
+        List<Thumbnail> thumbnails = createThumbnailsFromJsonResponse(searchImagesResponse, limit);
+
+        for (Thumbnail t : thumbnails)
+            setThumbnailDetails(t);
+
+        return thumbnails;
+    }
+
 }

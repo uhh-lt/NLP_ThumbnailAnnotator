@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RestController
 @CrossOrigin
@@ -54,6 +55,7 @@ public class ApiController {
 
     /**
      * Extracts the CaptionTokens in the {@link UserInput}
+     *
      * @param input the UserInput in form of JSON
      * @return the {@link ExtractorResult} for the given {@link UserInput}
      * @throws ResourceInitializationException
@@ -119,12 +121,18 @@ public class ApiController {
 
         // get the CrawlerResults from the Futures, cache them and add them to the final results
         for (Future<CrawlerResult> crawlerResultFuture : crawlingResultFutures) {
-
+            CrawlerResult crawlerResult = null;
             try {
                 // wait no longer than 5 second
                 // TODO ConfigVariable
-                CrawlerResult crawlerResult = crawlerResultFuture.get(10, TimeUnit.SECONDS);
+                crawlerResult = crawlerResultFuture.get(10, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                throw new ConnectException("It too long time (10s) to finish crawling of Thumbnails!");
+            } catch (ExecutionException e) {
+                throw e;
+            }
 
+            try {
                 // save the results in repo
                 log.info("Caching results for '" + crawlerResult.getCaptionToken() + "'");
                 CrawlerResultEntity result = this.dbService.saveCrawlerResult(crawlerResult);
@@ -132,7 +140,7 @@ public class ApiController {
                 if (!crawlerResults.contains(result))
                     crawlerResults.add(result);
             } catch (Exception e) {
-                throw new ConnectException("It too long time (10s) to finish crawling of Thumbnails!");
+                throw e;
             }
 
         }
