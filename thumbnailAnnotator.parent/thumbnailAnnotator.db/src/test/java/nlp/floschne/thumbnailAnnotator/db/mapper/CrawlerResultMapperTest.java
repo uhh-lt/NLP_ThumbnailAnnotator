@@ -26,34 +26,72 @@ public class CrawlerResultMapperTest extends MapperTestBase<CrawlerResultEntity,
     public CrawlerResultEntity createDummyEntity() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "big", "ship"));
-        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext, null);
+        CaptionTokenEntity captionTokenEntity = new CaptionTokenEntity(
+                "big ship",
+                "COMPOUND",
+                Arrays.asList("JJ", "NN"),
+                Arrays.asList("big", "ship"),
+                udContext,
+                Collections.singletonList("ship"));
 
-        List<ThumbnailEntity> urls = new ArrayList<>();
+        List<ThumbnailEntity> thumbnails = new ArrayList<>();
 
-        ThumbnailEntity entity = new ThumbnailEntity("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 1);
+        ThumbnailEntity entity = new ThumbnailEntity(
+                "https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg",
+                1,
+                "desc1",
+                13337L,
+                Arrays.asList(new Thumbnail.Category(1, "a"), new Thumbnail.Category(2, "b")),
+                Arrays.asList("k1", "k2"));
         entity.setId("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg");
+        thumbnails.add(entity);
 
-        urls.add(entity);
-        entity = new ThumbnailEntity("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 2);
+        entity = new ThumbnailEntity(
+                "https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg",
+                2,
+                "desc2",
+                133437L,
+                Arrays.asList(new Thumbnail.Category(3, "c"), new Thumbnail.Category(4, "d")),
+                Arrays.asList("k3", "k4"));
         entity.setId("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg");
+        thumbnails.add(entity);
 
-        urls.add(entity);
-
-        return new CrawlerResultEntity(captionTokenEntity.getValue(), captionTokenEntity, urls);
+        return new CrawlerResultEntity(captionTokenEntity.getValue(), captionTokenEntity, thumbnails);
     }
 
     @Override
     public CrawlerResult createDummyDomainObject() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "small", "car"));
-        CaptionToken captionToken = new CaptionToken("small car", CaptionToken.Type.NOUN, Arrays.asList("JJ", "NN"), Arrays.asList("small", "car"), udContext, null);
+        CaptionToken captionToken = new CaptionToken(
+                "small car",
+                CaptionToken.Type.NOUN,
+                Arrays.asList("JJ", "NN"),
+                Arrays.asList("small", "car"),
+                udContext,
+                Collections.singletonList("car"));
 
-        List<Thumbnail> urls = new ArrayList<>();
+        List<Thumbnail> thumbnails = new ArrayList<>();
 
-        urls.add(new Thumbnail("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg", 1));
-        urls.add(new Thumbnail("https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg", 2));
+        Thumbnail domain = new Thumbnail(
+                "https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg",
+                1,
+                "desc1",
+                13337L,
+                Arrays.asList(new Thumbnail.Category(1, "a"), new Thumbnail.Category(2, "b")),
+                Arrays.asList("k1", "k2"));
+        thumbnails.add(domain);
 
-        return new CrawlerResult(captionToken, urls);
+        domain = new Thumbnail(
+                "https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg",
+                2,
+                "desc2",
+                133437L,
+                Arrays.asList(new Thumbnail.Category(3, "c"), new Thumbnail.Category(4, "d")),
+                Arrays.asList("k3", "k4"));
+        thumbnails.add(domain);
+
+        return new CrawlerResult(captionToken, thumbnails);
     }
 
     @Override

@@ -4,8 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -18,6 +21,14 @@ public class ThumbnailEntity extends Entity implements Comparable<ThumbnailEntit
 
     private Integer priority;
 
+    private String description;
+
+    @Indexed
+    protected Long shutterstockId;
+
+    protected List<Thumbnail.Category> categories;
+
+    protected List<String> keywords;
 
     @Override
     public int compareTo(ThumbnailEntity o) {

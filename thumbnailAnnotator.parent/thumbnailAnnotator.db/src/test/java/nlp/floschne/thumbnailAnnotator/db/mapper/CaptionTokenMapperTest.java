@@ -22,7 +22,13 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
     public CaptionTokenEntity createDummyEntity() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "big", "ship"));
-        CaptionTokenEntity entity = new CaptionTokenEntity("big ship", "COMPOUND", Arrays.asList("JJ", "NN"), Arrays.asList("big", "ship"), udContext, null);
+        CaptionTokenEntity entity = new CaptionTokenEntity(
+                "big ship",
+                "COMPOUND",
+                Arrays.asList("JJ", "NN"),
+                Arrays.asList("big", "ship"),
+                udContext,
+                Collections.singletonList("ship"));
         entity.setId("id");
         return entity;
     }
@@ -31,7 +37,12 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
     public CaptionToken createDummyDomainObject() {
         List<UDependency> udContext = new ArrayList<>();
         udContext.add(new UDependency("amod", "small", "car"));
-        return new CaptionToken("small car", CaptionToken.Type.NOUN, Arrays.asList("JJ", "NN"), Arrays.asList("small", "car"), udContext, null);
+        return new CaptionToken("small car",
+                CaptionToken.Type.NOUN,
+                Arrays.asList("JJ", "NN"),
+                Arrays.asList("small", "car"),
+                udContext,
+                Collections.singletonList("car"));
     }
 
     @Override
