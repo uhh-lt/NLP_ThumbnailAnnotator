@@ -14,4 +14,5 @@ import java.util.List;
 public class CrawlerResult extends DomainObject {
     private CaptionToken captionToken;
     private List<Thumbnail> thumbnails;
+
 }

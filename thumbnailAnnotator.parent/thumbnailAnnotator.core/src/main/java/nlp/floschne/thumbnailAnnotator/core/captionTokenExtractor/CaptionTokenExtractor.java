@@ -6,7 +6,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpLemmatizer;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpPosTagger;
-import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpSegmenter;
 import de.tudarmstadt.ukp.dkpro.core.maltparser.MaltParser;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
@@ -17,16 +16,12 @@ import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.tokenization.StringSplit;
 import de.tudarmstadt.ukp.dkpro.wsd.si.POS;
 import de.tudarmstadt.ukp.dkpro.wsd.si.SenseInventoryException;
 import de.tudarmstadt.ukp.dkpro.wsd.si.wordnet.WordNetSynsetSenseInventory;
-import lombok.Data;
 import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.NamedEntityCaptionTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.NounCaptionTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosExclusionFlagTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosViewCreator;
-import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
-import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
-import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
+import nlp.floschne.thumbnailAnnotator.core.domain.*;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -122,7 +117,7 @@ public class CaptionTokenExtractor {
 
             // get UDContext and WordNetSense per sentence
             List<String> wNetSenses = new ArrayList<>();
-            List<UDependency> udContext = new ArrayList<>();
+            List<CaptionToken.UDependency> udContext = new ArrayList<>();
             for (Sentence context : JCasUtil.select(userInputJCas, Sentence.class)) {
                 // only take the parent sentence into account
                 if (cta.getBegin() >= context.getBegin() && cta.getEnd() <= context.getEnd()) {
@@ -134,15 +129,15 @@ public class CaptionTokenExtractor {
             return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens, udContext, wNetSenses);
         }
 
-        private List<UDependency> getUDContext(@NotNull List<String> tokens, JCas userInputJCas, Sentence s) {
+        private List<CaptionToken.UDependency> getUDContext(@NotNull List<String> tokens, JCas userInputJCas, Sentence s) {
             // the target token is always the last noun of the caption token since all tokens before are modifiers
             String targetToken = tokens.get(tokens.size() - 1);
-            List<UDependency> context = new ArrayList<>();
+            List<CaptionToken.UDependency> context = new ArrayList<>();
             for (Dependency d : JCasUtil.selectCovered(userInputJCas, Dependency.class, s))
                 if (d.getGovernor().getCoveredText().equals(targetToken)
                         || d.getDependent().getCoveredText().equals(targetToken)
                         || d.getCoveredText().equals(targetToken) && !d.getDependencyType().equals("punct"))
-                    context.add(new UDependency(d.getDependencyType(), d.getGovernor().getCoveredText(), d.getDependent().getCoveredText()));
+                    context.add(new CaptionToken.UDependency(d.getDependencyType(), d.getGovernor().getCoveredText(), d.getDependent().getCoveredText()));
 
             return context;
         }

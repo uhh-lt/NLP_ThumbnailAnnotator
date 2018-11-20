@@ -39,4 +39,20 @@ public class CaptionToken extends DomainObject {
     private List<String> tokens;
     private List<UDependency> udContext;
     private List<String> wordNetSenses;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = false)
+    public static class UDependency extends DomainObject {
+
+        String type;
+        String governor;
+        String dependent;
+
+        @Override
+        public String toString() {
+            return this.type + "(" + this.governor + "," + this.dependent + ")";
+        }
+    }
 }

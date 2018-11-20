@@ -2,7 +2,6 @@ package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler;
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
-import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,8 +19,8 @@ public class ThumbnailCrawlerTest {
     @Test
     public void crawlThumbnails() {
 
-        List<UDependency> udContext = new ArrayList<>();
-        udContext.add(new UDependency("amod", "small", "car"));
+        List<CaptionToken.UDependency> udContext = new ArrayList<>();
+        udContext.add(new CaptionToken.UDependency("amod", "small", "car"));
         CaptionToken captionToken = new CaptionToken(
                 "small car",
                 CaptionToken.Type.NOUN,
