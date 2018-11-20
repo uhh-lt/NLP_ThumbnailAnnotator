@@ -21,6 +21,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,6 +29,7 @@ import java.net.ConnectException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -139,20 +141,20 @@ public class ShutterstockSource implements IThumbnailSource {
         return obj;
     }
 
-    private List<Thumbnail> createThumbnailsFromJsonResponse(JsonObject response, Integer limit) {
+    private List<Thumbnail> createThumbnailsFromJsonResponse(@NotNull JsonObject response, Integer limit) {
         List<Thumbnail> result = new ArrayList<>();
         for (JsonElement obj : response.getAsJsonArray("data")) {
             if (obj != null) {
 
-                String idStr = getElementByPath(obj.getAsJsonObject(), "id").toString();
+                String idStr = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "id")).toString();
                 // remove quotes
                 Long id = Long.parseLong(idStr.substring(1, idStr.length() - 1));
 
-                String url = getElementByPath(obj.getAsJsonObject(), "assets.huge_thumb.url").toString();
+                String url = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "assets.huge_thumb.url")).toString();
                 // remove quotes
                 url = url.substring(1, url.length() - 1);
 
-                String desc = getElementByPath(obj.getAsJsonObject(), "description").toString();
+                String desc = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "description")).toString();
                 // remove quotes
                 desc = desc.substring(1, desc.length() - 1);
 
@@ -170,10 +172,10 @@ public class ShutterstockSource implements IThumbnailSource {
         for (JsonElement obj : response.getAsJsonArray("categories")) {
             if (obj != null) {
                 // remove quotes
-                String idStr = getElementByPath(obj.getAsJsonObject(), "id").toString();
+                String idStr = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "id")).toString();
                 int catId = Integer.parseInt(idStr.substring(1, idStr.length() - 1));
 
-                String name = getElementByPath(obj.getAsJsonObject(), "name").toString();
+                String name = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "name")).toString();
                 // remove quotes
                 name = name.substring(1, name.length() - 1);
 
@@ -210,9 +212,9 @@ public class ShutterstockSource implements IThumbnailSource {
         String searchImagesApiUrl = generateSearchImagesApiUrl(queryParameter);
 
         JsonObject searchImagesResponse = this.makeGetRequest(searchImagesApiUrl);
-        if (searchImagesResponse == null) {
+        if (searchImagesResponse == null)
             throw new ConnectException("Got no response from Thumbnail Source!");
-        }
+        
         List<Thumbnail> thumbnails = createThumbnailsFromJsonResponse(searchImagesResponse, limit);
 
         for (Thumbnail t : thumbnails)
