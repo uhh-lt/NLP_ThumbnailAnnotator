@@ -8,14 +8,20 @@ import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ShutterstockSourceTest {
 
     @Test
-    public void basicQueryTest() throws IOException {
+    public void basicQueryTest() {
         String query = "water";
         IThumbnailSource shutterstockSource = new ShutterstockSource();
-        List<Thumbnail> response = shutterstockSource.queryThumbnails(query, 20);
+        List<Thumbnail> response = null;
+        try {
+            response = shutterstockSource.queryThumbnails(query, 20);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         assertNotNull(response);
         assertFalse(response.isEmpty());
 
@@ -29,10 +35,15 @@ public class ShutterstockSourceTest {
 
 
     @Test
-    public void multiWordQueryTest() throws IOException {
+    public void multiWordQueryTest() {
         String query = "red water";
         IThumbnailSource shutterstockSource = new ShutterstockSource();
-        List<Thumbnail> response = shutterstockSource.queryThumbnails(query, 20);
+        List<Thumbnail> response = null;
+        try {
+            response = shutterstockSource.queryThumbnails(query, 20);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         assertNotNull(response);
         assertFalse(response.isEmpty());
 
