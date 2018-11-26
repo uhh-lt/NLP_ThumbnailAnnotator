@@ -126,7 +126,14 @@ public class CaptionTokenExtractor {
                 }
             }
 
-            return new CaptionToken(cta.getValue(), CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()), posTags, tokens, udContext, wNetSenses);
+            return new CaptionToken(
+                    cta.getValue(),
+                    CaptionToken.Type.valueOf(cta.getTypeOf().toUpperCase()),
+                    posTags,
+                    tokens,
+                    udContext,
+                    wNetSenses,
+                    null);
         }
 
         private List<CaptionToken.UDependency> getUDContext(@NotNull List<String> tokens, JCas userInputJCas, Sentence s) {

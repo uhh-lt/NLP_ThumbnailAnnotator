@@ -39,9 +39,6 @@ public abstract class RepositoryTestBase<E extends Entity> {
             .around(RequiresRedisServer.onLocalhost().atLeast("3.2"));
 
     @Autowired
-    protected CrawlerResultEntityRepository crawlerResultEntityRepository;
-
-    @Autowired
     protected ThumbnailEntityRepository thumbnailEntityRepository;
 
     @Autowired
@@ -49,7 +46,7 @@ public abstract class RepositoryTestBase<E extends Entity> {
 
 
     public enum RepoType {
-        THUMBNAIL_URL, CRAWLER_RESULT, CAPTION_TOKEN;
+        THUMBNAIL_URL, CAPTION_TOKEN;
     }
 
     protected CrudRepository<E, String> repo;
@@ -65,9 +62,6 @@ public abstract class RepositoryTestBase<E extends Entity> {
             case THUMBNAIL_URL:
                 this.repo = (CrudRepository<E, String>) thumbnailEntityRepository;
                 break;
-            case CRAWLER_RESULT:
-                this.repo = (CrudRepository<E, String>) crawlerResultEntityRepository;
-                break;
             case CAPTION_TOKEN:
                 this.repo = (CrudRepository<E, String>) captionTokenEntityRepository;
                 break;
@@ -77,7 +71,6 @@ public abstract class RepositoryTestBase<E extends Entity> {
     @Before
     public void flushRepository() {
         this.setRepo();
-        this.crawlerResultEntityRepository.deleteAll();
         this.thumbnailEntityRepository.deleteAll();
         this.captionTokenEntityRepository.deleteAll();
     }

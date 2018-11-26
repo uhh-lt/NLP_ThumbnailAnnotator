@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -40,6 +42,11 @@ public class CaptionToken extends DomainObject {
     private List<UDependency> udContext;
     private List<String> wordNetSenses;
 
+    private List<Thumbnail> thumbnails;
+
+    // TODO Sentence context
+    // TODO BoW left, right context
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -54,5 +61,16 @@ public class CaptionToken extends DomainObject {
         public String toString() {
             return this.type + "(" + this.governor + "," + this.dependent + ")";
         }
+    }
+
+    public static CaptionToken createDummyTestingCaptionToken() {
+        return new CaptionToken(
+                "small car",
+                CaptionToken.Type.NOUN,
+                Arrays.asList("JJ", "NN"),
+                Arrays.asList("small", "car"),
+                Collections.singletonList(new UDependency("amod", "small", "car")),
+                Collections.singletonList("car"),
+                Collections.singletonList(Thumbnail.createDummyTestingThumbnail()));
     }
 }

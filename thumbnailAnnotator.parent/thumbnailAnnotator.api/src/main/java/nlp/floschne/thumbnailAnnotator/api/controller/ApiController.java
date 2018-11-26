@@ -5,12 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.CaptionTokenExtractor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
-import nlp.floschne.thumbnailAnnotator.db.entity.CrawlerResultEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -28,6 +27,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@SuppressWarnings("ALL")
 @RestController
 @CrossOrigin
 @RequestMapping(value = "/")
@@ -73,11 +73,11 @@ public class ApiController {
 
     /**
      * This is the main method of the API it extracts {@link CaptionToken} from a {@link UserInput}, crawls the {@link Thumbnail} for the
-     * {@link CaptionToken} and returns a List of {@link CrawlerResultEntity} for each {@link CaptionToken}.
-     * It also caches the CrawlerResultEntities or returns the CrawlerResultEntities that are already cached.
+     * {@link CaptionToken} and returns the List of extracted {@link CaptionToken}.
+     * It also caches the {@link CaptionTokenEntity} and returns the  {@link CaptionTokenEntity} that are already cached.
      *
      * @param input The UserInput in form of JSON
-     * @return a List of CrawlerResultEntities for each CaptionToken that was extracted from the UserInput
+     * @return a List of  {@link CaptionTokenEntity} for each CaptionToken that was extracted from the UserInput
      * @throws ExecutionException
      * @throws InterruptedException
      * @throws IOException
@@ -85,7 +85,7 @@ public class ApiController {
      * @throws JWNLException
      */
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
-    public List<CrawlerResultEntity> crawlThumbnails(@RequestBody UserInput input) throws ExecutionException, InterruptedException, IOException, ResourceInitializationException, JWNLException {
+    public List<CaptionTokenEntity> crawlThumbnails(@RequestBody UserInput input) throws ExecutionException, InterruptedException, IOException, ResourceInitializationException, JWNLException {
         if (input.getValue().isEmpty())
             throw new InputMismatchException("Must input at least a Token!");
 
@@ -93,39 +93,38 @@ public class ApiController {
         Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
         List<CaptionToken> captionTokens = extractionResultFuture.get().getCaptionTokens();
 
-        // list of futures of CrawlerResults
-        List<Future<CrawlerResult>> crawlingResultFutures = new ArrayList<>();
+        // list of CaptionTokenEntities that are already cached or get cached and will be returned
+        List<CaptionTokenEntity> captionTokenEntities = new ArrayList<>();
 
-        // list of CrawlerResultEntities that are already cached or get cached and will be returned
-        List<CrawlerResultEntity> crawlerResults = new ArrayList<>();
+        List<Future<CaptionToken>> captionTokenFutures = new ArrayList<>();
 
         // for every extracted CaptionToken
         for (CaptionToken captionToken : captionTokens) {
-            // check if CrawlerResultEntity that matches the captionToken is cached in repo and skip new crawling if so
-            CrawlerResultEntity result = this.dbService.findCrawlerResultByCaptionToken(captionToken);
+            // check if CaptionTokenEntity that matches the captionToken is cached in repo and skip new crawling if so
+            CaptionTokenEntity result = this.dbService.findBestMatchingCaptionTokenByUDContext(captionToken);
             if (result != null) {
                 log.info("Using cached results for '" + captionToken + "'");
-                if (!crawlerResults.contains(result))
-                    crawlerResults.add(result);
+                if (!captionTokenEntities.contains(result))
+                    captionTokenEntities.add(result);
                 continue;
             }
 
-            // no cached CrawlerResultEntity for the CaptionToken -> start crawling
+            // no cached CaptionTokenEntity for the CaptionToken -> start crawling
             try {
-                crawlingResultFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
+                captionTokenFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
             } catch (Exception e) {
                 throw e;
             }
         }
 
 
-        // get the CrawlerResults from the Futures, cache them and add them to the final results
-        for (Future<CrawlerResult> crawlerResultFuture : crawlingResultFutures) {
-            CrawlerResult crawlerResult = null;
+        // get the CaptionTokens from the Futures, cache them and add them to the final results
+        for (Future<CaptionToken> captionTokenFuture : captionTokenFutures) {
+            CaptionToken captionToken = null;
             try {
                 // wait no longer than 5 second
                 // TODO ConfigVariable
-                crawlerResult = crawlerResultFuture.get(10, TimeUnit.SECONDS);
+                captionToken = captionTokenFuture.get(10, TimeUnit.SECONDS);
             } catch (TimeoutException e) {
                 throw new ConnectException("It too long time (10s) to finish crawling of Thumbnails!");
             } catch (ExecutionException e) {
@@ -134,29 +133,29 @@ public class ApiController {
 
             try {
                 // save the results in repo
-                log.info("Caching results for '" + crawlerResult.getCaptionToken() + "'");
-                CrawlerResultEntity result = this.dbService.saveCrawlerResult(crawlerResult);
+                log.info("Caching results for '" + captionToken + "'");
+                CaptionTokenEntity result = this.dbService.saveCaptionToken(captionToken);
 
-                if (!crawlerResults.contains(result))
-                    crawlerResults.add(result);
+                if (!captionTokenEntities.contains(result))
+                    captionTokenEntities.add(result);
             } catch (Exception e) {
                 throw e;
             }
 
         }
 
-        return crawlerResults;
+        return captionTokenEntities;
     }
 
     /**
-     * Get a single {@link CrawlerResultEntity} by it's ID
+     * Get a single {@link CaptionTokenEntity} by it's ID
      *
-     * @param id the ID of the {@link CrawlerResultEntity}
-     * @return the {@link CrawlerResultEntity} identified by the ID
+     * @param id the ID of the {@link CaptionTokenEntity}
+     * @return the {@link CaptionTokenEntity} identified by the ID
      */
     @RequestMapping(value = "/getCrawlerResult/{id}", method = RequestMethod.GET)
-    public CrawlerResultEntity getCrawlerResult(@PathVariable String id) {
-        return this.dbService.findCrawlerResultById(id);
+    public CaptionTokenEntity getCaptionToken(@PathVariable String id) throws IOException {
+        return this.dbService.findCaptionTokenById(id);
     }
 
     /**
@@ -166,7 +165,7 @@ public class ApiController {
      * @return the {@link ThumbnailEntity}
      */
     @RequestMapping(value = "/incrementThumbnailPriority/{id}", method = RequestMethod.PUT)
-    public ThumbnailEntity incrementThumbnailPriority(@PathVariable String id) {
+    public ThumbnailEntity incrementThumbnailPriority(@PathVariable String id) throws IOException {
         return this.dbService.incrementThumbnailPriorityById(id);
     }
 
@@ -177,16 +176,16 @@ public class ApiController {
      * @return the {@link ThumbnailEntity}
      */
     @RequestMapping(value = "/decrementThumbnailPriority/{id}", method = RequestMethod.PUT)
-    public ThumbnailEntity decrementThumbnailPriority(@PathVariable String id) {
+    public ThumbnailEntity decrementThumbnailPriority(@PathVariable String id) throws IOException {
         return this.dbService.decrementThumbnailPriorityById(id);
     }
 
     /**
-     * @return All the {@link CrawlerResultEntity} that are saved in the Redis Cache
+     * @return All the {@link CaptionTokenEntity} that are saved in the Redis Cache
      */
-    @RequestMapping(value = "/getCachedCrawlerResults", method = RequestMethod.GET)
-    public List<CrawlerResultEntity> getCachedCrawlerResults() {
-        return new ArrayList<>(this.dbService.findAllCrawlerResult());
+    @RequestMapping(value = "/getCachedCaptionTokens", method = RequestMethod.GET)
+    public List<CaptionTokenEntity> getCachedCrawlerResults() {
+        return new ArrayList<>(this.dbService.findAllCaptionTokens());
     }
 
     /**

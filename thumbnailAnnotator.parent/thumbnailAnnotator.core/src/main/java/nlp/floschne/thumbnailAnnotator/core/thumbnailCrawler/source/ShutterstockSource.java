@@ -117,6 +117,8 @@ public class ShutterstockSource implements IThumbnailSource {
                 JsonObject jsonResponse = new GsonBuilder().create().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
                 if (jsonResponse == null) {
                     throw new ConnectException("Got no response from Thumbnail Source!");
+                } else if (jsonResponse.get("message") != null) {
+                    throw new ConnectException("Error returned from Thumbnail Source!:" + jsonResponse.get("message"));
                 }
                 return jsonResponse;
             } catch (Exception e) {
@@ -214,7 +216,7 @@ public class ShutterstockSource implements IThumbnailSource {
         JsonObject searchImagesResponse = this.makeGetRequest(searchImagesApiUrl);
         if (searchImagesResponse == null)
             throw new ConnectException("Got no response from Thumbnail Source!");
-        
+
         List<Thumbnail> thumbnails = createThumbnailsFromJsonResponse(searchImagesResponse, limit);
 
         for (Thumbnail t : thumbnails)

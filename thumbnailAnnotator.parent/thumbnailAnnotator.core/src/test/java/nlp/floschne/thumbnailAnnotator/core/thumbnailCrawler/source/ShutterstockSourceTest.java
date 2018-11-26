@@ -12,6 +12,9 @@ import static org.junit.Assert.assertNull;
 
 public class ShutterstockSourceTest {
 
+    // TODO testing for all fields of a Thumbnail!
+
+
     @Test
     public void basicQueryTest() {
         String query = "water";
