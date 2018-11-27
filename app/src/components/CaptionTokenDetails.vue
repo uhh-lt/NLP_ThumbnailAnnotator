@@ -1,17 +1,18 @@
 <template>
-  <div class="card text-white bg-primary m-0 p-0">
+  <div class="card text-white bg-primary">
     <div class="card-body">
       <caption-token
-        v-bind:captionTokenInstance="captionTokenObject"
+        v-bind:captionTokenInstance="captionTokenObj"
         v-bind:id="id"
       />
 
       <hr>
-      <draggable v-model="captionTokenObject.thumbnails" @start="drag=true" @end="drag=false">
-        <thumbnail v-for="thumbnail in captionTokenObject.thumbnails"
+      <draggable v-model="captionTokenObj.thumbnails" @change="updatePriorities">
+        <thumbnail v-for="thumbnail in captionTokenObj.thumbnails"
                    v-bind:key="thumbnail.id + '_' + id"
                    v-bind:id="thumbnail.id + '_' + id"
                    v-bind:thumbnail="thumbnail"
+                   v-bind:captionTokenId="captionTokenObj.id"
         />
       </draggable>
 
@@ -22,21 +23,20 @@
 
 <script>
 
+  import {EventBus} from "../main";
+
   import CaptionToken from "./CaptionToken";
   import Thumbnail from "./Thumbnail";
   import draggable from 'vuedraggable'
 
-
   import axios from 'axios';
-  import {EventBus} from "../main";
 
   export default {
     name: "CaptionTokenDetails",
     components: {CaptionToken, Thumbnail, draggable},
     data() {
       return {
-        captionTokenObject: null,
-        highestPriorityIndex: -1
+        captionTokenObj: null
       }
     },
     props: {
@@ -48,47 +48,60 @@
         required: true
       }
     },
+    computed: {
+      idToIdxMap: function () {
+        let map = {}
+
+        let i = 0;
+        let t = null;
+        for (t in this.thumbnails)
+          map[t.id] = i++;
+
+        return map
+      }
+    },
     methods: {
-      updateCaptionToken() {
-        axios.get(this.$hostname + "/getCaptionToken/" + this.captionTokenObject.id).then(response => {
-          this.submitSuccess(response);
+      updateCaptionToken(captionTokenId) {
+        if (this.captionTokenObj.id === captionTokenId) {
+          axios.get(this.$hostname + "/getCaptionToken/" + this.captionTokenObj.id).then(response => {
+            if (response.status === 200)
+              this.captionTokenObj = response.data;
+          }).catch(error => {
+            console.log(error);
+          });
+        }
+      },
+      updatePriorities(ev) {
+        let nonPrioritized = this.captionTokenObj.thumbnails.filter(x => x.priority === 0).length - 1;
+
+        // update the priority of the moved thumbnail for sure
+        let updatedThumbnailId = ev.moved.element.id;
+        let newPriority = this.captionTokenObj.thumbnails.length - ev.moved.newIndex - nonPrioritized;
+        this.setThumbnailPriority(updatedThumbnailId, newPriority);
+
+
+        // check if other thumbnail priorities have to be adapted (in order to have the correct priority regarding their positions)
+        let thumb = null;
+        for (thumb in this.captionTokenObj.thumbnails) {
+          if (this.captionTokenObj.thumbnails[thumb].id !== updatedThumbnailId && this.captionTokenObj.thumbnails[thumb].priority !== 0) {
+            let newPriority = this.captionTokenObj.thumbnails.length - this.captionTokenObj.thumbnails.findIndex(t => t.id === this.captionTokenObj.thumbnails[thumb].id) - nonPrioritized;
+            this.setThumbnailPriority(this.captionTokenObj.thumbnails[thumb].id, newPriority);
+          }
+        }
+      },
+      setThumbnailPriority(thumbnailId, priority) {
+        axios.put(this.$hostname + "/setThumbnailPriority?id=" + thumbnailId + "&priority=" + priority).then(response => {
+          // update event for components that contain thumbnails
+          EventBus.$emit("updatedThumbnail_event", response.data);
+          // also update the captionToken to hold the new ordering
+          this.updateCaptionToken(this.captionTokenObj.id);
         }).catch(error => {
           console.log(error);
         });
       },
-      submitSuccess(response) {
-        if (response.status === 200)
-          this.captionTokenObject = response.data;
-      }
     },
     created() {
-      this.captionTokenObject = this.captionToken;
-      EventBus.$on('thumbnailPriorityChanged_event', this.updateCaptionToken)
-    },
-    computed: {
-      highestPriorityThumbnail: function () {
-        let highestPrio = -100; //TODO bad style!
-        let i = 0;
-        for (i in this.captionTokenObject.thumbnails) {
-          if (this.captionTokenObject.thumbnails[i].priority > highestPrio) {
-            highestPrio = this.captionTokenObject.thumbnails[i].priority;
-            this.highestPriorityIndex = i;
-          }
-        }
-
-        return this.captionTokenObject.thumbnails[this.highestPriorityIndex];
-      },
-
-      lowPriorityThumbnails: function () {
-        let thumbs = [];
-        let i = 0;
-        for (i in this.captionTokenObject.thumbnails) {
-          if (i !== this.highestPriorityIndex)
-            thumbs.push(this.captionTokenObject.thumbnails[i]);
-        }
-
-        return thumbs;
-      }
+      this.captionTokenObj = this.captionToken;
     }
   }
 </script>

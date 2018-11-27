@@ -107,6 +107,16 @@ public class DBService {
     }
 
 
+    public ThumbnailEntity setThumbnailPriorityById(@NotNull String id, @NotNull Integer priority) throws IOException {
+        if (this.thumbnailEntityRepository.findById(id).isPresent()) {
+            ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
+            thumbnailEntity.setPriority(priority);
+            this.thumbnailEntityRepository.save(thumbnailEntity);
+            return this.thumbnailEntityRepository.findById(id).get();
+        } else
+            throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
+    }
+
     public List<CaptionTokenEntity> findAllCaptionTokens() {
         return (List<CaptionTokenEntity>) this.captionTokenEntityRepository.findAll();
     }
