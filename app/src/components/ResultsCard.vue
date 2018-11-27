@@ -4,10 +4,10 @@
       <div class="card-header card-title text-md-center h5">Thumbnail-annotated text</div>
       <div class="card-body">
         <template v-for="node, n in nodes">
-          <crawler-result v-if="n % 2"
-                          v-bind:key="nodeResultMap[node].id + '_' + n"
-                          v-bind:id="nodeResultMap[node].id+ '_' + n"
-                          v-bind:crawler-result="nodeResultMap[node]"
+          <caption-token-wrapper v-if="n % 2"
+                                 v-bind:key="nodeResultMap[node].id + '_' + n"
+                                 v-bind:id="nodeResultMap[node].id+ '_' + n"
+                                 v-bind:captionToken="nodeResultMap[node]"
           />
           <template v-else>
             {{ node }}
@@ -21,11 +21,11 @@
 <script>
 
   import {EventBus} from "../main";
-  import CrawlerResult from "./CrawlerResult";
+  import CaptionTokenWrapper from "./CaptionTokenWrapper";
 
   export default {
     name: "ResultsCard",
-    components: {CrawlerResult},
+    components: {CaptionTokenWrapper},
     data() {
       return {
         resultsData: 'noData',
@@ -41,9 +41,9 @@
         let sortedResults = this.resultsData;
 
         function compare(a, b) {
-          if (a.captionTokenValue.length < b.captionTokenValue.length)
+          if (a.value.length < b.value.length)
             return 1;
-          if (a.captionTokenValue.length > b.captionTokenValue.length)
+          if (a.value.length > b.value.length)
             return -1;
           return 0;
         }
@@ -52,9 +52,9 @@
 
         // encapsulate each CaptionToken occurrence with ~ ..... #
         let input = ' ' + this.userInput;
-        let cr;
-        for (cr in sortedResults)
-          input = input.replace(new RegExp(' ' + sortedResults[cr].captionTokenValue, 'gm'), ' ~' + sortedResults[cr].captionTokenValue + '#');
+        let ct;
+        for (ct in sortedResults)
+          input = input.replace(new RegExp(' ' + sortedResults[ct].value, 'gm'), ' ~' + sortedResults[ct].value + '#');
 
 
         // remove nested occurrence marks
@@ -69,9 +69,9 @@
 
       generateResultMap() {
         let resMap = {};
-        let cr;
-        for (cr in this.resultsData)
-          resMap[this.resultsData[cr].captionTokenValue] = this.resultsData[cr];
+        let ct;
+        for (ct in this.resultsData)
+          resMap[this.resultsData[ct].value] = this.resultsData[ct];
         this.nodeResultMap = resMap;
       },
 

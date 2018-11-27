@@ -2,7 +2,7 @@
   <div class="card text-white bg-primary m-0 p-0">
     <div class="card-body">
       <caption-token
-        v-bind:captionTokenInstance="crawlerResultObject.captionToken"
+        v-bind:captionTokenInstance="captionTokenObject"
         v-bind:id="id"
       />
 
@@ -34,16 +34,16 @@
   import {EventBus} from "../main";
 
   export default {
-    name: "CrawlerResultDetails",
+    name: "CaptionTokenDetails",
     components: {CaptionToken, Thumbnail},
     data() {
       return {
-        crawlerResultObject: null,
+        captionTokenObject: null,
         highestPriorityIndex: -1
       }
     },
     props: {
-      crawlerResult: {
+      captionToken: {
         type: Object,
         required: true
       },
@@ -52,8 +52,8 @@
       }
     },
     methods: {
-      updateCrawlerResult() {
-        axios.get(this.$hostname + "/getCrawlerResult/" + this.crawlerResultObject.id).then(response => {
+      updateCaptionToken() {
+        axios.get(this.$hostname + "/getCaptionToken/" + this.captionTokenObject.id).then(response => {
           this.submitSuccess(response);
         }).catch(error => {
           console.log(error);
@@ -61,33 +61,33 @@
       },
       submitSuccess(response) {
         if (response.status === 200)
-          this.crawlerResultObject = response.data;
+          this.captionTokenObject = response.data;
       }
     },
     created() {
-      this.crawlerResultObject = this.crawlerResult;
-      EventBus.$on('thumbnailPriorityChanged_event', this.updateCrawlerResult)
+      this.captionTokenObject = this.captionToken;
+      EventBus.$on('thumbnailPriorityChanged_event', this.updateCaptionToken)
     },
     computed: {
       highestPriorityThumbnail: function () {
         let highestPrio = -100; //TODO bad style!
         let i = 0;
-        for (i in this.crawlerResultObject.thumbnails) {
-          if (this.crawlerResultObject.thumbnails[i].priority > highestPrio) {
-            highestPrio = this.crawlerResultObject.thumbnails[i].priority;
+        for (i in this.captionTokenObject.thumbnails) {
+          if (this.captionTokenObject.thumbnails[i].priority > highestPrio) {
+            highestPrio = this.captionTokenObject.thumbnails[i].priority;
             this.highestPriorityIndex = i;
           }
         }
 
-        return this.crawlerResultObject.thumbnails[this.highestPriorityIndex];
+        return this.captionTokenObject.thumbnails[this.highestPriorityIndex];
       },
 
       lowPriorityThumbnails: function () {
         let thumbs = [];
         let i = 0;
-        for (i in this.crawlerResultObject.thumbnails) {
+        for (i in this.captionTokenObject.thumbnails) {
           if (i !== this.highestPriorityIndex)
-            thumbs.push(this.crawlerResultObject.thumbnails[i]);
+            thumbs.push(this.captionTokenObject.thumbnails[i]);
         }
 
         return thumbs;
