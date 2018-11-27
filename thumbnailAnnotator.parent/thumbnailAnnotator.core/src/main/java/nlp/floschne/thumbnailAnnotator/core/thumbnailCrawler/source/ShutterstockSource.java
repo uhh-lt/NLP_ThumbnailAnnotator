@@ -155,7 +155,7 @@ public class ShutterstockSource implements IThumbnailSource {
                 // remove quotes
                 Long id = Long.parseLong(idStr.substring(1, idStr.length() - 1));
 
-                String url = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "assets.huge_thumb.url")).toString();
+                String url = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "assets.large_thumb.url")).toString();
                 // remove quotes
                 url = url.substring(1, url.length() - 1);
 
@@ -164,7 +164,7 @@ public class ShutterstockSource implements IThumbnailSource {
                 desc = desc.substring(1, desc.length() - 1);
 
 
-                result.add(new Thumbnail(url, 1, desc, id, null, null));
+                result.add(new Thumbnail(url, 0, desc, id, null, null));
                 if (result.size() == limit)
                     break;
             }

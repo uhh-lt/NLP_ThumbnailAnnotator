@@ -170,25 +170,39 @@ public class ApiController {
     }
 
     /**
-     * Increments the Priority of a {@link ThumbnailEntity} identified by the ID.
+     * Increments the priority of a {@link ThumbnailEntity} identified by the ID.
      *
      * @param id the ID of the {@link ThumbnailEntity}
-     * @return the {@link ThumbnailEntity}
+     * @return the updated {@link ThumbnailEntity}
      */
+    @Deprecated
     @RequestMapping(value = "/incrementThumbnailPriority/{id}", method = RequestMethod.PUT)
     public ThumbnailEntity incrementThumbnailPriority(@PathVariable String id) throws IOException {
         return this.dbService.incrementThumbnailPriorityById(id);
     }
 
     /**
-     * Decrements the Priority of a {@link ThumbnailEntity} identified by the ID.
+     * Decrements the priority of a {@link ThumbnailEntity} identified by the ID.
      *
      * @param id the ID of the {@link ThumbnailEntity}
-     * @return the {@link ThumbnailEntity}
+     * @return the updated {@link ThumbnailEntity}
      */
+    @Deprecated
     @RequestMapping(value = "/decrementThumbnailPriority/{id}", method = RequestMethod.PUT)
     public ThumbnailEntity decrementThumbnailPriority(@PathVariable String id) throws IOException {
         return this.dbService.decrementThumbnailPriorityById(id);
+    }
+
+    /**
+     * Sets the priority of a {@link ThumbnailEntity} identified by the ID to the specified value.
+     *
+     * @param id       the ID of the {@link ThumbnailEntity}
+     * @param priority the new priority of the {@link ThumbnailEntity}
+     * @return the updated {@link ThumbnailEntity}
+     */
+    @RequestMapping(value = "/setThumbnailPriority", method = RequestMethod.PUT)
+    public ThumbnailEntity setThumbnailPriority(@RequestParam("id") String id, @RequestParam("priority") Integer priority) throws IOException {
+        return this.dbService.setThumbnailPriorityById(id, priority);
     }
 
     /**

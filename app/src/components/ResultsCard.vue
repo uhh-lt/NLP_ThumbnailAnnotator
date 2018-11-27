@@ -50,7 +50,7 @@
 
         sortedResults.sort(compare);
 
-        // encapsulate each CaptionToken occurrence with ~ ..... #
+        // encapsulate each CaptionToken occurrence with occurrence mark ~ ..... #
         let input = ' ' + this.userInput;
         let ct;
         for (ct in sortedResults)

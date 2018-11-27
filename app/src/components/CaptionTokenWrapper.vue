@@ -1,18 +1,18 @@
 <template>
   <span>
     <div class="badge badge-warning m-1 float-left">
-      <a href="#" class="text-body" :id="thumbnail_carousel_popover_target_id" v-b-modal="captionToken_details_modal_target_id">{{ this.captionTokenObject.value }}</a>
+      <a href="#" class="text-body" :id="thumbnail_carousel_popover_target_id" v-b-modal="captionToken_details_modal_target_id">{{ this.captionTokenObj.value }}</a>
 
-      <b-modal centered hide-header hide-footer :body-class="'details-modal'" :id="captionToken_details_modal_target_id" :title="captionTokenObject.value">
+      <b-modal centered hide-header hide-footer :body-class="'details-modal'" :id="captionToken_details_modal_target_id" :title="captionTokenObj.value">
         <caption-token-details v-bind:key="id"
-                               v-bind:caption-token="captionTokenObject"
+                               v-bind:caption-token="captionTokenObj"
                                v-bind:id="id"/>
       </b-modal>
     </div>
 
 
     <b-popover :target="thumbnail_carousel_popover_target_id" triggers="hover">
-      <thumbnail-carousel v-bind:thumbnails="captionTokenObject.thumbnails"
+      <thumbnail-carousel v-bind:thumbnails="captionTokenObj.thumbnails"
                           v-bind:id="id"/>
     </b-popover>
   </span>
@@ -44,25 +44,11 @@
       return {
         captionToken_details_modal_target_id: "caption-token-details-modal-target-" + this.id,
         thumbnail_carousel_popover_target_id: "thumbnail-carousel-popover-target-" + this.id,
-        captionTokenObject: null
-      }
-    },
-    methods: {
-      updateCaptionToken() {
-        axios.get(this.$hostname + "/getCaptionToken/" + this.captionTokenObject.id).then(response => {
-          this.submitSuccess(response);
-        }).catch(error => {
-          console.log(error);
-        });
-      },
-      submitSuccess(response) {
-        if (response.status === 200)
-          this.captionTokenObject = response.data;
+        captionTokenObj: null
       }
     },
     created() {
-      this.captionTokenObject = this.captionToken;
-      EventBus.$on('thumbnailPriorityChanged_event', this.updateCaptionToken)
+      this.captionTokenObj = this.captionToken;
     }
   }
 </script>

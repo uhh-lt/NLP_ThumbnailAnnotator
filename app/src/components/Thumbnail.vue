@@ -1,26 +1,34 @@
 <template>
   <div>
     <div class="float-left" :id="thumbnail_details_popover_target_id">
-      <img :src="thumbnail.url" v-bind:class="{'img-thumbnail': true, 'highestPriority': hasHighestPriority}" :alt="thumbnail.url"
+      <img :src="thumbnailObj.url" class="img-thumbnail" :alt="thumbnailObj.url"
            :id="thumbnail_large_image_popover_target_id">
     </div>
 
-    <b-popover :target="thumbnail_details_popover_target_id" triggers="click blur" placement="right" :show.sync="popoverShow">
+    <b-popover triggers="click blur" placement="left"
+               :target="thumbnail_details_popover_target_id"
+               :show.sync="popoverShow">
       <b-btn @click="popoverShow = false" class="close" aria-label="Close">
-        <span class="d-inline-block" aria-hidden="true">&times;</span>
+        &times;
       </b-btn>
-      <thumbnail-priority-panel
-        v-bind:thumbnail="thumbnail"/>
+      <thumbnail-details-panel
+        v-bind:thumbnail="thumbnailObj"
+        v-bind:captionTokenId="captionTokenId"
+      />
     </b-popover>
 
     <b-popover :target="thumbnail_large_image_popover_target_id" triggers="hover" placement="top">
-      <img :src="thumbnail.url" :alt="thumbnail.url">
+      <img :src="thumbnailObj.url" :alt="thumbnailObj.url">
+      <code class="badge badge-danger badge-pill">
+        {{ this.thumbnailObj.priority }}
+      </code>
     </b-popover>
   </div>
 </template>
 
 <script>
-  import ThumbnailPriorityPanel from "./ThumbnailPriorityPanel";
+  import ThumbnailDetailsPanel from "./ThumbnailDetailsPanel";
+  import {EventBus} from "../main";
 
   export default {
     name: "Thumbnail",
@@ -29,9 +37,10 @@
         thumbnail_details_popover_target_id: "thumbail-details-popver-target-" + this.id,
         thumbnail_large_image_popover_target_id: "thumbail-large-image-popver-target" + this.id,
         popoverShow: false,
+        thumbnailObj: null
       }
     },
-    components: {ThumbnailPriorityPanel},
+    components: {ThumbnailDetailsPanel},
     props: {
       thumbnail: {
         type: Object,
@@ -40,7 +49,20 @@
       id: {
         required: true
       },
-      hasHighestPriority: false
+      captionTokenId: {
+        required: true
+      }
+    },
+    methods: {
+      updateThumbnail(updatedThumbnail) {
+        if (this.thumbnailObj.id === updatedThumbnail.id) {
+          this.thumbnailObj = updatedThumbnail;
+        }
+      }
+    },
+    created() {
+      this.thumbnailObj = this.thumbnail;
+      EventBus.$on('updatedThumbnail_event', this.updateThumbnail)
     }
   }
 </script>
@@ -56,11 +78,5 @@
   img {
     max-width: 250px;
     max-height: 250px;
-  }
-
-  .highestPriority {
-    border-color: red !important;
-    border-radius: 0.25rem;
-    border-width: 2px;
   }
 </style>
