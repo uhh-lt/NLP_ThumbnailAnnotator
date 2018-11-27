@@ -2,13 +2,11 @@ package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler;
 
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.CrawlerResult;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.IThumbnailSource;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source.ShutterstockSource;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +22,7 @@ public class ThumbnailCrawler {
     /**
      * Agent that crawls Thumbnails for a {@link CaptionToken}
      */
-    private class CrawlerAgent implements Callable<CrawlerResult> {
+    private class CrawlerAgent implements Callable<CaptionToken> {
         /**
          * The {@link CaptionToken}  that is processed by this {@link CrawlerAgent}
          */
@@ -42,18 +40,29 @@ public class ThumbnailCrawler {
 
         /**
          * The crawling happens here!
-         *
-         * @return the result wrapped in a {@link CrawlerResult}
          */
         @Override
-        public CrawlerResult call() throws IOException {
+        public CaptionToken call() throws IOException {
             // TODO replace dummy implementation
-
-            List<Thumbnail> thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), limit);
-            if (thumbnails.size() < limit / 2) {
-                thumbnails.addAll(thumbnailSource.queryThumbnails(this.captionToken.getTokens().get(this.captionToken.getTokens().size() - 1), limit));
+            List<Thumbnail> thumbnails = null;
+            try {
+                thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), limit);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new IOException("There went something wrong while crawling Thumbnails!\n" + e.getMessage());
             }
-            return new CrawlerResult(this.captionToken, thumbnails);
+            assert thumbnails != null;
+            if (thumbnails.size() < limit / 2) {
+                try {
+                    thumbnails.addAll(thumbnailSource.queryThumbnails(this.captionToken.getTokens().get(this.captionToken.getTokens().size() - 1), limit));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new IOException("There went something wrong while crawling Thumbnails!");
+                }
+            }
+            this.captionToken.setThumbnails(thumbnails);
+
+            return this.captionToken;
         }
     }
 
@@ -78,12 +87,8 @@ public class ThumbnailCrawler {
         return singleton;
     }
 
-    public Future<CrawlerResult> startCrawlingThumbnails(CaptionToken captionToken) throws IOException {
-        try {
-            return this.threadPool.submit(new CrawlerAgent(captionToken));
-        } catch (Exception e) {
-            throw new ConnectException("There was an error while Crawling for Thumbnails!");
-        }
+    public Future<CaptionToken> startCrawlingThumbnails(CaptionToken captionToken) {
+        return this.threadPool.submit(new CrawlerAgent(captionToken));
     }
 
 }

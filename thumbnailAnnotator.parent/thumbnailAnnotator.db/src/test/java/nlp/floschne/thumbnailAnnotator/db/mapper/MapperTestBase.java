@@ -29,16 +29,13 @@ public abstract class MapperTestBase<E extends Entity, D extends DomainObject> {
     }
 
     @Autowired
-    protected CrawlerResultMapper crawlerResultMapper;
-
-    @Autowired
     protected ThumbnailMapper thumbnailMapper;
 
     @Autowired
     protected CaptionTokenMapper captionTokenMapper;
 
     public enum MapperType {
-        THUMBNAIL_URL, CRAWLER_RESULT, CAPTION_TOKEN;
+        THUMBNAIL_URL, CAPTION_TOKEN;
     }
 
     private IMapper<E, D> mapper;
@@ -54,9 +51,6 @@ public abstract class MapperTestBase<E extends Entity, D extends DomainObject> {
         switch (type) {
             case THUMBNAIL_URL:
                 this.mapper = (IMapper<E, D>) thumbnailMapper;
-                break;
-            case CRAWLER_RESULT:
-                this.mapper = (IMapper<E, D>) crawlerResultMapper;
                 break;
             case CAPTION_TOKEN:
                 this.mapper = (IMapper<E, D>) captionTokenMapper;

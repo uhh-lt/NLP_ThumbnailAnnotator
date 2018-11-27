@@ -1,11 +1,10 @@
 package nlp.floschne.thumbnailAnnotator.db.repository;
 
-import nlp.floschne.thumbnailAnnotator.core.domain.UDependency;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Optional;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -19,16 +18,7 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
     @NotNull
     @Override
     protected CaptionTokenEntity createDummyEntity() {
-        List<UDependency> udContext = new ArrayList<>();
-        udContext.add(new UDependency("amod", "big", "ship"));
-        CaptionTokenEntity entity = new CaptionTokenEntity(
-                "big ship",
-                "COMPOUND",
-                Arrays.asList("JJ", "NN"),
-                Arrays.asList("big", "ship"),
-                udContext,
-                Collections.singletonList("ship"));
-        return entity;
+        return CaptionTokenEntity.createDummyTestingCaptionTokenEnitity();
     }
 
     @Override

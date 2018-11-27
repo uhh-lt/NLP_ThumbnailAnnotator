@@ -7,7 +7,7 @@ import BootstrapVue from 'bootstrap-vue'
 
 Vue.use(BootstrapVue);
 // Vue.prototype.$hostname = 'http://api:8081'; // use with docker-compose
-Vue.prototype.$hostname = 'http://localhost:8081'; // use for localhost
+Vue.prototype.$hostname = 'http://localhost:8081/thumbnail-api'; // use for localhost
 
 new Vue({
   el: '#app',

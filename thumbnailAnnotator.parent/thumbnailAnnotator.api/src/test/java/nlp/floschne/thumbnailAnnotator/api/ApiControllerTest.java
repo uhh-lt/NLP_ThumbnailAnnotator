@@ -3,9 +3,8 @@ package nlp.floschne.thumbnailAnnotator.api;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.db.RedisConfig;
-import nlp.floschne.thumbnailAnnotator.db.repository.CrawlerResultEntityRepository;
+import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +26,15 @@ import java.util.Arrays;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertNotNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {Application.class, RedisConfig.class})
 @WebAppConfiguration
 public class ApiControllerTest {
+
+    //TODO test all api endpoints!
 
     private MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
             MediaType.APPLICATION_JSON.getSubtype(),
@@ -58,7 +60,7 @@ public class ApiControllerTest {
     }
 
     @Autowired
-    CrawlerResultEntityRepository repository;
+    CaptionTokenEntityRepository repository;
 
     @Before
     public void setup() {
@@ -72,7 +74,7 @@ public class ApiControllerTest {
     }
 
     @Test
-    @Ignore
+    // TODO test all fields of CaptionToken
     public void extractCaptionTokensITest() throws Exception {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         String value = "The red, broken and big car control system is great.";

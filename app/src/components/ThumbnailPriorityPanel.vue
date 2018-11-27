@@ -1,7 +1,8 @@
 <template>
   <div class="card text-white bg-primary d-inline-block m-1 clearfix">
     <div class="card-header card-title text-md-center"><b>Edit Priority</b></div>
-    <div class="card-body justify-content-center">
+    <div class="card-body">
+      <div class="justify-content-center">
       <a class="float-left" href="#" v-on:click="incPrio">
         <span class="badge badge-dark badge-pill" title="Increment priority">
             <i class="fa fa-minus-square" aria-hidden="true">+</i>
@@ -15,6 +16,19 @@
             <i class="fa fa-plus-square" aria-hidden="true">-</i>
         </span>
       </a>
+      </div>
+      <hr>
+      <div>
+        <span v-for="c in this.thumbnailObj.categories" class="badge badge-info ml-1">
+          {{c.name}}
+        </span>
+      </div>
+      <hr>
+      <div>
+        <span v-for="k in this.thumbnailObj.keywords" class="badge badge-info ml-1">
+          {{k}}
+        </span>
+      </div>
     </div>
   </div>
 </template>

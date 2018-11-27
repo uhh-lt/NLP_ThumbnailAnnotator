@@ -88,7 +88,7 @@
       },
       crawlThumbnails() {
         this.enableSubmitLoader();
-        axios.post(this.$hostname + "/crawlThumbnails", this.form).then(response => {
+        axios.post(this.$hostname + "/crawlThumbnails/", this.form).then(response => {
           this.submitSuccess(response);
           this.disableSubmitLoader();
         }).catch(error => {
