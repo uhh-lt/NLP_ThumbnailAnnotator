@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
@@ -29,6 +30,7 @@ public class CaptionTokenEntity extends Entity {
     private List<CaptionToken.UDependency> udContext;
     private List<String> wordNetSenses;
 
+    @Reference
     private List<ThumbnailEntity> thumbnails;
 
     public static CaptionTokenEntity createDummyTestingCaptionTokenEnitity() {

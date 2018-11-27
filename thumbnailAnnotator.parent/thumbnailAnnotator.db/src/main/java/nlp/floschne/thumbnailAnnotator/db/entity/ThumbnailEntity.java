@@ -17,14 +17,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @RedisHash("thumbnail_url_entity")
 public class ThumbnailEntity extends Entity implements Comparable<ThumbnailEntity> {
-    @Indexed
+
     private String url;
 
     private Integer priority;
 
     private String description;
 
-    @Indexed
     protected Long shutterstockId;
 
     protected List<Thumbnail.Category> categories;

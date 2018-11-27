@@ -57,15 +57,24 @@ public class DBService {
             Collections.sort(ct.getThumbnails());
             return ct;
         } else {
-            throw new IOException("Cannot find CaptionToken with ID: " + id);
+            throw new IOException("Cannot find CaptionTokenEntity with ID: " + id);
+        }
+    }
+
+    public ThumbnailEntity findThumbnailById(@NotNull String id) throws IOException {
+        if (this.thumbnailEntityRepository.findById(id).isPresent()) {
+            ThumbnailEntity te = this.thumbnailEntityRepository.findById(id).get();
+            return te;
+        } else {
+            throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
         }
     }
 
     public CaptionTokenEntity findBestMatchingCaptionTokenByUDContext(@NotNull CaptionToken captionToken) {
-        // first, find all CrawlerResultEntities with the CaptionToken's value
+        // first, find all CaptionTokenEntities with the CaptionToken's value
         List<CaptionTokenEntity> cts = this.captionTokenEntityRepository.findAllByValue(captionToken.getValue());
 
-        // second, find the (best) matching CrawlerResultEntity by the CaptionToken's UDContext
+        // second, find the (best) matching CaptionToken by the UDContext
         CaptionTokenEntity best = null;
         for (CaptionTokenEntity ct : cts)
             if (ct.getUdContext().containsAll(captionToken.getUdContext()))
@@ -81,7 +90,7 @@ public class DBService {
             ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
             thumbnailEntity.setPriority(thumbnailEntity.getPriority() + 1);
             this.thumbnailEntityRepository.save(thumbnailEntity);
-            return thumbnailEntity;
+            return this.thumbnailEntityRepository.findById(id).get();
         } else
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
     }
@@ -92,7 +101,7 @@ public class DBService {
             ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
             thumbnailEntity.setPriority(thumbnailEntity.getPriority() - 1);
             this.thumbnailEntityRepository.save(thumbnailEntity);
-            return thumbnailEntity;
+            return this.thumbnailEntityRepository.findById(id).get();
         } else
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
     }
@@ -102,7 +111,8 @@ public class DBService {
         return (List<CaptionTokenEntity>) this.captionTokenEntityRepository.findAll();
     }
 
-    public void deleteAllCrawlerResultEntities() {
+    public void deleteAllCaptionTokenEntities() {
+        this.thumbnailEntityRepository.deleteAll();
         this.captionTokenEntityRepository.deleteAll();
     }
 

@@ -153,9 +153,20 @@ public class ApiController {
      * @param id the ID of the {@link CaptionTokenEntity}
      * @return the {@link CaptionTokenEntity} identified by the ID
      */
-    @RequestMapping(value = "/getCrawlerResult/{id}", method = RequestMethod.GET)
+    @RequestMapping(value = "/getCaptionToken/{id}", method = RequestMethod.GET)
     public CaptionTokenEntity getCaptionToken(@PathVariable String id) throws IOException {
         return this.dbService.findCaptionTokenById(id);
+    }
+
+    /**
+     * Get a single {@link ThumbnailEntity} by it's ID
+     *
+     * @param id the ID of the {@link ThumbnailEntity}
+     * @return the {@link ThumbnailEntity} identified by the ID
+     */
+    @RequestMapping(value = "/getThumbnail/{id}", method = RequestMethod.GET)
+    public ThumbnailEntity getThumbnail(@PathVariable String id) throws IOException {
+        return this.dbService.findThumbnailById(id);
     }
 
     /**
@@ -184,7 +195,7 @@ public class ApiController {
      * @return All the {@link CaptionTokenEntity} that are saved in the Redis Cache
      */
     @RequestMapping(value = "/getCachedCaptionTokens", method = RequestMethod.GET)
-    public List<CaptionTokenEntity> getCachedCrawlerResults() {
+    public List<CaptionTokenEntity> getCachedCaptionTokens() {
         return new ArrayList<>(this.dbService.findAllCaptionTokens());
     }
 
@@ -194,6 +205,6 @@ public class ApiController {
     @RequestMapping(value = "/flushCache", method = RequestMethod.DELETE)
     public void flushCache() {
         log.warn("Flushed Cache!");
-        this.dbService.deleteAllCrawlerResultEntities();
+        this.dbService.deleteAllCaptionTokenEntities();
     }
 }
