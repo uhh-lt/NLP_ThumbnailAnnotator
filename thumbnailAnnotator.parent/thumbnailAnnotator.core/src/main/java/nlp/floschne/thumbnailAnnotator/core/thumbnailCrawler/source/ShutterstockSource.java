@@ -57,8 +57,11 @@ public class ShutterstockSource implements IThumbnailSource {
     /**
      * KEY and SECRET from https://developers.shutterstock.com/user/me/apps
      */
-    private static final String CONSUMER_KEY = "a23c2-918bb-11c18-e9fa2-268dd-35f02";
-    private static final String CONSUMER_SECRET = "a4b74-ccd2c-a0fb2-c37ad-bface-75a3e";
+    private static final String CONSUMER_KEY_1 = "a23c2-918bb-11c18-e9fa2-268dd-35f02";
+    private static final String CONSUMER_SECRET_1 = "a4b74-ccd2c-a0fb2-c37ad-bface-75a3e";
+
+    private static final String CONSUMER_KEY_2 = "98987-31f4d-0dc30-9f060-bcf36-bf729";
+    private static final String CONSUMER_SECRET_2 = "ca74b-3edd8-a5e18-69871-c013d-89d37";
 
     private static final String IMAGE_SEARCH_RESOURCE_URL = "https://api.shutterstock.com/v2/images/search";
     private static final String IMAGE_DETAILS_RESOURCE_URL = "https://api.shutterstock.com/v2/images/";
@@ -96,7 +99,7 @@ public class ShutterstockSource implements IThumbnailSource {
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         credsProvider.setCredentials(
                 new AuthScope(target.getHostName(), target.getPort()),
-                new UsernamePasswordCredentials(CONSUMER_KEY, CONSUMER_SECRET));
+                new UsernamePasswordCredentials(CONSUMER_KEY_2, CONSUMER_SECRET_2));
 
         // Create model and get and then execute
         try (CloseableHttpClient httpclient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build()) {
