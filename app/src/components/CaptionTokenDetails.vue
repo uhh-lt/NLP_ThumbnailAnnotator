@@ -7,20 +7,15 @@
       />
 
       <hr>
+      <draggable v-model="captionTokenObject.thumbnails" @start="drag=true" @end="drag=false">
+        <thumbnail v-for="thumbnail in captionTokenObject.thumbnails"
+                   v-bind:key="thumbnail.id + '_' + id"
+                   v-bind:id="thumbnail.id + '_' + id"
+                   v-bind:thumbnail="thumbnail"
+        />
+      </draggable>
 
-      <thumbnail v-if="highestPriorityThumbnail != null"
-                 v-bind:key="highestPriorityThumbnail.id + '_' + id"
-                 v-bind:id="highestPriorityThumbnail.id + '_' + id"
-                 v-bind:hasHighestPriority="true"
-                 v-bind:thumbnail="highestPriorityThumbnail"
-      />
 
-      <thumbnail v-for="thumbnail in lowPriorityThumbnails"
-                 v-bind:key="thumbnail.id + '_' + id"
-                 v-bind:id="thumbnail.id + '_' + id"
-                 v-bind:hasHighestPriority="false"
-                 v-bind:thumbnail="thumbnail"
-      />
     </div>
   </div>
 </template>
@@ -29,13 +24,15 @@
 
   import CaptionToken from "./CaptionToken";
   import Thumbnail from "./Thumbnail";
+  import draggable from 'vuedraggable'
+
 
   import axios from 'axios';
   import {EventBus} from "../main";
 
   export default {
     name: "CaptionTokenDetails",
-    components: {CaptionToken, Thumbnail},
+    components: {CaptionToken, Thumbnail, draggable},
     data() {
       return {
         captionTokenObject: null,

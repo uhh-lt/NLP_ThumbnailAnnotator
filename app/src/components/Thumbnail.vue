@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="float-left" :id="thumbnail_details_popover_target_id">
-      <img :src="thumbnail.url" v-bind:class="{'img-thumbnail': true, 'highestPriority': hasHighestPriority}" :alt="thumbnail.url"
+      <img :src="thumbnail.url" class="img-thumbnail" :alt="thumbnail.url"
            :id="thumbnail_large_image_popover_target_id">
     </div>
 
@@ -39,8 +39,7 @@
       },
       id: {
         required: true
-      },
-      hasHighestPriority: false
+      }
     }
   }
 </script>
