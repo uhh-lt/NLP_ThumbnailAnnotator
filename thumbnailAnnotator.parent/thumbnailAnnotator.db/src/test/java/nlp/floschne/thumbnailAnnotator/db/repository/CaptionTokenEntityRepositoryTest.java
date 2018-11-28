@@ -28,12 +28,16 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
         assertEquals(a.getId(), b.getId());
         assertEquals(a.getPosTags(), b.getPosTags());
         assertEquals(a.getTokens(), b.getTokens());
+        assertEquals(a.getWordNetSenses(), b.getWordNetSenses());
+        assertEquals(a.getUdContext(), b.getUdContext());
+        assertEquals(a.getThumbnails(), b.getThumbnails());
         assertEquals(a, b);
     }
 
     @Override
     protected void saveEntity(CaptionTokenEntity entity) {
-        this.repo.save(entity);
+        this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
+        this.captionTokenEntityRepository.save(entity);
     }
 
     @Test
