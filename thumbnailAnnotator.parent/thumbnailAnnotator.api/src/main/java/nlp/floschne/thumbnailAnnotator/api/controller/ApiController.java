@@ -27,7 +27,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@SuppressWarnings("ALL")
 @RestController
 @CrossOrigin
 @RequestMapping(value = "/")
@@ -122,9 +121,9 @@ public class ApiController {
         for (Future<CaptionToken> captionTokenFuture : captionTokenFutures) {
             CaptionToken captionToken = null;
             try {
-                // wait no longer than 5 second
+                // wait no longer than 5 Minutes
                 // TODO ConfigVariable
-                captionToken = captionTokenFuture.get(10, TimeUnit.SECONDS);
+                captionToken = captionTokenFuture.get(300, TimeUnit.SECONDS);
             } catch (TimeoutException e) {
                 throw new ConnectException("It too long time (10s) to finish crawling of Thumbnails!");
             } catch (ExecutionException e) {
