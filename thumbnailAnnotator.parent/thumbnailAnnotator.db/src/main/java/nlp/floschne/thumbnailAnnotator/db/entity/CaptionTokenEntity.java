@@ -33,14 +33,17 @@ public class CaptionTokenEntity extends Entity {
     @Reference
     private List<ThumbnailEntity> thumbnails;
 
+    private List<String> lemmata;
+
     public static CaptionTokenEntity createDummyTestingCaptionTokenEnitity() {
         return new CaptionTokenEntity(
-                "big ship",
+                "bigger ship",
                 "COMPOUND",
                 Arrays.asList("JJ", "NN"),
-                Arrays.asList("big", "ship"),
-                Collections.singletonList(new CaptionToken.UDependency("amod", "big", "ship")),
+                Arrays.asList("bigger", "ship"),
+                Collections.singletonList(new CaptionToken.UDependency("amod", "bigger", "ship")),
                 Collections.singletonList("ship"),
-                Collections.singletonList(ThumbnailEntity.createDummyTestingThumbnailEntity()));
+                Collections.singletonList(ThumbnailEntity.createDummyTestingThumbnailEntity()),
+                Arrays.asList("big", "ship"));
     }
 }

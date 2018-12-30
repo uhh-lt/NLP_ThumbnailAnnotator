@@ -21,7 +21,9 @@ import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.Name
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.NounCaptionTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosExclusionFlagTokenAnnotator;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosViewCreator;
-import nlp.floschne.thumbnailAnnotator.core.domain.*;
+import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
+import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -58,7 +60,7 @@ public class CaptionTokenExtractor {
          */
         private UserInput userInput;
 
-        public ExtractorAgent(UserInput userInput) throws IOException, JWNLException {
+        public ExtractorAgent(UserInput userInput) {
             this.userInput = userInput;
         }
 
@@ -114,6 +116,7 @@ public class CaptionTokenExtractor {
         private CaptionToken createCaptionToken(JCas userInputJCas, @NotNull CaptionTokenAnnotation cta) throws SenseInventoryException {
             List<String> posTags = Arrays.asList(cta.getPOSList().split(";"));
             List<String> tokens = Arrays.asList(cta.getTokenList().split(";"));
+            List<String> lemmata = Arrays.asList(cta.getLemmaList().split(";"));
 
             // get UDContext and WordNetSense per sentence
             List<String> wNetSenses = new ArrayList<>();
@@ -133,7 +136,8 @@ public class CaptionTokenExtractor {
                     tokens,
                     udContext,
                     wNetSenses,
-                    null);
+                    null,
+                    lemmata);
         }
 
         private List<CaptionToken.UDependency> getUDContext(@NotNull List<String> tokens, JCas userInputJCas, Sentence s) {
@@ -249,23 +253,28 @@ public class CaptionTokenExtractor {
 
         AggregateBuilder aggregateBuilder = new AggregateBuilder();
 
+        // SEGMENTER & TOKENIZER
         AnalysisEngineDescription seg = AnalysisEngineFactory.createEngineDescription(OpenNlpSegmenter.class,
                 OpenNlpSegmenter.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(seg);
 
+        // POS TAGGER
         AnalysisEngineDescription pos = AnalysisEngineFactory.createEngineDescription(ClearNlpPosTagger.class,
                 ClearNlpPosTagger.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(pos);
 
+        // LEMMATIZER
         AnalysisEngineDescription lemma = AnalysisEngineFactory.createEngineDescription(ClearNlpLemmatizer.class,
                 ClearNlpLemmatizer.PARAM_LANGUAGE, LANGUAGE);
         aggregateBuilder.add(lemma);
 
+        // DEPENDENCY PARSER
         AnalysisEngineDescription parse = AnalysisEngineFactory.createEngineDescription(MaltParser.class,
                 MaltParser.PARAM_LANGUAGE, LANGUAGE,
                 MaltParser.PARAM_VARIANT, "poly");
         aggregateBuilder.add(parse);
 
+        // NAMED ENTITY TAGGERS
         AnalysisEngineDescription nerLoc = AnalysisEngineFactory.createEngineDescription(OpenNlpNamedEntityRecognizer.class,
                 OpenNlpNamedEntityRecognizer.PARAM_LANGUAGE, LANGUAGE,
                 OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "location");
@@ -281,6 +290,7 @@ public class CaptionTokenExtractor {
                 OpenNlpNamedEntityRecognizer.PARAM_VARIANT, "organization");
         aggregateBuilder.add(nerOrg);
 
+        // CAPTION TOKEN EXTRACTORS
         AnalysisEngineDescription pefta = AnalysisEngineFactory.createEngineDescription(PosExclusionFlagTokenAnnotator.class);
         aggregateBuilder.add(pefta);
 
