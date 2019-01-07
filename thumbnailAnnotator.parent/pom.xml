@@ -18,6 +18,13 @@
     <artifactId>thumbnailAnnotator.parent</artifactId>
     <version>${thumbnailAnnotator.parent.version}</version>
     <packaging>pom</packaging>
+    
+    <!--distributionManagement>
+        <repository>
+            <id>latest</id>
+            <url>https://hub.docker.com/r/uhhlt/nlp_thumbnailannotator_api/</url>
+        </repository>
+    </distributionManagement-->
 
     <name>thumbnailAnnotator.parent</name>
     <description>ThumbnailAnnotator parent project</description>
