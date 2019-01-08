@@ -4,9 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.mapper.CaptionTokenMapper;
 import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailEntityRepository;
+import nlp.floschne.thumbnailAnnotator.db.repository.UserEntityRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @ComponentScan(basePackages = {"nlp.floschne.thumbnailAnnotator.db"})
@@ -25,20 +28,26 @@ public class DBService {
 
     private final CaptionTokenEntityRepository captionTokenEntityRepository;
 
+    private final UserEntityRepository userEntityRepository;
+
     private final CaptionTokenMapper captionTokenMapper;
 
     @Autowired
     public DBService(ThumbnailEntityRepository thumbnailEntityRepository,
                      CaptionTokenEntityRepository captionTokenEntityRepository,
-                     CaptionTokenMapper captionTokenMapper) {
+                     CaptionTokenMapper captionTokenMapper,
+                     UserEntityRepository userEntityRepository) {
         this.thumbnailEntityRepository = thumbnailEntityRepository;
         this.captionTokenEntityRepository = captionTokenEntityRepository;
+        this.userEntityRepository = userEntityRepository;
         this.captionTokenMapper = captionTokenMapper;
+
 
         log.info("DB Service ready!");
     }
 
-    public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct) {
+    public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) {
+        //TODO save the caption to the user by access key!
         CaptionTokenEntity entity;
         if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent())
             entity = this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
@@ -126,4 +135,31 @@ public class DBService {
         this.captionTokenEntityRepository.deleteAll();
     }
 
+    public UserEntity registerUser(@NotNull String username, @NotNull String password) {
+        UserEntity user = null;
+        if (!this.userEntityRepository.findByUsername(username).isPresent()) {
+            user = new UserEntity(username, password, UUID.randomUUID().toString(), null);
+            this.userEntityRepository.save(user);
+            return user;
+        } else
+            return this.userEntityRepository.findByUsername(username).get();
+    }
+
+    public boolean checkPassword(@NotNull String username, @NotNull String password) {
+        if (!this.userEntityRepository.findByUsername(username).isPresent())
+            return false;
+        else return this.userEntityRepository.findByUsername(username).get().getPassword().equals(password);
+    }
+
+    public UserEntity getUserByAccessKey(@NotNull String accessKey) {
+        if (!this.userEntityRepository.findByAccessKey(accessKey).isPresent())
+            return this.userEntityRepository.findByAccessKey(accessKey).get();
+        else return null;
+    }
+
+    public UserEntity getUserByUsername(@NotNull String username) {
+        if (this.userEntityRepository.findByUsername(username).isPresent())
+            return this.userEntityRepository.findByUsername(username).get();
+        else return null;
+    }
 }
