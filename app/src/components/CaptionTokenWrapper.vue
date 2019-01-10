@@ -24,10 +24,6 @@
   import ThumbnailCarousel from "./ThumbnailCarousel";
   import CaptionTokenDetails from "./CaptionTokenDetails";
 
-  import {EventBus} from "../main";
-
-  import axios from 'axios';
-
   export default {
     name: "CaptionTokenWrapper",
     components: {CaptionTokenDetails, ThumbnailCarousel, Thumbnail, CaptionToken},
