@@ -125,6 +125,9 @@ public class ShutterstockRequestManager {
 
     private List<ShutterstockCredentials> credentialsList;
 
+    private Integer currentCredentialsIndex;
+
+    private static final Boolean USE_KEYS_EQUALLY = true;
 
     private ShutterstockRequestManager() {
         this.credentialsList = new ArrayList<>();
@@ -141,17 +144,38 @@ public class ShutterstockRequestManager {
         this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_9, CONSUMER_SECRET_9));
         this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_10, CONSUMER_SECRET_10));
 
-        Collections.shuffle(this.credentialsList);
+        this.currentCredentialsIndex = new Random().nextInt() % this.credentialsList.size();
+
+//        Collections.shuffle(this.credentialsList);
+    }
+
+    private synchronized Integer getAndIncrementCurrentCredentialsIndex() {
+        Integer tmp = this.currentCredentialsIndex;
+        this.currentCredentialsIndex = (this.currentCredentialsIndex + 1) % this.credentialsList.size();
+        return tmp;
     }
 
     private synchronized UsernamePasswordCredentials getCredentials() throws ConnectException {
         long shortestWaitingTime = Long.MAX_VALUE;
-        for (ShutterstockCredentials screds : this.credentialsList) {
-            UsernamePasswordCredentials creds = screds.getCredentials();
-            if (creds != null)
-                return creds;
-            else
-                shortestWaitingTime = Math.min(screds.getMilliSecondsUntilReset(), shortestWaitingTime);
+        if (USE_KEYS_EQUALLY) {
+            int i = 0;
+            while (i < this.credentialsList.size()) { // try it for at max. the number of available keys
+                ShutterstockCredentials screds = this.credentialsList.get(this.getAndIncrementCurrentCredentialsIndex());
+                UsernamePasswordCredentials creds = screds.getCredentials();
+                if (creds != null)
+                    return creds;
+                else {
+                    shortestWaitingTime = Math.min(screds.getMilliSecondsUntilReset(), shortestWaitingTime);
+                }
+            }
+        } else {
+            for (ShutterstockCredentials screds : this.credentialsList) {
+                UsernamePasswordCredentials creds = screds.getCredentials();
+                if (creds != null)
+                    return creds;
+                else
+                    shortestWaitingTime = Math.min(screds.getMilliSecondsUntilReset(), shortestWaitingTime);
+            }
         }
         throw new ConnectException("Rate Limit for all API keys exceeded! Seconds until reset: " + shortestWaitingTime);
     }
@@ -163,7 +187,7 @@ public class ShutterstockRequestManager {
         // Set credentials (by getting the current active credentials)
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         UsernamePasswordCredentials creds = this.getCredentials();
-        System.out.println("Using: " + creds);
+        System.out.println("Using Shutterstock Credentials: " + creds);
         credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()), creds);
 
         // Create model and get and then execute
