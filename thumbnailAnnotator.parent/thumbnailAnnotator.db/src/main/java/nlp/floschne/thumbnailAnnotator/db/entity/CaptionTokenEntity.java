@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
+import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
@@ -35,6 +36,8 @@ public class CaptionTokenEntity extends Entity {
 
     private List<String> lemmata;
 
+    private SentenceContext sentenceContext;
+
     public static CaptionTokenEntity createDummyTestingCaptionTokenEnitity() {
         return new CaptionTokenEntity(
                 "bigger ship",
@@ -42,8 +45,10 @@ public class CaptionTokenEntity extends Entity {
                 Arrays.asList("JJ", "NN"),
                 Arrays.asList("bigger", "ship"),
                 Collections.singletonList(new CaptionToken.UDependency("amod", "bigger", "ship")),
-                Collections.singletonList("ship"),
+                Collections.singletonList("A ship is a vehicle that swims on the water."),
                 Collections.singletonList(ThumbnailEntity.createDummyTestingThumbnailEntity()),
-                Arrays.asList("big", "ship"));
+                Arrays.asList("big", "ship"),
+                SentenceContext.createDummyEntityTestingSentenceContext()
+        );
     }
 }

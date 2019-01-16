@@ -46,8 +46,7 @@ public class CaptionToken extends DomainObject {
 
     private List<String> lemmata;
 
-    // TODO Sentence context
-    // TODO BoW left, right context
+    private SentenceContext sentenceContext;
 
     @Data
     @AllArgsConstructor
@@ -79,9 +78,10 @@ public class CaptionToken extends DomainObject {
                 CaptionToken.Type.NOUN,
                 Arrays.asList("JJ", "NN"),
                 Arrays.asList("smaller", "car"),
-                Collections.singletonList(new UDependency("amod", "smaller", "car")),
-                Collections.singletonList("car"),
+                Collections.singletonList(new UDependency("amod", "small", "car")),
+                Collections.singletonList("A car is a vehicle with four wheels."),
                 Collections.singletonList(Thumbnail.createDummyTestingThumbnail()),
-                Arrays.asList("small", "car"));
+                Arrays.asList("small", "car"),
+                SentenceContext.createDummyEntityTestingSentenceContext());
     }
 }

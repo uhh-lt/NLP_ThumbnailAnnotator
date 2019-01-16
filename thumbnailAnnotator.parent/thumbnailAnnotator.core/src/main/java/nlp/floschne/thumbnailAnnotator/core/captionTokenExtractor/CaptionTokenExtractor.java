@@ -23,6 +23,7 @@ import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosE
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator.PosViewCreator;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
+import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
@@ -34,6 +35,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.net.URL;
@@ -43,6 +45,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * The main component to manage the extraction of {@link CaptionToken}s from {@link UserInput}s.
@@ -121,11 +125,13 @@ public class CaptionTokenExtractor {
             // get UDContext and WordNetSense per sentence
             List<String> wNetSenses = new ArrayList<>();
             List<CaptionToken.UDependency> udContext = new ArrayList<>();
+            SentenceContext sentenceContext = null;
             for (Sentence context : JCasUtil.select(userInputJCas, Sentence.class)) {
                 // only take the parent sentence into account
                 if (cta.getBegin() >= context.getBegin() && cta.getEnd() <= context.getEnd()) {
                     udContext = getUDContext(tokens, userInputJCas, context);
                     wNetSenses = getWNetSenses(cta, userInputJCas, context);
+                    sentenceContext = getSentenceContext(cta, userInputJCas, context);
                 }
             }
 
@@ -137,7 +143,21 @@ public class CaptionTokenExtractor {
                     udContext,
                     wNetSenses,
                     null,
-                    lemmata);
+                    lemmata,
+                    sentenceContext);
+        }
+
+        private SentenceContext getSentenceContext(CaptionTokenAnnotation cta, JCas userInputJCas, Sentence s) {
+            Pair<Integer, Integer> captionTokenSpan = Pair.of(cta.getBegin(), cta.getEnd());
+            List<String> tokens = new ArrayList<>();
+            List<String> lemmata = new ArrayList<>();
+
+            for (Token t : JCasUtil.selectCovered(userInputJCas, Token.class, s)) {
+                tokens.add(t.toString());
+                lemmata.add(t.getLemmaValue());
+            }
+
+            return new SentenceContext(tokens, lemmata, captionTokenSpan);
         }
 
         private List<CaptionToken.UDependency> getUDContext(@NotNull List<String> tokens, JCas userInputJCas, Sentence s) {
