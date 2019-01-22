@@ -54,14 +54,6 @@ public class ShutterstockSource implements IThumbnailSource {
         }
     }
 
-    /**
-     * KEY and SECRET from https://developers.shutterstock.com/user/me/apps
-     */
-    private static final String CONSUMER_KEY_1 = "a23c2-918bb-11c18-e9fa2-268dd-35f02";
-    private static final String CONSUMER_SECRET_1 = "a4b74-ccd2c-a0fb2-c37ad-bface-75a3e";
-
-    private static final String CONSUMER_KEY_2 = "98987-31f4d-0dc30-9f060-bcf36-bf729";
-    private static final String CONSUMER_SECRET_2 = "ca74b-3edd8-a5e18-69871-c013d-89d37";
 
     private static final String IMAGE_SEARCH_RESOURCE_URL = "https://api.shutterstock.com/v2/images/search";
     private static final String IMAGE_DETAILS_RESOURCE_URL = "https://api.shutterstock.com/v2/images/";
@@ -91,43 +83,6 @@ public class ShutterstockSource implements IThumbnailSource {
 
     private String generateImageDetailsApiUrl(Long imageId) throws UnsupportedEncodingException {
         return IMAGE_DETAILS_RESOURCE_URL + URLEncoder.encode(imageId.toString(), "UTF-8");
-    }
-
-    private JsonObject makeGetRequest(String apiCall) throws IOException {
-        // Set host & credentials
-        HttpHost target = new HttpHost("api.shutterstock.com", 443, "https");
-        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider.setCredentials(
-                new AuthScope(target.getHostName(), target.getPort()),
-                new UsernamePasswordCredentials(CONSUMER_KEY_2, CONSUMER_SECRET_2));
-
-        // Create model and get and then execute
-        try (CloseableHttpClient httpclient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build()) {
-            // Create AuthCache instance
-            AuthCache authCache = new BasicAuthCache();
-
-            // Generate BASIC scheme object and add it to the local auth cache
-            BasicScheme basicAuth = new BasicScheme();
-            authCache.put(target, basicAuth);
-
-            // Add AuthCache to the execution context
-            HttpClientContext localContext = HttpClientContext.create();
-            localContext.setAuthCache(authCache);
-
-            // execute the call
-            HttpGet httpget = new HttpGet(apiCall);
-            try (CloseableHttpResponse response = httpclient.execute(target, httpget, localContext)) {
-                JsonObject jsonResponse = new GsonBuilder().create().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
-                if (jsonResponse == null) {
-                    throw new ConnectException("Got no response from Thumbnail Source!");
-                } else if (jsonResponse.get("message") != null) {
-                    throw new ConnectException("Error returned from Thumbnail Source!:" + jsonResponse.get("message"));
-                }
-                return jsonResponse;
-            } catch (Exception e) {
-                throw new ConnectException("There was an error connecting to the Thumbnail Source! " + e.getMessage());
-            }
-        }
     }
 
     private JsonElement getElementByPath(JsonObject obj, String path) {
@@ -203,7 +158,7 @@ public class ShutterstockSource implements IThumbnailSource {
 
     private void setThumbnailDetails(Thumbnail t) throws IOException {
         String imageDetailsApiUrl = generateImageDetailsApiUrl(t.getShutterstockId());
-        JsonObject imageDetailsResponse = this.makeGetRequest(imageDetailsApiUrl);
+        JsonObject imageDetailsResponse = ShutterstockRequestManager.getInstance().makeGetRequest(imageDetailsApiUrl);
 
         List<Thumbnail.Category> categories = extractCategoriesFromJsonResponse(imageDetailsResponse);
         List<String> keywords = extractKeywordsFromJsonResponse(imageDetailsResponse);
@@ -216,7 +171,7 @@ public class ShutterstockSource implements IThumbnailSource {
     public List<Thumbnail> queryThumbnails(String queryParameter, Integer limit) throws IOException {
         String searchImagesApiUrl = generateSearchImagesApiUrl(queryParameter);
 
-        JsonObject searchImagesResponse = this.makeGetRequest(searchImagesApiUrl);
+        JsonObject searchImagesResponse = ShutterstockRequestManager.getInstance().makeGetRequest(searchImagesApiUrl);
         if (searchImagesResponse == null)
             throw new ConnectException("Got no response from Thumbnail Source!");
 
