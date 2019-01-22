@@ -125,7 +125,7 @@ public class ShutterstockRequestManager {
 
     private List<ShutterstockCredentials> credentialsList;
 
-    private Integer currentCredentialsIndex;
+    private AtomicInteger currentCredentialsIndex;
 
     private static final Boolean USE_KEYS_EQUALLY = true;
 
@@ -144,14 +144,14 @@ public class ShutterstockRequestManager {
         this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_9, CONSUMER_SECRET_9));
         this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_10, CONSUMER_SECRET_10));
 
-        this.currentCredentialsIndex = new Random().nextInt() % this.credentialsList.size();
+        this.currentCredentialsIndex = new AtomicInteger(0);
 
 //        Collections.shuffle(this.credentialsList);
     }
 
     private synchronized Integer getAndIncrementCurrentCredentialsIndex() {
-        Integer tmp = this.currentCredentialsIndex;
-        this.currentCredentialsIndex = (this.currentCredentialsIndex + 1) % this.credentialsList.size();
+        Integer tmp = this.currentCredentialsIndex.get();
+        this.currentCredentialsIndex.set((this.currentCredentialsIndex.get() + 1) % this.credentialsList.size());
         return tmp;
     }
 
