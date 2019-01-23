@@ -30,6 +30,6 @@ public class CaptionTokenAnnotatorUtil {
         StringBuilder sb = new StringBuilder();
         for (Lemma l : JCasUtil.selectCovered(aJCas, Lemma.class, captionToken))
             sb.append(l.getValue()).append(";");
-        captionToken.setTokenList(sb.toString().substring(0, sb.length() - 1));
+        captionToken.setLemmaList(sb.toString().substring(0, sb.length() - 1));
     }
 }

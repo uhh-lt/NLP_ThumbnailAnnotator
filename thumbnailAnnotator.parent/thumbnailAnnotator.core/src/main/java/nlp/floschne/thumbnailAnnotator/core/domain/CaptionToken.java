@@ -69,7 +69,8 @@ public class CaptionToken extends DomainObject {
                 this.type.equals(other.type) &&
                 this.posTags.equals(other.posTags) &&
                 this.tokens.equals(other.tokens) &&
-                this.udContext.equals(other.udContext));
+                this.udContext.equals(other.udContext) &&
+                this.sentenceContext.equals(other.sentenceContext));
     }
 
     public static CaptionToken createDummyTestingCaptionToken() {
