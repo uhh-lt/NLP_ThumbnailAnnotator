@@ -28,6 +28,7 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
         assertEquals(a.getId(), b.getId());
         assertEquals(a.getPosTags(), b.getPosTags());
         assertEquals(a.getTokens(), b.getTokens());
+        assertEquals(a.getLemmata(), b.getLemmata());
         assertEquals(a, b);
     }
 
@@ -45,6 +46,6 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
         assertTrue(o.isPresent());
 
         CaptionTokenEntity b = o.get();
-        assertEqual(a, b);
+        this.assertEqual(a, b);
     }
 }

@@ -29,6 +29,7 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
         assertEquals(entity.getValue(), domain.getValue());
         assertEquals(entity.getTokens(), domain.getTokens());
         assertEquals(entity.getPosTags(), domain.getPosTags());
+        assertEquals(entity.getLemmata(), domain.getLemmata());
         assertEquals(entity.getUdContext(), domain.getUdContext());
         assertTrue(entity.getType().equalsIgnoreCase(domain.getType().toString()));
     }

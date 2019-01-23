@@ -44,8 +44,9 @@ public class CaptionToken extends DomainObject {
 
     private List<Thumbnail> thumbnails;
 
-    // TODO Sentence context
-    // TODO BoW left, right context
+    private List<String> lemmata;
+
+    private SentenceContext sentenceContext;
 
     @Data
     @AllArgsConstructor
@@ -68,17 +69,20 @@ public class CaptionToken extends DomainObject {
                 this.type.equals(other.type) &&
                 this.posTags.equals(other.posTags) &&
                 this.tokens.equals(other.tokens) &&
-                this.udContext.equals(other.udContext));
+                this.udContext.equals(other.udContext) &&
+                this.sentenceContext.equals(other.sentenceContext));
     }
 
     public static CaptionToken createDummyTestingCaptionToken() {
         return new CaptionToken(
-                "small car",
+                "smaller car",
                 CaptionToken.Type.NOUN,
                 Arrays.asList("JJ", "NN"),
-                Arrays.asList("small", "car"),
+                Arrays.asList("smaller", "car"),
                 Collections.singletonList(new UDependency("amod", "small", "car")),
-                Collections.singletonList("car"),
-                Collections.singletonList(Thumbnail.createDummyTestingThumbnail()));
+                Collections.singletonList("A car is a vehicle with four wheels."),
+                Collections.singletonList(Thumbnail.createDummyTestingThumbnail()),
+                Arrays.asList("small", "car"),
+                SentenceContext.createDummyEntityTestingSentenceContext());
     }
 }

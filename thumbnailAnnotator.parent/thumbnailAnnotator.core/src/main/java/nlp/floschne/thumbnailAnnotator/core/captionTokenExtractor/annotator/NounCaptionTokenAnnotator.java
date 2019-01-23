@@ -3,9 +3,7 @@ package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.annotator;
 import captionTokenExtractor.type.CaptionTokenAnnotation;
 import captionTokenExtractor.type.PosExclusionFlagToken;
 import captionTokenExtractor.type.ViewMappingToken;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
@@ -76,18 +74,9 @@ public class NounCaptionTokenAnnotator extends JCasAnnotator_ImplBase {
                         captionToken.setTypeOf(CaptionToken.Type.COMPOUND.toString());
                     }
 
-                    // get underlying POS Tags and transform to semicolon separated string aka POSList
-                    StringBuilder sb = new StringBuilder();
-                    for (POS p : JCasUtil.selectCovered(aJCas, POS.class, captionToken))
-                        sb.append(p.getPosValue()).append(";");
-                    captionToken.setPOSList(sb.toString().substring(0, sb.length() - 1));
-
-                    // get underlying Tokens and transform to semicolon separated string aka TokenList
-                    sb.setLength(0);
-                    for (Token t : JCasUtil.selectCovered(aJCas, Token.class, captionToken))
-                        sb.append(t.getCoveredText()).append(";");
-                    captionToken.setTokenList(sb.toString().substring(0, sb.length() - 1));
-
+                    CaptionTokenAnnotatorUtil.setTokenList(aJCas, captionToken);
+                    CaptionTokenAnnotatorUtil.setPosList(aJCas, captionToken);
+                    CaptionTokenAnnotatorUtil.setLemmaList(aJCas, captionToken);
 
                     captionToken.setValue(captionToken.getCoveredText());
                     captionToken.addToIndexes();

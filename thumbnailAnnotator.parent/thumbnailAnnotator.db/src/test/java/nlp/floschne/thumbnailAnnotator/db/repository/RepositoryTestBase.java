@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
@@ -109,7 +110,10 @@ public abstract class RepositoryTestBase<E extends Entity> {
 
         List<E> entities = new ArrayList<>();
         this.repo.findAll().forEach(entities::add);
-        entities.containsAll(saved);
+        assertEquals(entities.size(), saved.size());
+        assertTrue(entities.containsAll(saved));
+
+
     }
 
     @Test

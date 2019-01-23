@@ -30,6 +30,11 @@
                     <description>Semicolon-separated list of the underlying POS Tags</description>
                     <rangeTypeName>uima.cas.String</rangeTypeName>
                 </featureDescription>
+                <featureDescription>
+                    <name>LemmaList</name>
+                    <description>Semicolon-separated list of the underlying Lemma Tags</description>
+                    <rangeTypeName>uima.cas.String</rangeTypeName>
+                </featureDescription>
             </features>
         </typeDescription>
     </types>
