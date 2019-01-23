@@ -33,7 +33,8 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
 
     @Override
     protected void saveEntity(CaptionTokenEntity entity) {
-        this.repo.save(entity);
+        this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
+        this.captionTokenEntityRepository.save(entity);
     }
 
     @Test

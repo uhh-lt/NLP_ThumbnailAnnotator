@@ -16,6 +16,11 @@
           </textarea>
 
           <div class="form-group">
+            <input name="access_key" id="access_key_input" class="form-control d-block mt-1" placeholder="User Access Key" type="text" v-model.trim="form.accessKey"/>
+          </div>
+
+
+          <div class="form-group">
             <button type="submit" class="btn btn-primary btn-block mt-md-2" :disabled="submitting" value="Get Thumbnails!">
               <span v-if="submitting">{{ form.submitting }} <img id="loader" src="../assets/loader.svg"/></span>
               <span v-else>Crawl Thumbnails!</span>
@@ -69,7 +74,8 @@
         submitting: false,
         textAreaCursor: 'cursor: text',
         form: {
-          value: ''
+          value: '',
+          accessKey: ''
         },
         errorMessage: ''
       }
@@ -88,7 +94,13 @@
       },
       crawlThumbnails() {
         this.enableSubmitLoader();
-        axios.post(this.$hostname + "/crawlThumbnails/", this.form).then(response => {
+        let authInput = {
+          "accessKey": this.form.accessKey,
+          "userInput": {
+            "value": this.form.value
+          }
+        };
+        axios.post(this.$hostname + "/crawlThumbnails/", authInput).then(response => {
           this.submitSuccess(response);
           this.disableSubmitLoader();
         }).catch(error => {

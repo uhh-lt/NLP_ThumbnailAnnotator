@@ -1,10 +1,7 @@
 package nlp.floschne.thumbnailAnnotator.db.repository;
 
-import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Arrays;
 
 import static junit.framework.TestCase.assertEquals;
 
