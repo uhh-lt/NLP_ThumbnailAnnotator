@@ -15,9 +15,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @ComponentScan(basePackages = {"nlp.floschne.thumbnailAnnotator.db"})
@@ -46,16 +45,30 @@ public class DBService {
         log.info("DB Service ready!");
     }
 
-    public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) {
+    public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) throws IOException {
         //TODO save the caption to the user by access key!
         CaptionTokenEntity entity;
         if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent())
+            //CaptionToken is already cached -> get the CaptionTokenEntity
             entity = this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
         else
+            //CaptionToken is not yet in the DB -> convert it to a CaptionTokenEntity
             entity = this.captionTokenMapper.mapToEntity(ct);
+
+        UserEntity owner;
+        if (this.userEntityRepository.findByAccessKey(accessKey).isPresent())
+            owner = this.userEntityRepository.findByAccessKey(accessKey).get();
+        else
+            throw new IOException("Cannot find UserEntity with accessKey: " + accessKey);
 
         this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
         this.captionTokenEntityRepository.save(entity);
+
+        if (owner.getCaptionTokenEntities() == null)
+            owner.setCaptionTokenEntities(new ArrayList<>());
+        owner.getCaptionTokenEntities().add(entity);
+
+        this.userEntityRepository.save(owner);
 
         return entity;
     }
@@ -92,6 +105,33 @@ public class DBService {
         if (best != null)
             Collections.sort(best.getThumbnails());
         return best;
+    }
+
+    public List<CaptionTokenEntity> findCaptionTokensByUsername(@NotNull String username) throws IOException {
+        UserEntity owner;
+        if (this.userEntityRepository.findByUsername(username).isPresent())
+            owner = this.userEntityRepository.findByUsername(username).get();
+        else
+            throw new IOException("Cannot find UserEntity with username: " + username);
+
+        return owner.getCaptionTokenEntities();
+    }
+
+    public List<CaptionTokenEntity> findCaptionTokensByAccessKey(@NotNull String accessKey) throws IOException {
+        UserEntity owner;
+        if (this.userEntityRepository.findByAccessKey(accessKey).isPresent())
+            owner = this.userEntityRepository.findByAccessKey(accessKey).get();
+        else
+            throw new IOException("Cannot find UserEntity with AccessKey: " + accessKey);
+
+        return owner.getCaptionTokenEntities();
+    }
+
+    public List<CaptionTokenEntity> findCaptionTokenEntitiesOfAccessKey(@NotNull CaptionToken captionToken, @NotNull String accessKey) throws IOException {
+        List<CaptionTokenEntity> all = this.findCaptionTokensByAccessKey(accessKey);
+        return all.stream()
+                .filter(captionTokenEntity -> captionToken.getValue().equals(captionTokenEntity.getValue()))
+                .collect(Collectors.toList());
     }
 
     public ThumbnailEntity incrementThumbnailPriorityById(@NotNull String id) throws IOException {
@@ -161,5 +201,20 @@ public class DBService {
         if (this.userEntityRepository.findByUsername(username).isPresent())
             return this.userEntityRepository.findByUsername(username).get();
         else return null;
+    }
+
+    public List<CaptionToken> filterUnCachedCaptionTokens(@NotNull List<CaptionToken> extractedCaptionTokens, @NotNull String accessKey) throws IOException {
+        // list of CaptionTokens cached for the the User
+        List<CaptionToken> cachedForUser = this.captionTokenMapper.mapFromEntityList(this.findCaptionTokensByAccessKey(accessKey));
+
+        // TODO find more efficient way!
+        Set<CaptionToken> unCached = new HashSet<>();
+        for (CaptionToken ct : extractedCaptionTokens) {
+            for (CaptionToken cta : cachedForUser)
+                if (!ct.contextEquals(cta))
+                    unCached.add(ct);
+        }
+
+        return new ArrayList<>(unCached);
     }
 }

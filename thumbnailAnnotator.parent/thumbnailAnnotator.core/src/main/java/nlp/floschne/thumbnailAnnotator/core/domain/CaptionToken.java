@@ -63,6 +63,14 @@ public class CaptionToken extends DomainObject {
         }
     }
 
+    public boolean contextEquals(CaptionToken other) {
+        return this == other || (this.value.equals(other.value) &&
+                this.type.equals(other.type) &&
+                this.posTags.equals(other.posTags) &&
+                this.tokens.equals(other.tokens) &&
+                this.udContext.equals(other.udContext));
+    }
+
     public static CaptionToken createDummyTestingCaptionToken() {
         return new CaptionToken(
                 "small car",

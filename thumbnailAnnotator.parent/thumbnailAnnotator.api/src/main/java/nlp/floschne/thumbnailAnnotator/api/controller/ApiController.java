@@ -94,6 +94,7 @@ public class ApiController {
      * @throws IOException
      * @throws JWNLException
      */
+    @Deprecated
     @RequestMapping(value = "/extractCaptionTokens", method = RequestMethod.POST)
     public ExtractorResult extractCaptionTokens(@RequestBody AuthenticatedUserInputDTO authenticatedUserInputDTO) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException, AuthException {
         if (this.dummyAuthenticationService.isActive(authenticatedUserInputDTO.getAccessKey())) {
@@ -124,24 +125,16 @@ public class ApiController {
 
             // extract the CaptionTokens from UserInput
             Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(authenticatedUserInputDTO.getUserInput());
-            List<CaptionToken> captionTokens = extractionResultFuture.get().getCaptionTokens();
+            List<CaptionToken> extractedCaptionTokens = extractionResultFuture.get().getCaptionTokens();
 
             // list of CaptionTokenEntities that are already cached or get cached and will be returned
-            List<CaptionTokenEntity> captionTokenEntities = new ArrayList<>();
-
             List<Future<CaptionToken>> captionTokenFutures = new ArrayList<>();
 
-            // for every extracted CaptionToken
-            for (CaptionToken captionToken : captionTokens) {
-                // check if CaptionTokenEntity that matches the captionToken is cached in repo and skip new crawling if so
-                CaptionTokenEntity result = this.dbService.findBestMatchingCaptionTokenByUDContext(captionToken);
-                if (result != null) {
-                    log.info("Using cached results for '" + captionToken + "'");
-                    if (!captionTokenEntities.contains(result))
-                        captionTokenEntities.add(result);
-                    continue;
-                }
+            // get the remaining CaptionTokens which are not yet cached for the user
+            List<CaptionToken> unCachedCaptionTokens = this.dbService.filterUnCachedCaptionTokens(extractedCaptionTokens, authenticatedUserInputDTO.getAccessKey());
 
+            // for every un-cached CaptionToken
+            for (CaptionToken captionToken : unCachedCaptionTokens) {
                 // no cached CaptionTokenEntity for the CaptionToken -> start crawling
                 try {
                     captionTokenFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
@@ -151,11 +144,12 @@ public class ApiController {
             }
 
 
+            List<CaptionTokenEntity> results = new ArrayList<>();
             // get the CaptionTokens from the Futures, cache them and add them to the final results
             for (Future<CaptionToken> captionTokenFuture : captionTokenFutures) {
                 CaptionToken captionToken = null;
                 try {
-                    // wait no longer than 5 second
+                    // wait no longer than 10 second
                     // TODO ConfigVariable
                     captionToken = captionTokenFuture.get(10, TimeUnit.SECONDS);
                 } catch (TimeoutException e) {
@@ -166,18 +160,18 @@ public class ApiController {
 
                 try {
                     // save the results in repo
-                    log.info("Caching results for '" + captionToken + "'");
+                    log.info("Caching results for '" + captionToken + "' for '" + authenticatedUserInputDTO.getAccessKey() + "'");
                     CaptionTokenEntity result = this.dbService.saveCaptionToken(captionToken, authenticatedUserInputDTO.getAccessKey());
 
-                    if (!captionTokenEntities.contains(result))
-                        captionTokenEntities.add(result);
+                    if (!results.contains(result))
+                        results.add(result);
                 } catch (Exception e) {
                     throw e;
                 }
 
             }
 
-            return captionTokenEntities;
+            return results;
         } else throw new AuthException("AccessKey is not authorized!");
     }
 

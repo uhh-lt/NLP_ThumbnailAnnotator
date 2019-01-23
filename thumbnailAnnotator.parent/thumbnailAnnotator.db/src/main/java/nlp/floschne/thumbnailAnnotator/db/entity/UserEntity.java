@@ -1,16 +1,17 @@
 package nlp.floschne.thumbnailAnnotator.db.entity;
 
 
-import jdk.nashorn.internal.ir.annotations.Reference;
 import lombok.*;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+@AllArgsConstructor
 @RedisHash("user_entity")
 public class UserEntity extends Entity {
 

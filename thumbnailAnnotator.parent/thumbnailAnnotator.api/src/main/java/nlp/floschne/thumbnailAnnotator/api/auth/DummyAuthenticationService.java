@@ -24,7 +24,7 @@ public class DummyAuthenticationService {
     public DummyAuthenticationService(DBService dbService) {
         this.activeSessions = new HashSet<>();
         this.dbService = dbService;
-        this.dbService.registerUser(DUMMY_USER, DUMMY_PASSWORD);
+        this.registerUser(DUMMY_USER, DUMMY_PASSWORD);
     }
 
     public AccessKeyDTO login(String user, String pw) {
