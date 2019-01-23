@@ -3,9 +3,9 @@ package nlp.floschne.thumbnailAnnotator.api.controller;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.extjwnl.JWNLException;
+import nlp.floschne.thumbnailAnnotator.api.auth.AuthenticationService;
 import nlp.floschne.thumbnailAnnotator.api.dto.AccessKeyDTO;
 import nlp.floschne.thumbnailAnnotator.api.dto.AuthenticatedUserInputDTO;
-import nlp.floschne.thumbnailAnnotator.api.auth.DummyAuthenticationService;
 import nlp.floschne.thumbnailAnnotator.api.dto.LoginDataDTO;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.CaptionTokenExtractor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
@@ -42,10 +42,10 @@ public class ApiController {
 
     private final DBService dbService;
 
-    private final DummyAuthenticationService dummyAuthenticationService;
+    private final AuthenticationService dummyAuthenticationService;
 
     @Autowired
-    public ApiController(DBService dbService, DummyAuthenticationService dummyAuthenticationService) {
+    public ApiController(DBService dbService, AuthenticationService dummyAuthenticationService) {
         this.dbService = dbService;
         this.dummyAuthenticationService = dummyAuthenticationService;
         log.info("API Controller ready!");
@@ -178,91 +178,70 @@ public class ApiController {
     /**
      * Get a single {@link CaptionTokenEntity} by it's ID
      *
-     * @param accessKey The accessKey to access the Resource
-     * @param id        the ID of the {@link CaptionTokenEntity}
+     * @param id the ID of the {@link CaptionTokenEntity}
      * @return the {@link CaptionTokenEntity} identified by the ID or null if the accessKey is not active
      */
-    @RequestMapping(value = "/getCaptionToken/{accessKey}/{id}", method = RequestMethod.GET)
-    public CaptionTokenEntity getCaptionToken(@PathVariable String accessKey, @PathVariable String id) throws IOException, AuthException {
-        if (this.dummyAuthenticationService.isActive(accessKey)) {
-            return this.dbService.findCaptionTokenById(id);
+    @RequestMapping(value = "/getCaptionToken/{id}", method = RequestMethod.GET)
+    public CaptionTokenEntity getCaptionToken(@PathVariable String id) throws IOException {
 
-        } else throw new AuthException("AccessKey is not authorized!");
+        return this.dbService.findCaptionTokenById(id);
     }
 
     /**
      * Get a single {@link ThumbnailEntity} by it's ID
      *
-     * @param accessKey The accessKey to access the Resource
-     * @param id        the ID of the {@link ThumbnailEntity}
+     * @param id the ID of the {@link ThumbnailEntity}
      * @return the {@link ThumbnailEntity} identified by the ID or null if the accessKey is not active
      */
-    @RequestMapping(value = "/getThumbnail/{accessKey}/{id}", method = RequestMethod.GET)
-    public ThumbnailEntity getThumbnail(@PathVariable String accessKey, @PathVariable String id) throws IOException, AuthException {
-        if (this.dummyAuthenticationService.isActive(accessKey)) {
-
-            return this.dbService.findThumbnailById(id);
-        } else throw new AuthException("AccessKey is not authorized!");
-
+    @RequestMapping(value = "/getThumbnail/{id}", method = RequestMethod.GET)
+    public ThumbnailEntity getThumbnail(@PathVariable String id) throws IOException {
+        return this.dbService.findThumbnailById(id);
     }
 
     /**
      * Increments the priority of a {@link ThumbnailEntity} identified by the ID.
      *
-     * @param accessKey The accessKey to access the Resource
-     * @param id        the ID of the {@link ThumbnailEntity}
+     * @param id the ID of the {@link ThumbnailEntity}
      * @return the updated {@link ThumbnailEntity} or null if the accessKey is not active
      */
     @Deprecated
     @RequestMapping(value = "/incrementThumbnailPriority/{id}", method = RequestMethod.PUT)
-    public ThumbnailEntity incrementThumbnailPriority(@PathVariable String accessKey, @PathVariable String id) throws IOException, AuthException {
-        if (this.dummyAuthenticationService.isActive(accessKey)) {
-
-            return this.dbService.incrementThumbnailPriorityById(id);
-
-        } else throw new AuthException("AccessKey is not authorized!");
+    public ThumbnailEntity incrementThumbnailPriority(@PathVariable String id) throws IOException {
+        return this.dbService.incrementThumbnailPriorityById(id);
     }
 
     /**
      * Decrements the priority of a {@link ThumbnailEntity} identified by the ID.
      *
-     * @param accessKey The accessKey to access the Resource
-     * @param id        the ID of the {@link ThumbnailEntity}
+     * @param id the ID of the {@link ThumbnailEntity}
      * @return the updated {@link ThumbnailEntity} or null if the accessKey is not active
      */
     @Deprecated
     @RequestMapping(value = "/decrementThumbnailPriority/{id}", method = RequestMethod.PUT)
-    public ThumbnailEntity decrementThumbnailPriority(@PathVariable String accessKey, @PathVariable String id) throws IOException, AuthException {
-        if (this.dummyAuthenticationService.isActive(accessKey)) {
-            return this.dbService.decrementThumbnailPriorityById(id);
+    public ThumbnailEntity decrementThumbnailPriority(@PathVariable String id) throws IOException {
 
-        } else throw new AuthException("AccessKey is not authorized!");
+        return this.dbService.decrementThumbnailPriorityById(id);
     }
 
     /**
      * Sets the priority of a {@link ThumbnailEntity} identified by the ID to the specified value.
      *
-     * @param accessKey The accessKey to access the Resource
-     * @param id        the ID of the {@link ThumbnailEntity}
-     * @param priority  the new priority of the {@link ThumbnailEntity} or null if the accessKey is not active
+     * @param id       the ID of the {@link ThumbnailEntity}
+     * @param priority the new priority of the {@link ThumbnailEntity} or null if the accessKey is not active
      * @return the updated {@link ThumbnailEntity}
      */
     @RequestMapping(value = "/setThumbnailPriority", method = RequestMethod.PUT)
-    public ThumbnailEntity setThumbnailPriority(@RequestParam("accessKey") String accessKey, @RequestParam("id") String id, @RequestParam("priority") Integer priority) throws IOException, AuthException {
-        if (this.dummyAuthenticationService.isActive(accessKey)) {
-            return this.dbService.setThumbnailPriorityById(id, priority);
-        } else throw new AuthException("AccessKey is not authorized!");
+    public ThumbnailEntity setThumbnailPriority(@RequestParam("id") String id, @RequestParam("priority") Integer priority) throws IOException {
+
+        return this.dbService.setThumbnailPriorityById(id, priority);
     }
 
     /**
-     * @param accessKey The accessKey to access the Resource
      * @return All the {@link CaptionTokenEntity} that are saved in the Redis Cache or null if the accessKey is not active
      */
-    @RequestMapping(value = "/{accessKey}/getCachedCaptionTokens", method = RequestMethod.GET)
-    public List<CaptionTokenEntity> getCachedCaptionTokens(@PathVariable String accessKey) throws AuthException {
-        if (this.dummyAuthenticationService.isActive(accessKey)) {
-            return new ArrayList<>(this.dbService.findAllCaptionTokens());
-        } else throw new AuthException("AccessKey is not authorized!");
+    @RequestMapping(value = "/getCachedCaptionTokens", method = RequestMethod.GET)
+    public List<CaptionTokenEntity> getCachedCaptionTokens() {
+        return new ArrayList<>(this.dbService.findAllCaptionTokens());
     }
 
     /**

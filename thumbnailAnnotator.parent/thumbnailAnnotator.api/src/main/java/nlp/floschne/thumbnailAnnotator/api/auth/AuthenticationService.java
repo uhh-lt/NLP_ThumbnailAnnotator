@@ -12,7 +12,7 @@ import java.util.*;
  * Dummy Authentication Service.. This will later be replaced by Spring Oauth2 + JWT Authorization
  */
 @Service
-public class DummyAuthenticationService {
+public class AuthenticationService {
     private static final String DUMMY_USER = "DUMMY";
     private static final String DUMMY_PASSWORD = "dummy";
 
@@ -21,7 +21,7 @@ public class DummyAuthenticationService {
     private DBService dbService;
 
     @Autowired
-    public DummyAuthenticationService(DBService dbService) {
+    public AuthenticationService(DBService dbService) {
         this.activeSessions = new HashSet<>();
         this.dbService = dbService;
         this.registerUser(DUMMY_USER, DUMMY_PASSWORD);
