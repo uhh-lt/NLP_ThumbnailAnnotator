@@ -5,6 +5,7 @@ import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.db.RedisConfig;
 import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {Application.class, RedisConfig.class})
 @WebAppConfiguration
+@Ignore
 public class ApiControllerTest {
 
     //TODO test all api endpoints!
