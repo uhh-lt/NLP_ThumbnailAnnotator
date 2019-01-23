@@ -15,10 +15,9 @@ import java.util.List;
 @NoArgsConstructor
 public class SentenceContext {
 
-    private List<String> tokens;
-    private List<String> lemmata;
-    private List<String> posTags;
-    private Pair<Integer, Integer> captionTokenSpan;
+    private List<String> sTokens;
+    private List<String> sLemmata;
+    private List<String> sPosTags;
 
     // TODO methods to get the n left and/or right words! (context window)
 
@@ -27,8 +26,7 @@ public class SentenceContext {
         List<String> tokens = Arrays.asList(s.split(" "));
         List<String> lemmata = Arrays.asList("I", "like", "my", "small", "car", "a", "lot", ".");
         List<String> pos = Arrays.asList("PRP", "VB", "PRP", "JJR", "NN", "DET", "NN", ".");
-        Pair<Integer, Integer> captionTokenSpan = Pair.of(3, 4);
-        return new SentenceContext(tokens, lemmata, pos, captionTokenSpan);
+        return new SentenceContext(tokens, lemmata, pos);
     }
 
     public static SentenceContext createDummyEntityTestingSentenceContext() {
@@ -36,7 +34,6 @@ public class SentenceContext {
         List<String> tokens = Arrays.asList(s.split(" "));
         List<String> lemmata = Arrays.asList("I", "like", "my", "big", "ship", "a", "lot", ".");
         List<String> pos = Arrays.asList("PRP", "VB", "PRP", "JJR", "NN", "DET", "NN", ".");
-        Pair<Integer, Integer> captionTokenSpan = Pair.of(3, 4);
-        return new SentenceContext(tokens, lemmata, pos, captionTokenSpan);
+        return new SentenceContext(tokens, lemmata, pos);
     }
 }

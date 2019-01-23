@@ -148,7 +148,6 @@ public class CaptionTokenExtractor {
         }
 
         private SentenceContext getSentenceContext(CaptionTokenAnnotation cta, JCas userInputJCas, Sentence s) {
-            Pair<Integer, Integer> captionTokenSpan = Pair.of(cta.getBegin(), cta.getEnd());
             List<String> tokens = new ArrayList<>();
             List<String> lemmata = new ArrayList<>();
             List<String> pos = new ArrayList<>();
@@ -159,7 +158,7 @@ public class CaptionTokenExtractor {
                 pos.add(t.getPosValue());
             }
 
-            return new SentenceContext(tokens, lemmata, pos, captionTokenSpan);
+            return new SentenceContext(tokens, lemmata, pos);
         }
 
         private List<CaptionToken.UDependency> getUDContext(@NotNull List<String> tokens, JCas userInputJCas, Sentence s) {
