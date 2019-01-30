@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,7 +14,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
 public class CaptionToken extends DomainObject {
 
     public enum Type {
@@ -71,6 +72,38 @@ public class CaptionToken extends DomainObject {
                 this.tokens.equals(other.tokens) &&
                 this.udContext.equals(other.udContext) &&
                 this.sentenceContext.equals(other.sentenceContext));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CaptionToken that = (CaptionToken) o;
+
+        return new EqualsBuilder()
+                .append(getValue(), that.getValue())
+                .append(getType(), that.getType())
+                .append(getPosTags(), that.getPosTags())
+                .append(getTokens(), that.getTokens())
+                .append(getUdContext(), that.getUdContext())
+                .append(getLemmata(), that.getLemmata())
+                .append(getSentenceContext(), that.getSentenceContext())
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(getValue())
+                .append(getType())
+                .append(getPosTags())
+                .append(getTokens())
+                .append(getUdContext())
+                .append(getLemmata())
+                .append(getSentenceContext())
+                .toHashCode();
     }
 
     public static CaptionToken createDummyTestingCaptionToken() {
