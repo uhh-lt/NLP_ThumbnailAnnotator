@@ -154,7 +154,7 @@ public class ApiController {
                 try {
                     // wait no longer than 10 second
                     // TODO ConfigVariable
-                    captionToken = captionTokenFuture.get(10, TimeUnit.SECONDS);
+                    captionToken = captionTokenFuture.get(60, TimeUnit.SECONDS);
                 } catch (TimeoutException e) {
                     throw new ConnectException("It too long time (10s) to finish crawling of Thumbnails!");
                 } catch (ExecutionException e) {

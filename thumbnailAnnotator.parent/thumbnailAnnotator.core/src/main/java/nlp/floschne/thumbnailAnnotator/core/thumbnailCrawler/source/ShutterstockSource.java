@@ -54,9 +54,10 @@ public class ShutterstockSource implements IThumbnailSource {
         }
     }
 
-
     private static final String IMAGE_SEARCH_RESOURCE_URL = "https://api.shutterstock.com/v2/images/search";
     private static final String IMAGE_DETAILS_RESOURCE_URL = "https://api.shutterstock.com/v2/images/";
+    private static final String IMAGE_TYPES = "&image_type[]=photo&image_type[]=illustration&image_type[]=vector";
+    private static final String IMAGE_LICENCES = "&license[]=commercial&license[]=editorial&license[]=enhanced&license[]=sensitive";
     private static final String IMAGE_QUERY_PARAMETER = "?query=";
     private static final String SORT_PARAMETER = "&sort=";
     private static final String PER_PAGE_PARAMETER = "&per_page=";
@@ -75,6 +76,8 @@ public class ShutterstockSource implements IThumbnailSource {
 
     private String generateSearchImagesApiUrl(String queryParameter) throws UnsupportedEncodingException {
         return IMAGE_SEARCH_RESOURCE_URL +
+                IMAGE_TYPES +
+                IMAGE_LICENCES +
                 IMAGE_QUERY_PARAMETER + URLEncoder.encode(queryParameter, "UTF-8") +
                 SORT_PARAMETER + sortBy.toString() +
                 PER_PAGE_PARAMETER + per_page.toString();
