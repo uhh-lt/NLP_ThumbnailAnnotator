@@ -9,6 +9,7 @@ import nlp.floschne.thumbnailAnnotator.db.mapper.CaptionTokenMapper;
 import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.UserEntityRepository;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
@@ -203,18 +204,31 @@ public class DBService {
         else return null;
     }
 
-    public List<CaptionToken> filterUnCachedCaptionTokens(@NotNull List<CaptionToken> extractedCaptionTokens, @NotNull String accessKey) throws IOException {
-        // list of CaptionTokens cached for the the User
-        List<CaptionToken> cachedForUser = this.captionTokenMapper.mapFromEntityList(this.findCaptionTokensByAccessKey(accessKey));
+    // TODO implement sufficient test!
+    public Pair<List<CaptionTokenEntity>, List<CaptionToken>> getCachedAndUncachedCaptionTokens(@NotNull List<CaptionToken> extractedCaptionTokens, @NotNull String accessKey) throws IOException {
+        // List of cached CaptionTokens for the the User
+        List<CaptionTokenEntity> cachedForUser = this.findCaptionTokensByAccessKey(accessKey);
+
+
+        // remove all the cached CaptionTokens from the extracted to get the uncached CaptionTokens
+        Set<CaptionToken> cachedForUserSet = new HashSet<>(this.captionTokenMapper.mapFromEntityList(cachedForUser));
+        Set<CaptionToken> uncachedSet = new HashSet<>(extractedCaptionTokens);
+        uncachedSet.removeAll(cachedForUserSet);
+
+        return Pair.of(cachedForUser, new ArrayList<>(uncachedSet));
 
         // TODO find more efficient way!
-        Set<CaptionToken> unCached = new HashSet<>();
-        for (CaptionToken ct : extractedCaptionTokens) {
-            for (CaptionToken cta : cachedForUser)
-                if (!ct.contextEquals(cta))
-                    unCached.add(ct);
-        }
-
-        return new ArrayList<>(unCached);
+//        Set<CaptionToken> unCached = new HashSet<>();
+//        if(cachedForUser.isEmpty())
+//            unCached.addAll(extractedCaptionTokens);
+//        else {
+//            for (CaptionToken ct : extractedCaptionTokens) {
+//                for (CaptionToken cta : cachedForUser)
+//                    if (!ct.contextEquals(cta))
+//                        unCached.add(ct);
+//            }
+//        }
+//
+//        return new ArrayList<>(unCached);
     }
 }

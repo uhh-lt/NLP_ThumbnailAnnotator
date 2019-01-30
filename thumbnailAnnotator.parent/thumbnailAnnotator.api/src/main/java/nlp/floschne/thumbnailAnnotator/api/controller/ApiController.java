@@ -16,6 +16,7 @@ import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -127,15 +128,15 @@ public class ApiController {
             Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(authenticatedUserInputDTO.getUserInput());
             List<CaptionToken> extractedCaptionTokens = extractionResultFuture.get().getCaptionTokens();
 
-            // list of CaptionTokenEntities that are already cached or get cached and will be returned
+
+            // get the cached and uncached CaptionTokens
+            Pair<List<CaptionTokenEntity>, List<CaptionToken>> cachedAndUncachedCaptionTokens = this.dbService.getCachedAndUncachedCaptionTokens(extractedCaptionTokens, authenticatedUserInputDTO.getAccessKey());
+
+
+            // for every un-cached CaptionToken start crawling for Thumbnails!
             List<Future<CaptionToken>> captionTokenFutures = new ArrayList<>();
-
-            // get the remaining CaptionTokens which are not yet cached for the user
-            List<CaptionToken> unCachedCaptionTokens = this.dbService.filterUnCachedCaptionTokens(extractedCaptionTokens, authenticatedUserInputDTO.getAccessKey());
-
-            // for every un-cached CaptionToken
+            List<CaptionToken> unCachedCaptionTokens = cachedAndUncachedCaptionTokens.getRight();
             for (CaptionToken captionToken : unCachedCaptionTokens) {
-                // no cached CaptionTokenEntity for the CaptionToken -> start crawling
                 try {
                     captionTokenFutures.add(ThumbnailCrawler.getInstance().startCrawlingThumbnails(captionToken));
                 } catch (Exception e) {
@@ -144,8 +145,10 @@ public class ApiController {
             }
 
 
-            List<CaptionTokenEntity> results = new ArrayList<>();
-            // get the CaptionTokens from the Futures, cache them and add them to the final results
+            // create the list of resulting CaptionTokenEntities
+            List<CaptionTokenEntity> results = new ArrayList<>(cachedAndUncachedCaptionTokens.getLeft());
+
+            // collect the results from features
             for (Future<CaptionToken> captionTokenFuture : captionTokenFutures) {
                 CaptionToken captionToken = null;
                 try {
