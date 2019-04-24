@@ -234,8 +234,8 @@ public class ApiController {
      * @return the updated {@link ThumbnailEntity}
      */
     @RequestMapping(value = "/setThumbnailPriority", method = RequestMethod.PUT)
-    public ThumbnailEntity setThumbnailPriority(@RequestParam("id") String id, @RequestParam("priority") Integer priority) throws IOException {
-
+    public ThumbnailEntity setThumbnailPriority(@RequestParam("id") String id, @RequestParam("priority") Integer priority, @RequestParam("captionTokenId") String captionTokenId) throws IOException {
+        this.dbService.createFeatureVector(id, captionTokenId);
         return this.dbService.setThumbnailPriorityById(id, priority);
     }
 

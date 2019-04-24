@@ -77,7 +77,7 @@
         // update the priority of the moved thumbnail for sure
         let updatedThumbnailId = ev.moved.element.id;
         let newPriority = this.captionTokenObj.thumbnails.length - ev.moved.newIndex - nonPrioritized;
-        this.setThumbnailPriority(updatedThumbnailId, newPriority);
+        this.setThumbnailPriority(updatedThumbnailId, newPriority, this.captionTokenObj.id);
 
 
         // check if other thumbnail priorities have to be adapted (in order to have the correct priority regarding their positions)
@@ -85,12 +85,12 @@
         for (thumb in this.captionTokenObj.thumbnails) {
           if (this.captionTokenObj.thumbnails[thumb].id !== updatedThumbnailId && this.captionTokenObj.thumbnails[thumb].priority !== 0) {
             let newPriority = this.captionTokenObj.thumbnails.length - this.captionTokenObj.thumbnails.findIndex(t => t.id === this.captionTokenObj.thumbnails[thumb].id) - nonPrioritized;
-            this.setThumbnailPriority(this.captionTokenObj.thumbnails[thumb].id, newPriority);
+            this.setThumbnailPriority(this.captionTokenObj.thumbnails[thumb].id, newPriority, this.captionTokenObj.id);
           }
         }
       },
-      setThumbnailPriority(thumbnailId, priority) {
-        axios.put(this.$hostname + "/setThumbnailPriority?id=" + thumbnailId + "&priority=" + priority).then(response => {
+      setThumbnailPriority(thumbnailId, priority, captionTokenId) {
+        axios.put(this.$hostname + "/setThumbnailPriority?id=" + thumbnailId + "&priority=" + priority + "&captionTokenId=" + captionTokenId).then(response => {
           // update event for components that contain thumbnails
           EventBus.$emit("updatedThumbnail_event", response.data);
           // also update the captionToken to hold the new ordering

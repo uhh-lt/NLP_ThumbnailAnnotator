@@ -3,10 +3,12 @@ package nlp.floschne.thumbnailAnnotator.db.service;
 import lombok.extern.slf4j.Slf4j;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.FeatureVectorEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.mapper.CaptionTokenMapper;
 import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
+import nlp.floschne.thumbnailAnnotator.db.repository.FeatureVectorEntityRepo;
 import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.UserEntityRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,24 +32,27 @@ public class DBService {
 
     private final UserEntityRepository userEntityRepository;
 
+    private final FeatureVectorEntityRepo featureVectorEntityRepo;
+
     private final CaptionTokenMapper captionTokenMapper;
 
     @Autowired
     public DBService(ThumbnailEntityRepository thumbnailEntityRepository,
                      CaptionTokenEntityRepository captionTokenEntityRepository,
                      CaptionTokenMapper captionTokenMapper,
-                     UserEntityRepository userEntityRepository) {
+                     UserEntityRepository userEntityRepository,
+                     FeatureVectorEntityRepo featureVectorEntityRepo) {
         this.thumbnailEntityRepository = thumbnailEntityRepository;
         this.captionTokenEntityRepository = captionTokenEntityRepository;
         this.userEntityRepository = userEntityRepository;
         this.captionTokenMapper = captionTokenMapper;
+        this.featureVectorEntityRepo = featureVectorEntityRepo;
 
 
         log.info("DB Service ready!");
     }
 
     public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) throws IOException {
-        //TODO save the caption to the user by access key!
         CaptionTokenEntity entity;
         if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent())
             //CaptionToken is already cached -> get the CaptionTokenEntity
@@ -235,5 +240,14 @@ public class DBService {
 //        }
 //
 //        return new ArrayList<>(unCached);
+    }
+
+    public void createFeatureVector(String thumbnailId, String captionTokenId) {
+        CaptionTokenEntity cte = this.captionTokenEntityRepository.findById(captionTokenId).get();
+        ThumbnailEntity te = this.thumbnailEntityRepository.findById(thumbnailId).get();
+
+        FeatureVectorEntity fve = new FeatureVectorEntity(cte, te);
+
+        this.featureVectorEntityRepo.save(fve);
     }
 }
