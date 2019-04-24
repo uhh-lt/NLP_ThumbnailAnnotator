@@ -38,7 +38,7 @@ public class CaptionTokenEntity extends Entity {
 
     private SentenceContext sentenceContext;
 
-    public static CaptionTokenEntity createDummyTestingCaptionTokenEnitity() {
+    public static CaptionTokenEntity createDummyTestingCaptionTokenEntity() {
         return new CaptionTokenEntity(
                 "bigger ship",
                 "COMPOUND",

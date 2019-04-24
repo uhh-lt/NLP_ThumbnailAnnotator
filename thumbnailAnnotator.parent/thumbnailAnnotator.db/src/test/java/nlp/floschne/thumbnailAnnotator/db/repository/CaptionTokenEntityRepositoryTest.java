@@ -18,7 +18,7 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
     @NotNull
     @Override
     protected CaptionTokenEntity createDummyEntity() {
-        return CaptionTokenEntity.createDummyTestingCaptionTokenEnitity();
+        return CaptionTokenEntity.createDummyTestingCaptionTokenEntity();
     }
 
     @Override

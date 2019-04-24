@@ -204,6 +204,11 @@ public class DBService {
         else return null;
     }
 
+    public List<UserEntity> getUsers() {
+        return (List<UserEntity>) this.userEntityRepository.findAll();
+    }
+
+
     // TODO implement sufficient test!
     public Pair<List<CaptionTokenEntity>, List<CaptionToken>> getCachedAndUncachedCaptionTokens(@NotNull List<CaptionToken> extractedCaptionTokens, @NotNull String accessKey) throws IOException {
         // List of cached CaptionTokens for the the User

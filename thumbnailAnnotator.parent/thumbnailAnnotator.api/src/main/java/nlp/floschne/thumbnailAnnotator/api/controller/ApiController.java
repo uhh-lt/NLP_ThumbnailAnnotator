@@ -15,6 +15,7 @@ import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -152,11 +153,11 @@ public class ApiController {
             for (Future<CaptionToken> captionTokenFuture : captionTokenFutures) {
                 CaptionToken captionToken = null;
                 try {
-                    // wait no longer than 10 second
+                    // wait no longer than 120 second
                     // TODO ConfigVariable
-                    captionToken = captionTokenFuture.get(60, TimeUnit.SECONDS);
+                    captionToken = captionTokenFuture.get(120, TimeUnit.SECONDS);
                 } catch (TimeoutException e) {
-                    throw new ConnectException("It too long time (10s) to finish crawling of Thumbnails!");
+                    throw new ConnectException("It too long time (120s) to finish crawling of Thumbnails!");
                 } catch (ExecutionException e) {
                     throw e;
                 }
@@ -186,7 +187,6 @@ public class ApiController {
      */
     @RequestMapping(value = "/getCaptionToken/{id}", method = RequestMethod.GET)
     public CaptionTokenEntity getCaptionToken(@PathVariable String id) throws IOException {
-
         return this.dbService.findCaptionTokenById(id);
     }
 
@@ -240,15 +240,33 @@ public class ApiController {
     }
 
     /**
-     * @return All the {@link CaptionTokenEntity} that are saved in the Redis Cache or null if the accessKey is not active
+     * @return All the {@link CaptionTokenEntity} that are saved in the Redis Cache of all users
      */
     @RequestMapping(value = "/getCachedCaptionTokens", method = RequestMethod.GET)
     public List<CaptionTokenEntity> getCachedCaptionTokens() {
         return new ArrayList<>(this.dbService.findAllCaptionTokens());
     }
 
+
     /**
-     * Flushes the Redis Cache
+     * @return All the {@link CaptionTokenEntity} of the given username that are saved in the Redis Cache
+     */
+    @RequestMapping(value = "/getCachedCaptionTokens/{username}", method = RequestMethod.GET)
+    public List<CaptionTokenEntity> getCachedCaptionTokensOfUser(@PathVariable String username) throws IOException {
+        return new ArrayList<>(this.dbService.findCaptionTokensByUsername(username));
+    }
+
+    /**
+     * @return All the {@link CaptionTokenEntity} of the given username that are saved in the Redis Cache
+     */
+    @RequestMapping(value = "/getUsers", method = RequestMethod.GET)
+    public List<UserEntity> getUsers() {
+        return new ArrayList<>(this.dbService.getUsers());
+    }
+
+
+    /**
+     * Flushes the Redis Cache for the CaptionTokens
      */
     @RequestMapping(value = "/flushCache", method = RequestMethod.DELETE)
     public void flushCache() {
