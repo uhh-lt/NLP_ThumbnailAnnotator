@@ -2,6 +2,7 @@ package nlp.floschne.thumbnailAnnotator.db.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
+import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.FeatureVectorEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
@@ -226,28 +227,14 @@ public class DBService {
         uncachedSet.removeAll(cachedForUserSet);
 
         return Pair.of(cachedForUser, new ArrayList<>(uncachedSet));
-
-        // TODO find more efficient way!
-//        Set<CaptionToken> unCached = new HashSet<>();
-//        if(cachedForUser.isEmpty())
-//            unCached.addAll(extractedCaptionTokens);
-//        else {
-//            for (CaptionToken ct : extractedCaptionTokens) {
-//                for (CaptionToken cta : cachedForUser)
-//                    if (!ct.contextEquals(cta))
-//                        unCached.add(ct);
-//            }
-//        }
-//
-//        return new ArrayList<>(unCached);
     }
 
-    public void createFeatureVector(String thumbnailId, String captionTokenId) {
+    public void createAndStoreFeatureVectors(String ownerUsername, String thumbnailId, String captionTokenId) {
         CaptionTokenEntity cte = this.captionTokenEntityRepository.findById(captionTokenId).get();
         ThumbnailEntity te = this.thumbnailEntityRepository.findById(thumbnailId).get();
 
-        FeatureVectorEntity fve = new FeatureVectorEntity(cte, te);
-
-        this.featureVectorEntityRepo.save(fve);
+        // create a feature vec for every category (?!)
+        for(Thumbnail.Category label : te.getCategories())
+            this.featureVectorEntityRepo.save(new FeatureVectorEntity(label.getName(), ownerUsername, cte, te));
     }
 }

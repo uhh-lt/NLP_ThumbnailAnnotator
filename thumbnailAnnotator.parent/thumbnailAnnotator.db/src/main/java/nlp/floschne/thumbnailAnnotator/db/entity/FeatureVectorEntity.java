@@ -20,8 +20,10 @@ public class FeatureVectorEntity {
     @Indexed
     private String id;
 
-    public FeatureVectorEntity(CaptionTokenEntity cte, ThumbnailEntity te) {
-        this.labelCategory = te.getCategories().get(0).getName();
+    public FeatureVectorEntity(String labelCategory, String ownerUserName, CaptionTokenEntity cte, ThumbnailEntity te) {
+        this.labelCategory = labelCategory;
+
+        this.ownerUserName = ownerUserName;
 
         this.captionTokenLemmata = cte.getLemmata();
         this.captionTokenPosTags = cte.getPosTags();
@@ -29,7 +31,7 @@ public class FeatureVectorEntity {
 
 
         this.captionTokenUdContext = new ArrayList<>();
-        for(CaptionToken.UDependency ud : cte.getUdContext())
+        for (CaptionToken.UDependency ud : cte.getUdContext())
             this.captionTokenUdContext.add(ud.toString());
 
         this.captionTokenSentenceContext = cte.getSentenceContext();
@@ -37,10 +39,14 @@ public class FeatureVectorEntity {
         this.thumbnailKeywords = te.getKeywords();
     }
 
+    @Indexed
+    private String ownerUserName;
+
     // FIXME there are often more than one category
     /*
     the label
      */
+    @Indexed
     private String labelCategory;
 
     /*
@@ -55,11 +61,4 @@ public class FeatureVectorEntity {
 
 
     private List<String> thumbnailKeywords;
-    /*
-    TODO
-        - think of representation in Python (to apply ML stuff)
-            - how to access data in python -> simply connect to RedisDB ?!
-     */
-    private List<String> sentenceTokens;
-
 }

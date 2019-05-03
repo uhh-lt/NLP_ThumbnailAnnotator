@@ -234,9 +234,19 @@ public class ApiController {
      * @return the updated {@link ThumbnailEntity}
      */
     @RequestMapping(value = "/setThumbnailPriority", method = RequestMethod.PUT)
-    public ThumbnailEntity setThumbnailPriority(@RequestParam("id") String id, @RequestParam("priority") Integer priority, @RequestParam("captionTokenId") String captionTokenId) throws IOException {
-        this.dbService.createFeatureVector(id, captionTokenId);
+    public ThumbnailEntity setThumbnailPriority(@RequestParam("id") String id, @RequestParam("priority") Integer priority) throws IOException {
         return this.dbService.setThumbnailPriorityById(id, priority);
+    }
+
+    /**
+     * creates and stores a feature vector (in redis db)
+     * @param ownerUsername the username of the owner of the feature vector
+     * @param thumbnailId the id of the Thumbnail the feature vector is created for
+     * @param captionTokenId the id of the CaptionToken the feature vector is created for
+     */
+    @RequestMapping(value = "/storeFeatureVector", method = RequestMethod.PUT)
+    public void storeFeatureVector(@RequestParam("ownerUsername") String ownerUsername, @RequestParam("thumbnailId") String thumbnailId, @RequestParam("captionTokenId") String captionTokenId) {
+        this.dbService.createAndStoreFeatureVectors(ownerUsername, thumbnailId, captionTokenId);
     }
 
     /**

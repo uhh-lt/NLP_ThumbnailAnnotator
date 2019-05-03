@@ -10,7 +10,4 @@ public interface CaptionTokenEntityRepository extends CrudRepository<CaptionToke
     Optional<CaptionTokenEntity> findByValue(String value);
 
     List<CaptionTokenEntity> findAllByValue(String captionTokenValue);
-
-    boolean existsByValue(String value);
-
 }
