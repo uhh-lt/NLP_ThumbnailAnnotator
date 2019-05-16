@@ -1,9 +1,6 @@
 package nlp.floschne.thumbnailAnnotator.core.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
@@ -13,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@ToString
 public class Thumbnail extends DomainObject implements Comparable<Thumbnail> {
     protected String url;
 

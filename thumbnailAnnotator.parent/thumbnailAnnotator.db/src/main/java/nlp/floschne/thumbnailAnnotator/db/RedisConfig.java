@@ -19,7 +19,9 @@ public class RedisConfig {
     @Bean
     @Profile("local")
     RedisConnectionFactory connectionFactoryLocal() {
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration("localhost"));
+        RedisStandaloneConfiguration conf = new RedisStandaloneConfiguration("localhost");
+        conf.setDatabase(1);
+        return new LettuceConnectionFactory(conf);
     }
 
     @Bean

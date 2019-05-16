@@ -14,7 +14,7 @@ public class CaptionTokenMapperTest extends MapperTestBase<CaptionTokenEntity, C
 
     @Override
     public CaptionTokenEntity createDummyEntity() {
-        CaptionTokenEntity entity = CaptionTokenEntity.createDummyTestingCaptionTokenEnitity();
+        CaptionTokenEntity entity = CaptionTokenEntity.createDummyTestingCaptionTokenEntity();
         entity.setId("id");
         return entity;
     }

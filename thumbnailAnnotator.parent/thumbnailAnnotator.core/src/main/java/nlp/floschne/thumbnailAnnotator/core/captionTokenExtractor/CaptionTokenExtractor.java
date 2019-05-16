@@ -153,7 +153,7 @@ public class CaptionTokenExtractor {
             List<String> pos = new ArrayList<>();
 
             for (Token t : JCasUtil.selectCovered(userInputJCas, Token.class, s)) {
-                tokens.add(t.toString());
+                tokens.add(t.getCoveredText());
                 lemmata.add(t.getLemmaValue());
                 pos.add(t.getPosValue());
             }

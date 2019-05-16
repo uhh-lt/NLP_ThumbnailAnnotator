@@ -78,6 +78,7 @@
         let updatedThumbnailId = ev.moved.element.id;
         let newPriority = this.captionTokenObj.thumbnails.length - ev.moved.newIndex - nonPrioritized;
         this.setThumbnailPriority(updatedThumbnailId, newPriority);
+        this.storeFeatureVector('DUMMY', updatedThumbnailId, this.captionTokenObj.id);
 
 
         // check if other thumbnail priorities have to be adapted (in order to have the correct priority regarding their positions)
@@ -86,6 +87,7 @@
           if (this.captionTokenObj.thumbnails[thumb].id !== updatedThumbnailId && this.captionTokenObj.thumbnails[thumb].priority !== 0) {
             let newPriority = this.captionTokenObj.thumbnails.length - this.captionTokenObj.thumbnails.findIndex(t => t.id === this.captionTokenObj.thumbnails[thumb].id) - nonPrioritized;
             this.setThumbnailPriority(this.captionTokenObj.thumbnails[thumb].id, newPriority);
+            this.storeFeatureVector('DUMMY', this.captionTokenObj.thumbnails[thumb].id, this.captionTokenObj.id);
           }
         }
       },
@@ -99,9 +101,19 @@
           console.log(error);
         });
       },
+      storeFeatureVector(username, thumbnailId, captionTokenId) {
+        axios.put(this.$hostname + "/storeFeatureVector?ownerUsername=" + username + "&thumbnailId=" + thumbnailId + "&captionTokenId=" + captionTokenId).catch(error => {
+          console.log(error);
+        });
+      },
     },
     created() {
       this.captionTokenObj = this.captionToken;
+      let thumb = null;
+      for (thumb in this.captionTokenObj.thumbnails) {
+        this.storeFeatureVector('DUMMY', this.captionTokenObj.thumbnails[thumb].id, this.captionTokenObj.id); //FIXME how to get username in production?!
+        console.log('created storeFeatureVector for ' + this.captionTokenObj.thumbnails[thumb].id)
+      }
     }
   }
 </script>

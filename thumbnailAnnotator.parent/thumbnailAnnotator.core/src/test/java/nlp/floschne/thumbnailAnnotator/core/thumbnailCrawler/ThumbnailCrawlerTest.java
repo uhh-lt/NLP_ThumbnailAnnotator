@@ -8,10 +8,6 @@ import java.util.concurrent.Future;
 
 import static org.junit.Assert.*;
 
-import java.util.*;
-import java.lang.*;
-import java.io.*;
-
 public class ThumbnailCrawlerTest {
 
     @Test
@@ -33,4 +29,5 @@ public class ThumbnailCrawlerTest {
         assertFalse(ct.getThumbnails().isEmpty());
         assertEquals(ct, captionToken);
     }
+
 }
