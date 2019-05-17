@@ -17,6 +17,8 @@ import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
+import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
+import nlp.floschne.thumbnailAnnotator.wsd.service.WSDService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,10 +48,13 @@ public class ApiController {
 
     private final AuthenticationService dummyAuthenticationService;
 
+    private final WSDService wsdService;
+
     @Autowired
-    public ApiController(DBService dbService, AuthenticationService dummyAuthenticationService) {
+    public ApiController(DBService dbService, AuthenticationService dummyAuthenticationService, WSDService wsdService) {
         this.dbService = dbService;
         this.dummyAuthenticationService = dummyAuthenticationService;
+        this.wsdService = wsdService;
         log.info("API Controller ready!");
     }
 
@@ -187,7 +192,7 @@ public class ApiController {
      */
     @RequestMapping(value = "/getCaptionToken/{id}", method = RequestMethod.GET)
     public CaptionTokenEntity getCaptionToken(@PathVariable String id) throws IOException {
-        return this.dbService.findCaptionTokenById(id);
+        return this.dbService.findCaptionTokenEntityById(id);
     }
 
     /**
@@ -198,7 +203,7 @@ public class ApiController {
      */
     @RequestMapping(value = "/getThumbnail/{id}", method = RequestMethod.GET)
     public ThumbnailEntity getThumbnail(@PathVariable String id) throws IOException {
-        return this.dbService.findThumbnailById(id);
+        return this.dbService.findThumbnailEntityById(id);
     }
 
     /**
@@ -240,13 +245,24 @@ public class ApiController {
 
     /**
      * creates and stores a feature vector (in redis db)
-     * @param ownerUsername the username of the owner of the feature vector
-     * @param thumbnailId the id of the Thumbnail the feature vector is created for
+     *
+     * @param ownerUsername  the username of the owner of the feature vector
+     * @param thumbnailId    the id of the Thumbnail the feature vector is created for
      * @param captionTokenId the id of the CaptionToken the feature vector is created for
      */
     @RequestMapping(value = "/storeFeatureVector", method = RequestMethod.PUT)
     public void storeFeatureVector(@RequestParam("ownerUsername") String ownerUsername, @RequestParam("thumbnailId") String thumbnailId, @RequestParam("captionTokenId") String captionTokenId) {
-        this.dbService.createAndStoreFeatureVectors(ownerUsername, thumbnailId, captionTokenId);
+        try {
+            CaptionToken ct = this.dbService.findCaptionTokenById(captionTokenId);
+            Thumbnail t = this.dbService.findThumbnailById(thumbnailId);
+
+            List<FeatureVector> featureVectors = this.wsdService.extractFeatures(ct, t);
+            this.dbService.saveFeatureVectors(ownerUsername, featureVectors);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**

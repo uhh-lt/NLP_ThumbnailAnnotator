@@ -33,6 +33,7 @@
         <module>thumbnailAnnotator.core</module>
         <module>thumbnailAnnotator.db</module>
         <module>thumbnailAnnotator.api</module>
+        <module>thumbnailAnnotator.wsd</module>
     </modules>
 
     <dependencies>

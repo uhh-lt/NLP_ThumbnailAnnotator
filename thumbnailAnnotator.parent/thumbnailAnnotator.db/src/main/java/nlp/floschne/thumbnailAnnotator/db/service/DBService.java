@@ -8,10 +8,13 @@ import nlp.floschne.thumbnailAnnotator.db.entity.FeatureVectorEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.mapper.CaptionTokenMapper;
+import nlp.floschne.thumbnailAnnotator.db.mapper.FeatureVectorMapper;
+import nlp.floschne.thumbnailAnnotator.db.mapper.ThumbnailMapper;
 import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.FeatureVectorEntityRepo;
 import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.UserEntityRepository;
+import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,17 +40,24 @@ public class DBService {
 
     private final CaptionTokenMapper captionTokenMapper;
 
+    private final ThumbnailMapper thumbnailMapper;
+
+    private final FeatureVectorMapper featureVectorMapper;
+
+
     @Autowired
     public DBService(ThumbnailEntityRepository thumbnailEntityRepository,
                      CaptionTokenEntityRepository captionTokenEntityRepository,
                      CaptionTokenMapper captionTokenMapper,
                      UserEntityRepository userEntityRepository,
-                     FeatureVectorEntityRepo featureVectorEntityRepo) {
+                     FeatureVectorEntityRepo featureVectorEntityRepo, ThumbnailMapper thumbnailMapper, FeatureVectorMapper featureVectorMapper) {
         this.thumbnailEntityRepository = thumbnailEntityRepository;
         this.captionTokenEntityRepository = captionTokenEntityRepository;
         this.userEntityRepository = userEntityRepository;
         this.captionTokenMapper = captionTokenMapper;
         this.featureVectorEntityRepo = featureVectorEntityRepo;
+        this.thumbnailMapper = thumbnailMapper;
+        this.featureVectorMapper = featureVectorMapper;
 
 
         log.info("DB Service ready!");
@@ -80,7 +90,7 @@ public class DBService {
         return entity;
     }
 
-    public CaptionTokenEntity findCaptionTokenById(@NotNull String id) throws IOException {
+    public CaptionTokenEntity findCaptionTokenEntityById(@NotNull String id) throws IOException {
         if (this.captionTokenEntityRepository.findById(id).isPresent()) {
             CaptionTokenEntity ct = this.captionTokenEntityRepository.findById(id).get();
             Collections.sort(ct.getThumbnails());
@@ -90,10 +100,29 @@ public class DBService {
         }
     }
 
-    public ThumbnailEntity findThumbnailById(@NotNull String id) throws IOException {
+    public ThumbnailEntity findThumbnailEntityById(@NotNull String id) throws IOException {
         if (this.thumbnailEntityRepository.findById(id).isPresent()) {
             ThumbnailEntity te = this.thumbnailEntityRepository.findById(id).get();
             return te;
+        } else {
+            throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
+        }
+    }
+
+    public CaptionToken findCaptionTokenById(@NotNull String id) throws IOException {
+        if (this.captionTokenEntityRepository.findById(id).isPresent()) {
+            CaptionTokenEntity ct = this.captionTokenEntityRepository.findById(id).get();
+            Collections.sort(ct.getThumbnails());
+            return this.captionTokenMapper.mapFromEntity(ct);
+        } else {
+            throw new IOException("Cannot find CaptionTokenEntity with ID: " + id);
+        }
+    }
+
+    public Thumbnail findThumbnailById(@NotNull String id) throws IOException {
+        if (this.thumbnailEntityRepository.findById(id).isPresent()) {
+            ThumbnailEntity te = this.thumbnailEntityRepository.findById(id).get();
+            return this.thumbnailMapper.mapFromEntity(te);
         } else {
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
         }
@@ -229,12 +258,11 @@ public class DBService {
         return Pair.of(cachedForUser, new ArrayList<>(uncachedSet));
     }
 
-    public void createAndStoreFeatureVectors(String ownerUsername, String thumbnailId, String captionTokenId) {
-        CaptionTokenEntity cte = this.captionTokenEntityRepository.findById(captionTokenId).get();
-        ThumbnailEntity te = this.thumbnailEntityRepository.findById(thumbnailId).get();
+    public List<FeatureVectorEntity> saveFeatureVectors(String ownerUsername, List<FeatureVector> featureVectors) {
+        List<FeatureVectorEntity> featureVectorEntities = this.featureVectorMapper.mapToEntityList(featureVectors);
+        for (FeatureVectorEntity fve : featureVectorEntities)
+            fve.setOwnerUserName(ownerUsername);
 
-        // create a feature vec for every category (?!)
-        for(Thumbnail.Category label : te.getCategories())
-            this.featureVectorEntityRepo.save(new FeatureVectorEntity(label.getName(), ownerUsername, cte, te));
+        return (List<FeatureVectorEntity>) this.featureVectorEntityRepo.saveAll(featureVectorEntities);
     }
 }

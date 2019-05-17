@@ -7,11 +7,11 @@
     <parent>
         <groupId>nlp.floschne</groupId>
         <artifactId>thumbnailAnnotator.parent</artifactId>
-        <version>0.0.1</version>
+        <version>${thumbnailAnnotator.parent.version}</version>
     </parent>
 
     <artifactId>thumbnailAnnotator.wsd</artifactId>
-    <version>0.0.1</version>
+    <version>${thumbnailAnnotator.parent.version}</version>
     <packaging>jar</packaging>
 
     <name>thumbnailAnnotator.wsd</name>
@@ -43,8 +43,28 @@
         <dependency>
             <groupId>nlp.floschne</groupId>
             <artifactId>thumbnailAnnotator.core</artifactId>
-            <version>0.0.1</version>
+            <version>${thumbnailAnnotator.parent.version}</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${org.springframework.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test</artifactId>
+            <!-- exclude the logging due to dependency conflicts with DKPro in core module (with Lesk) -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
