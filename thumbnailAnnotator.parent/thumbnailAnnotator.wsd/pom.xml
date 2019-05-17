@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>nlp.floschne</groupId>
+        <artifactId>thumbnailAnnotator.parent</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <artifactId>thumbnailAnnotator.wsd</artifactId>
+    <version>0.0.1</version>
+    <packaging>jar</packaging>
+
+    <name>thumbnailAnnotator.wsd</name>
+    <description>ThumbnailAnnotator WSD</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-parent</artifactId>
+                <version>${org.springframework.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>nlp.floschne</groupId>
+            <artifactId>thumbnailAnnotator.core</artifactId>
+            <version>0.0.1</version>
+            <scope>compile</scope>
+        </dependency>
+
+    </dependencies>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${org.springframework.boot.version}</version>
+                <configuration>
+                    <skip>false</skip>
+                    <profiles>
+                        <profile>local</profile>
+                        <profile>docker</profile>
+                    </profiles>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

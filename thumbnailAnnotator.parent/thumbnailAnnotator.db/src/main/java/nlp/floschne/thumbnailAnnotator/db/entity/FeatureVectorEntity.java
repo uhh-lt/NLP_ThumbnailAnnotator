@@ -2,42 +2,21 @@ package nlp.floschne.thumbnailAnnotator.db.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
 @RedisHash("feature_vector")
-public class FeatureVectorEntity {
-
-    @Indexed
-    private String id;
-
-    public FeatureVectorEntity(String labelCategory, String ownerUserName, CaptionTokenEntity cte, ThumbnailEntity te) {
-        this.labelCategory = labelCategory;
-
-        this.ownerUserName = ownerUserName;
-
-        this.captionTokenLemmata = cte.getLemmata();
-        this.captionTokenPosTags = cte.getPosTags();
-        this.captionTokenTokens = cte.getTokens();
-
-
-        this.captionTokenUdContext = new ArrayList<>();
-        for (CaptionToken.UDependency ud : cte.getUdContext())
-            this.captionTokenUdContext.add(ud.toString());
-
-        this.captionTokenSentenceContext = cte.getSentenceContext();
-
-        this.thumbnailKeywords = te.getKeywords();
-    }
+public class FeatureVectorEntity extends Entity {
 
     @Indexed
     private String ownerUserName;
@@ -47,7 +26,7 @@ public class FeatureVectorEntity {
     the label
      */
     @Indexed
-    private String labelCategory;
+    private String label;
 
     /*
     Features
@@ -61,4 +40,17 @@ public class FeatureVectorEntity {
 
 
     private List<String> thumbnailKeywords;
+
+    public static FeatureVectorEntity createDummyTestingFeatureVectorEntity() {
+        return new FeatureVectorEntity(
+                "DummyUser",
+                "DummyLabel",
+                Arrays.asList("POS1", "POS2"),
+                Arrays.asList("Token1", "Token2"),
+                Arrays.asList("Lemma1", "Lemma2"),
+                Arrays.asList("Lemma1", "Lemma2"),
+                SentenceContext.createDummyEntityTestingSentenceContext(),
+                Arrays.asList("keyword1", "keyword2")
+        );
+    }
 }
