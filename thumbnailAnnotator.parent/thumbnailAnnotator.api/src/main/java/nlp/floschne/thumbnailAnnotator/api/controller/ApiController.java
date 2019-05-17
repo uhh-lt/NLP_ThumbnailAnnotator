@@ -244,14 +244,14 @@ public class ApiController {
     }
 
     /**
-     * creates and stores a feature vector (in redis db)
+     * generates and stores a feature vector for every thumbnail category
      *
      * @param ownerUsername  the username of the owner of the feature vector
      * @param thumbnailId    the id of the Thumbnail the feature vector is created for
      * @param captionTokenId the id of the CaptionToken the feature vector is created for
      */
-    @RequestMapping(value = "/storeFeatureVector", method = RequestMethod.PUT)
-    public void storeFeatureVector(@RequestParam("ownerUsername") String ownerUsername, @RequestParam("thumbnailId") String thumbnailId, @RequestParam("captionTokenId") String captionTokenId) {
+    @RequestMapping(value = "/generateFeatureVector", method = RequestMethod.PUT)
+    public void generateFeatureVector(@RequestParam("ownerUsername") String ownerUsername, @RequestParam("thumbnailId") String thumbnailId, @RequestParam("captionTokenId") String captionTokenId) {
         try {
             CaptionToken ct = this.dbService.findCaptionTokenById(captionTokenId);
             Thumbnail t = this.dbService.findThumbnailById(thumbnailId);
