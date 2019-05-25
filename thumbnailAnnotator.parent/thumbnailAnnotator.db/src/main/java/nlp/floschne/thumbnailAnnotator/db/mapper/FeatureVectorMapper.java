@@ -13,13 +13,33 @@ import java.util.List;
 @Component
 public interface FeatureVectorMapper extends IMapper<FeatureVectorEntity, FeatureVector> {
 
-    @Override
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "ownerUserName", ignore = true)
-    FeatureVectorEntity mapToEntity(FeatureVector domainObject);
+    @Mapping(target = "id", ignore = true)
+    default FeatureVectorEntity mapToEntity(FeatureVector domainObject) {
+        FeatureVectorEntity entity = new FeatureVectorEntity();
 
-    @Override
-    FeatureVector mapFromEntity(FeatureVectorEntity entity);
+        entity.setCaptionTokenTokens(domainObject.getCaptionTokenTokens());
+        entity.setCaptionTokenLemmata(domainObject.getCaptionTokenLemmata());
+        entity.setCaptionTokenPosTags(domainObject.getCaptionTokenPosTags());
+        entity.setCaptionTokenSentenceContext(domainObject.getCaptionTokenSentenceContext());
+        entity.setCaptionTokenUdContext(domainObject.getCaptionTokenUdContext());
+        entity.setThumbnailKeywords(domainObject.getThumbnailKeywords());
+        entity.setLabel(domainObject.getLabel().getValue());
+
+        return entity;
+    }
+
+    default FeatureVector mapFromEntity(FeatureVectorEntity entity) {
+        return new FeatureVector(
+                entity.getLabel(),
+                entity.getCaptionTokenPosTags(),
+                entity.getCaptionTokenTokens(),
+                entity.getCaptionTokenLemmata(),
+                entity.getCaptionTokenUdContext(),
+                entity.getCaptionTokenSentenceContext(),
+                entity.getThumbnailKeywords()
+        );
+    }
 
     @Override
     List<FeatureVectorEntity> mapToEntityList(List<FeatureVector> domainObjectList);

@@ -21,23 +21,15 @@ public class FeatureVectorEntity extends Entity {
     @Indexed
     private String ownerUserName;
 
-    // FIXME there are often more than one category
-    /*
-    the label
-     */
     @Indexed
     private String label;
 
-    /*
-    Features
-     */
     private List<String> captionTokenPosTags;
     private List<String> captionTokenTokens;
     private List<String> captionTokenLemmata;
 
     private List<String> captionTokenUdContext;
     private SentenceContext captionTokenSentenceContext;
-
 
     private List<String> thumbnailKeywords;
 

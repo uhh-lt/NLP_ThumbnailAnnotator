@@ -23,11 +23,11 @@ public class ThumbnailEntity extends Entity implements Comparable<ThumbnailEntit
 
     private String description;
 
-    protected Long shutterstockId;
+    private Long shutterstockId;
 
-    protected List<Thumbnail.Category> categories;
+    private List<Thumbnail.Category> categories;
 
-    protected List<String> keywords;
+    private List<String> keywords;
 
     @Override
     public int compareTo(ThumbnailEntity o) {

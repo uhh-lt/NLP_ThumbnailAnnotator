@@ -26,7 +26,7 @@ public class FeatureVectorMapperTest extends MapperTestBase<FeatureVectorEntity,
 
     @Override
     public void assertEqual(FeatureVectorEntity entity, FeatureVector domain) {
-        assertEquals(entity.getLabel(), domain.getLabel());
+        assertEquals(entity.getLabel(), domain.getLabel().getValue());
 
         assertEquals(entity.getCaptionTokenTokens(), domain.getCaptionTokenTokens());
         assertEquals(entity.getCaptionTokenLemmata(), domain.getCaptionTokenLemmata());

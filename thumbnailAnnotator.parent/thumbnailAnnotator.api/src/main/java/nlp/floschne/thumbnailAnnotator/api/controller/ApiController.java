@@ -156,7 +156,7 @@ public class ApiController {
 
             // collect the results from features
             for (Future<CaptionToken> captionTokenFuture : captionTokenFutures) {
-                CaptionToken captionToken = null;
+                CaptionToken captionToken;
                 try {
                     // wait no longer than 120 second
                     // TODO ConfigVariable
@@ -179,7 +179,6 @@ public class ApiController {
                 }
 
             }
-
             return results;
         } else throw new AuthException("AccessKey is not authorized!");
     }
@@ -256,7 +255,8 @@ public class ApiController {
             CaptionToken ct = this.dbService.findCaptionTokenById(captionTokenId);
             Thumbnail t = this.dbService.findThumbnailById(thumbnailId);
 
-            List<FeatureVector> featureVectors = this.wsdService.extractFeatures(ct, t);
+            @SuppressWarnings("unchecked")
+            List<FeatureVector> featureVectors = (List) this.wsdService.extractFeatures(ct, t);
             this.dbService.saveFeatureVectors(ownerUsername, featureVectors);
 
         } catch (IOException e) {

@@ -3,6 +3,7 @@ package nlp.floschne.thumbnailAnnotator.db.service;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.db.entity.FeatureVectorEntity;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.NaiveBayesClassifier;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.BasicFeatureExtractor;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import nlp.floschne.thumbnailAnnotator.wsd.service.WSDService;
@@ -19,7 +20,11 @@ import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertNotEquals;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {WSDService.class, BasicFeatureExtractor.class, DBService.class})
+@SpringBootTest(classes = {
+        WSDService.class,
+        BasicFeatureExtractor.class,
+        NaiveBayesClassifier.class,
+        DBService.class})
 public class DBServiceTest {
 
 
@@ -147,7 +152,8 @@ public class DBServiceTest {
         CaptionToken c = CaptionToken.createDummyTestingCaptionToken();
         Thumbnail t = Thumbnail.createDummyTestingThumbnail();
 
-        List<FeatureVector> featureVectors = this.wsdService.extractFeatures(c, t);
+        @SuppressWarnings("unchecked")
+        List<FeatureVector> featureVectors = (List) this.wsdService.extractFeatures(c, t);
 
         List<FeatureVectorEntity> featureVectorEntities = this.dbService.saveFeatureVectors("dummy", featureVectors);
 

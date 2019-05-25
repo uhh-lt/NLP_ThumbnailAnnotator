@@ -2,16 +2,16 @@ package nlp.floschne.thumbnailAnnotator.wsd.featureExtractor;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.Label;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
-@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @ToString
 public class FeatureVector extends IFeatureVector {
 
@@ -26,13 +26,14 @@ public class FeatureVector extends IFeatureVector {
     private List<String> thumbnailKeywords;
 
     public FeatureVector(String label, List<String> captionTokenPosTags, List<String> captionTokenTokens, List<String> captionTokenLemmata, List<String> captionTokenUdContext, SentenceContext captionTokenSentenceContext, List<String> thumbnailKeywords) {
-        super(label);
+        super(new Label<>(label));
         this.captionTokenPosTags = captionTokenPosTags;
         this.captionTokenTokens = captionTokenTokens;
         this.captionTokenLemmata = captionTokenLemmata;
         this.captionTokenUdContext = captionTokenUdContext;
         this.captionTokenSentenceContext = captionTokenSentenceContext;
         this.thumbnailKeywords = thumbnailKeywords;
+        this.features = this.getAllFeatures();
     }
 
     public static FeatureVector createDummyTestingFeatureVector() {
@@ -41,9 +42,25 @@ public class FeatureVector extends IFeatureVector {
                 Arrays.asList("POS3", "POS4"),
                 Arrays.asList("Token3", "Token4"),
                 Arrays.asList("Lemma3", "Lemma4"),
-                Arrays.asList("Lemma3", "Lemma4"),
+                Arrays.asList("subj(a, b)", "det(c)"),
                 SentenceContext.createDummyDomainTestingSentenceContext(),
                 Arrays.asList("keyword3", "keyword4")
         );
+    }
+
+    private List<Object> getAllFeatures() {
+        List<Object> allFeatures = new ArrayList<>();
+        allFeatures.addAll(this.captionTokenPosTags);
+        allFeatures.addAll(this.captionTokenTokens);
+        allFeatures.addAll(this.captionTokenLemmata);
+
+        allFeatures.addAll(this.captionTokenUdContext);
+        allFeatures.addAll(this.captionTokenSentenceContext.getSLemmata());
+        allFeatures.addAll(this.captionTokenSentenceContext.getSPosTags());
+        allFeatures.addAll(this.captionTokenSentenceContext.getSTokens());
+
+        allFeatures.addAll(this.thumbnailKeywords);
+
+        return allFeatures;
     }
 }
