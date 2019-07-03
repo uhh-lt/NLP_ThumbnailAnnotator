@@ -63,6 +63,15 @@ public class DBService {
         log.info("DB Service ready!");
     }
 
+    // check if already cached (if value AND sentence context match) // TODO better UDContext?!
+    private CaptionTokenEntity captionTokenIsCached(@NotNull CaptionToken ct) {
+        if(this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent() &&
+                this.captionTokenEntityRepository.findByValue(ct.getValue()).get().getSentenceContext().equals(ct.getSentenceContext()))
+            return this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
+        else
+            return null;
+    }
+
     public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) throws IOException {
         // get user
         UserEntity owner;
@@ -71,13 +80,9 @@ public class DBService {
         else
             throw new IOException("Cannot find UserEntity with accessKey: " + accessKey);
 
-        // check if already cached (if value AND sentence context match) // TODO better UDContext?!
-        CaptionTokenEntity entity;
-        if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent() &&
-                this.captionTokenEntityRepository.findByValue(ct.getValue()).get().getSentenceContext().equals(ct.getSentenceContext()))
-            //CaptionToken is already cached -> get the CaptionTokenEntity
-            entity = this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
-        else
+        //CaptionToken is already cached -> get the CaptionTokenEntity
+        CaptionTokenEntity entity = captionTokenIsCached(ct);
+        if (entity == null)
             //CaptionToken is not yet in the DB -> convert it to a CaptionTokenEntity
             entity = this.captionTokenMapper.mapToEntity(ct);
 
@@ -250,17 +255,21 @@ public class DBService {
 
 
     // TODO implement sufficient test!
+    // TODO rewrite this ugly piece of code... (stream / filter API)
     public Pair<List<CaptionTokenEntity>, List<CaptionToken>> getCachedAndUncachedCaptionTokens(@NotNull List<CaptionToken> extractedCaptionTokens, @NotNull String accessKey) throws IOException {
-        // List of cached CaptionTokens for the the User
-        List<CaptionTokenEntity> cachedForUser = this.findCaptionTokensByAccessKey(accessKey);
-
+        // get cached CaptionTokens from extracted CaptionTokens
+        Set<CaptionTokenEntity> cached = new HashSet<>();
+        for (CaptionToken ct : extractedCaptionTokens) {
+            CaptionTokenEntity cte = captionTokenIsCached(ct);
+            if (cte != null)
+                cached.add(cte);
+        }
 
         // remove all the cached CaptionTokens from the extracted to get the uncached CaptionTokens
-        Set<CaptionToken> cachedForUserSet = new HashSet<>(this.captionTokenMapper.mapFromEntityList(cachedForUser));
         Set<CaptionToken> uncachedSet = new HashSet<>(extractedCaptionTokens);
-        uncachedSet.removeAll(cachedForUserSet);
+        uncachedSet.removeAll(this.captionTokenMapper.mapFromEntityList(new ArrayList<>(cached)));
 
-        return Pair.of(cachedForUser, new ArrayList<>(uncachedSet));
+        return Pair.of(new ArrayList<>(cached), new ArrayList<>(uncachedSet));
     }
 
     public List<FeatureVectorEntity> saveFeatureVectors(String ownerUsername, List<FeatureVector> featureVectors) {
@@ -282,8 +291,8 @@ public class DBService {
     public UserEntity findOwnerOfCaptionTokenId(String captionTokenId) throws IOException {
         CaptionTokenEntity cte = this.findCaptionTokenEntityById(captionTokenId);
         List<UserEntity> allUsers = (List<UserEntity>) this.userEntityRepository.findAll();
-        for( UserEntity user : allUsers) {
-            if(user.getCaptionTokenEntities().contains(cte))
+        for (UserEntity user : allUsers) {
+            if (user.getCaptionTokenEntities().contains(cte))
                 return user;
         }
         throw new IOException("Cannot find Owner of CaptionTokenEntity with ID: " + captionTokenId);
