@@ -64,23 +64,27 @@ public class DBService {
     }
 
     public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) throws IOException {
-        CaptionTokenEntity entity;
-        if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent())
-            //CaptionToken is already cached -> get the CaptionTokenEntity
-            entity = this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
-        else
-            //CaptionToken is not yet in the DB -> convert it to a CaptionTokenEntity
-            entity = this.captionTokenMapper.mapToEntity(ct);
-
+        // get user
         UserEntity owner;
         if (this.userEntityRepository.findByAccessKey(accessKey).isPresent())
             owner = this.userEntityRepository.findByAccessKey(accessKey).get();
         else
             throw new IOException("Cannot find UserEntity with accessKey: " + accessKey);
 
+        // check if already cached (if value AND sentence context match) // TODO better UDContext?!
+        CaptionTokenEntity entity;
+        if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent() &&
+                this.captionTokenEntityRepository.findByValue(ct.getValue()).get().getSentenceContext().equals(ct.getSentenceContext()))
+            //CaptionToken is already cached -> get the CaptionTokenEntity
+            entity = this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
+        else
+            //CaptionToken is not yet in the DB -> convert it to a CaptionTokenEntity
+            entity = this.captionTokenMapper.mapToEntity(ct);
+
         this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
         this.captionTokenEntityRepository.save(entity);
 
+        // add the CaptionTokenEntity to the user
         if (owner.getCaptionTokenEntities() == null)
             owner.setCaptionTokenEntities(new ArrayList<>());
         owner.getCaptionTokenEntities().add(entity);
@@ -102,8 +106,7 @@ public class DBService {
 
     public ThumbnailEntity findThumbnailEntityById(@NotNull String id) throws IOException {
         if (this.thumbnailEntityRepository.findById(id).isPresent()) {
-            ThumbnailEntity te = this.thumbnailEntityRepository.findById(id).get();
-            return te;
+            return this.thumbnailEntityRepository.findById(id).get();
         } else {
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
         }
@@ -224,7 +227,8 @@ public class DBService {
     public boolean checkPassword(@NotNull String username, @NotNull String password) {
         if (!this.userEntityRepository.findByUsername(username).isPresent())
             return false;
-        else return this.userEntityRepository.findByUsername(username).get().getPassword().equals(password);
+        else
+            return this.userEntityRepository.findByUsername(username).get().getPassword().equals(password);
     }
 
     public UserEntity getUserByAccessKey(@NotNull String accessKey) {
@@ -264,5 +268,13 @@ public class DBService {
             fve.setOwnerUserName(ownerUsername);
 
         return (List<FeatureVectorEntity>) this.featureVectorEntityRepo.saveAll(featureVectorEntities);
+    }
+
+    public FeatureVector findFeatureVectorById(String featureVectorId) throws IOException {
+        Optional<FeatureVectorEntity> featureVector = this.featureVectorEntityRepo.findById(featureVectorId);
+        if (featureVector.isPresent())
+            return this.featureVectorMapper.mapFromEntity(featureVector.get());
+        else
+            throw new IOException("Cannot find FeatureVectorEntity with ID: " + featureVectorId);
     }
 }
