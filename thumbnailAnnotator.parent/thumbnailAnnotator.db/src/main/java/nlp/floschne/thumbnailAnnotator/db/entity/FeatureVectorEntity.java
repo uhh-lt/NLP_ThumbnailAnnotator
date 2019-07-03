@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.Label;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
@@ -22,7 +23,7 @@ public class FeatureVectorEntity extends Entity {
     private String ownerUserName;
 
     @Indexed
-    private String label;
+    private Label label;
 
     private List<String> captionTokenPosTags;
     private List<String> captionTokenTokens;
@@ -36,7 +37,7 @@ public class FeatureVectorEntity extends Entity {
     public static FeatureVectorEntity createDummyTestingFeatureVectorEntity() {
         return new FeatureVectorEntity(
                 "DummyUser",
-                "DummyLabel",
+                new Label<>("DummyLabel"),
                 Arrays.asList("POS1", "POS2"),
                 Arrays.asList("Token1", "Token2"),
                 Arrays.asList("Lemma1", "Lemma2"),

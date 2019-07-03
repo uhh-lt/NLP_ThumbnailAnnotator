@@ -24,14 +24,14 @@ public interface FeatureVectorMapper extends IMapper<FeatureVectorEntity, Featur
         entity.setCaptionTokenSentenceContext(domainObject.getCaptionTokenSentenceContext());
         entity.setCaptionTokenUdContext(domainObject.getCaptionTokenUdContext());
         entity.setThumbnailKeywords(domainObject.getThumbnailKeywords());
-        entity.setLabel(domainObject.getLabel().getValue());
+        entity.setLabel(domainObject.getLabel());
 
         return entity;
     }
 
     default FeatureVector mapFromEntity(FeatureVectorEntity entity) {
         return new FeatureVector(
-                entity.getLabel(),
+                (String) entity.getLabel().getValue(), // TODO ugly cast..
                 entity.getCaptionTokenPosTags(),
                 entity.getCaptionTokenTokens(),
                 entity.getCaptionTokenLemmata(),
