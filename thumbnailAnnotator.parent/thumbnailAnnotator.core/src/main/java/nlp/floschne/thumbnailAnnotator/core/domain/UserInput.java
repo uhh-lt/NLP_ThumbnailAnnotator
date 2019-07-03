@@ -9,6 +9,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class UserInput extends DomainObject {
     @NonNull
     private String value;
