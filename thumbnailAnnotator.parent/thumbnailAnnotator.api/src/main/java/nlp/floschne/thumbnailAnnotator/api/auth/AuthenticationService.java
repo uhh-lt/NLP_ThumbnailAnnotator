@@ -1,5 +1,6 @@
 package nlp.floschne.thumbnailAnnotator.api.auth;
 
+import lombok.extern.log4j.Log4j;
 import nlp.floschne.thumbnailAnnotator.api.dto.AccessKeyDTO;
 import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
@@ -12,6 +13,7 @@ import java.util.*;
  * Dummy Authentication Service.. This will later be replaced by Spring Oauth2 + JWT Authorization
  */
 @Service
+@Log4j
 public class AuthenticationService {
     private static final String DUMMY_USER = "DUMMY";
     private static final String DUMMY_PASSWORD = "dummy";
@@ -25,6 +27,8 @@ public class AuthenticationService {
         this.activeSessions = new HashSet<>();
         this.dbService = dbService;
         this.registerUser(DUMMY_USER, DUMMY_PASSWORD);
+
+        log.info("Authentication Service ready!");
     }
 
     public AccessKeyDTO login(String user, String pw) {
