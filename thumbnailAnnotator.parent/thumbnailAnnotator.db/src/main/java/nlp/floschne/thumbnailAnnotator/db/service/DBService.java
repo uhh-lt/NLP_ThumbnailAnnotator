@@ -277,4 +277,14 @@ public class DBService {
         else
             throw new IOException("Cannot find FeatureVectorEntity with ID: " + featureVectorId);
     }
+
+    public UserEntity findOwnerOfCaptionTokenId(String captionTokenId) throws IOException {
+        CaptionTokenEntity cte = this.findCaptionTokenEntityById(captionTokenId);
+        List<UserEntity> allUsers = (List<UserEntity>) this.userEntityRepository.findAll();
+        for( UserEntity user : allUsers) {
+            if(user.getCaptionTokenEntities().contains(cte))
+                return user;
+        }
+        throw new IOException("Cannot find Owner of CaptionTokenEntity with ID: " + captionTokenId);
+    }
 }
