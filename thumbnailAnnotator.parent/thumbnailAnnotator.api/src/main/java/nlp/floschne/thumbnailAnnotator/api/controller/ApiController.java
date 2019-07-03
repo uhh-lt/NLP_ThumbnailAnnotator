@@ -231,20 +231,37 @@ public class ApiController {
     @Deprecated
     @RequestMapping(value = "/decrementThumbnailPriority/{id}", method = RequestMethod.PUT)
     public ThumbnailEntity decrementThumbnailPriority(@PathVariable String id) throws IOException {
-
         return this.dbService.decrementThumbnailPriorityById(id);
     }
 
     /**
      * Sets the priority of a {@link ThumbnailEntity} identified by the ID to the specified value.
      *
-     * @param id       the ID of the {@link ThumbnailEntity}
+     * @param thumbnailId       the ID of the {@link ThumbnailEntity}
      * @param priority the new priority of the {@link ThumbnailEntity} or null if the accessKey is not active
      * @return the updated {@link ThumbnailEntity}
      */
     @RequestMapping(value = "/setThumbnailPriority", method = RequestMethod.PUT)
-    public ThumbnailEntity setThumbnailPriority(@RequestParam("id") String id, @RequestParam("priority") Integer priority) throws IOException {
-        return this.dbService.setThumbnailPriorityById(id, priority);
+    public ThumbnailEntity setThumbnailPriority(@RequestParam("thumbnailId") String thumbnailId, @RequestParam("priority") Integer priority, @RequestParam("captionTokenId") String captionTokenId) throws IOException {
+        ThumbnailEntity te = this.dbService.setThumbnailPriorityById(thumbnailId, priority);
+        log.info("Setting priority " + priority + " for Thumbnail["+thumbnailId+"]");
+
+        // if the priority is set to 1 it's interpreted as a labelling by the user!
+        // So we generate the corresponding FeatureVector and "train" the model with it!
+        if (te.getPriority() == 1) {
+            CaptionToken ct = this.dbService.findCaptionTokenById(captionTokenId);
+            Thumbnail t = this.dbService.findThumbnailById(thumbnailId);
+
+            @SuppressWarnings("unchecked")
+            List<FeatureVector> featureVectors = (List) this.wsdService.extractFeatures(ct, t);
+
+            this.wsdService.trainNaiveBayesModel(featureVectors);
+            this.wsdService.serializeNaiveBayesModel();
+
+            this.dbService.saveFeatureVectors(this.dbService.findOwnerOfCaptionTokenId(captionTokenId).getUsername(), featureVectors);
+        }
+
+        return te;
     }
 
     /**
