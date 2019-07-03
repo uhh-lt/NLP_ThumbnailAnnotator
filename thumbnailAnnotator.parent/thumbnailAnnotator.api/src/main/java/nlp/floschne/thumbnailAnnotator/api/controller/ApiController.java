@@ -14,9 +14,11 @@ import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.FeatureVectorEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.Prediction;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import nlp.floschne.thumbnailAnnotator.wsd.service.WSDService;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -130,6 +133,8 @@ public class ApiController {
             if (authenticatedUserInputDTO.getUserInput().getValue().isEmpty())
                 throw new InputMismatchException("Must input at least a Token!");
 
+            log.info("Crawling Thumbnails for " + authenticatedUserInputDTO.toString());
+
             // extract the CaptionTokens from UserInput
             Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(authenticatedUserInputDTO.getUserInput());
             List<CaptionToken> extractedCaptionTokens = extractionResultFuture.get().getCaptionTokens();
@@ -169,7 +174,7 @@ public class ApiController {
 
                 try {
                     // save the results in repo
-                    log.info("Caching results for '" + captionToken + "' for '" + authenticatedUserInputDTO.getAccessKey() + "'");
+                    log.info("Caching results for '" + captionToken + "' for AccessKey'" + authenticatedUserInputDTO.getAccessKey() + "'");
                     CaptionTokenEntity result = this.dbService.saveCaptionToken(captionToken, authenticatedUserInputDTO.getAccessKey());
 
                     if (!results.contains(result))
