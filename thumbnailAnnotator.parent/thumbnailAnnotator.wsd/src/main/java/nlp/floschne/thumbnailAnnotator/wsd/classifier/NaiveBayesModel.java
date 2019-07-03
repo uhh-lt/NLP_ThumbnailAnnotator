@@ -56,6 +56,7 @@ public class NaiveBayesModel extends IModel {
         Label clazz = featureVector.getLabel();
 
         // add vector to model
+        // TODO what if its exactly the same vector?! Shouldn't we use a Set..?
         this.featureVectors.add(featureVector);
 
         // update the features per class (all the features that belong to the class)
@@ -83,7 +84,10 @@ public class NaiveBayesModel extends IModel {
     }
 
     public Double getClassProbability(Label clazz) {
-        return this.classPriors.get(clazz);
+        Double prob = this.classPriors.get(clazz);
+        if (prob == null)
+            return 0.0;
+        return prob;
     }
 
     public Double computeClassConditionalProbability(Object feature, Label clazz) {
