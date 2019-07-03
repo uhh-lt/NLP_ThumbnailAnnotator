@@ -7,7 +7,8 @@ import nlp.floschne.thumbnailAnnotator.db.service.DBService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Dummy Authentication Service.. This will later be replaced by Spring Oauth2 + JWT Authorization
@@ -34,6 +35,7 @@ public class AuthenticationService {
     public AccessKeyDTO login(String user, String pw) {
         if (this.dbService.checkPassword(user, pw)) {
             this.activeSessions.add(dbService.getUserByUsername(user).getAccessKey());
+            log.info("User " + user + " logged in successfully!");
             return new AccessKeyDTO(dbService.getUserByUsername(user).getAccessKey());
         }
         return null;
@@ -45,6 +47,7 @@ public class AuthenticationService {
     }
 
     public boolean logout(String uuid) {
+        log.info("User " + uuid + " logged out successfully!");
         return this.activeSessions.remove(uuid);
     }
 

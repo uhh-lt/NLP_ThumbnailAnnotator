@@ -1,10 +1,7 @@
 package nlp.floschne.thumbnailAnnotator.db.entity;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
 import org.springframework.data.annotation.Reference;
@@ -16,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Data
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor

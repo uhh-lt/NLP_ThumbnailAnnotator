@@ -80,7 +80,7 @@ public class WSDService {
         sb.append(featureVectors.size()).append(" FeatureVector(s) for class(es): ");
         for (IFeatureVector f : featureVectors)
             sb.append(f.getLabel().getValue().toString()).append(", ");
-        sb.delete(sb.length() - 3, sb.length() - 1);
+        sb.delete(sb.length() - 2, sb.length() - 1);
         log.info(sb.toString());
         this.classifier.train(featureVectors);
     }

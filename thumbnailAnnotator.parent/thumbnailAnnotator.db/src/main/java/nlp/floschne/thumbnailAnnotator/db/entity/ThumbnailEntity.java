@@ -1,9 +1,6 @@
 package nlp.floschne.thumbnailAnnotator.db.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import org.springframework.data.redis.core.RedisHash;
 
@@ -11,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Data
+@ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

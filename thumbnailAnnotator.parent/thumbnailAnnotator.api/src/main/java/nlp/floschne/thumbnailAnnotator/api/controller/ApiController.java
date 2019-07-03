@@ -157,6 +157,8 @@ public class ApiController {
 
 
             // create the list of resulting CaptionTokenEntities
+            for (CaptionTokenEntity cached : cachedAndUncachedCaptionTokens.getLeft())
+                log.info("Using cached " + cached.toString());
             List<CaptionTokenEntity> results = new ArrayList<>(cachedAndUncachedCaptionTokens.getLeft());
 
             // collect the results from features
@@ -167,6 +169,7 @@ public class ApiController {
                     // TODO ConfigVariable
                     captionToken = captionTokenFuture.get(120, TimeUnit.SECONDS);
                 } catch (TimeoutException e) {
+                    log.error("It too long time (120s) to finish crawling of Thumbnails!");
                     throw new ConnectException("It too long time (120s) to finish crawling of Thumbnails!");
                 } catch (ExecutionException e) {
                     throw e;
@@ -174,8 +177,8 @@ public class ApiController {
 
                 try {
                     // save the results in repo
-                    log.info("Caching results for '" + captionToken + "' for AccessKey'" + authenticatedUserInputDTO.getAccessKey() + "'");
                     CaptionTokenEntity result = this.dbService.saveCaptionToken(captionToken, authenticatedUserInputDTO.getAccessKey());
+                    log.info("Caching results for '" + result + "' for AccessKey'" + authenticatedUserInputDTO.getAccessKey() + "'");
 
                     if (!results.contains(result))
                         results.add(result);
@@ -244,7 +247,7 @@ public class ApiController {
     @RequestMapping(value = "/setThumbnailPriority", method = RequestMethod.PUT)
     public ThumbnailEntity setThumbnailPriority(@RequestParam("thumbnailId") String thumbnailId, @RequestParam("priority") Integer priority, @RequestParam("captionTokenId") String captionTokenId) throws IOException {
         ThumbnailEntity te = this.dbService.setThumbnailPriorityById(thumbnailId, priority);
-        log.info("Setting priority " + priority + " for Thumbnail["+thumbnailId+"]");
+        log.info("Setting priority " + priority + " for Thumbnail[" + thumbnailId + "]");
 
         // if the priority is set to 1 it's interpreted as a labelling by the user!
         // So we generate the corresponding FeatureVector and "train" the model with it!

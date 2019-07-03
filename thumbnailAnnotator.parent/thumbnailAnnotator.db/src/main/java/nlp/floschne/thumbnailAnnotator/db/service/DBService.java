@@ -219,6 +219,7 @@ public class DBService {
         if (!this.userEntityRepository.findByUsername(username).isPresent()) {
             user = new UserEntity(username, password, UUID.randomUUID().toString(), null);
             this.userEntityRepository.save(user);
+            log.info("Registered new User < " + username + " | " + password + ">!");
             return user;
         } else
             return this.userEntityRepository.findByUsername(username).get();
