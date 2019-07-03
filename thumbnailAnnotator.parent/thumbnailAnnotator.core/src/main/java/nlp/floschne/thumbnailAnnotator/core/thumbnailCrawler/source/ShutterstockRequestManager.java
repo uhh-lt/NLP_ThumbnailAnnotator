@@ -2,6 +2,7 @@ package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -24,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class ShutterstockRequestManager {
 
 
@@ -187,7 +189,8 @@ public class ShutterstockRequestManager {
         // Set credentials (by getting the current active credentials)
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         UsernamePasswordCredentials creds = this.getCredentials();
-        System.out.println("Using Shutterstock Credentials: " + creds);
+
+        log.info("Using Shutterstock Credentials: " + creds);
         credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()), creds);
 
         // Create model and get and then execute
