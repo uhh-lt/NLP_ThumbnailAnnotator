@@ -1,5 +1,6 @@
 package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 
+import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.IFeatureVector;
 import org.springframework.stereotype.Component;
 
@@ -9,9 +10,9 @@ import java.util.List;
 public class NaiveBayesClassifier extends IClassifier {
 
     @Override
-    public Prediction classify(IModel model, IFeatureVector featureVector) {
-        assert model instanceof NaiveBayesModel;
-        NaiveBayesModel myModel = (NaiveBayesModel) model;
+    public Prediction classify(IFeatureVector featureVector) {
+        assert this.model instanceof NaiveBayesModel;
+        NaiveBayesModel myModel = (NaiveBayesModel) this.model;
         assert myModel.isTrained();
 
         Double maxProb = Double.MIN_VALUE;
@@ -36,7 +37,9 @@ public class NaiveBayesClassifier extends IClassifier {
     }
 
     @Override
-    public NaiveBayesModel train(List<? extends IFeatureVector> featureVectors) {
-        return new NaiveBayesModel(featureVectors);
+    public void train(List<? extends IFeatureVector> featureVectors) {
+        assert featureVectors != null && !featureVectors.isEmpty();
+        assert featureVectors.get(0) instanceof FeatureVector;
+        ((NaiveBayesModel) model).addAll((List)featureVectors);
     }
 }

@@ -65,17 +65,17 @@ public class WSDServiceTest {
         String modelPath = "/tmp/akk/myModel.bin";
 
         List<MyTestFeatureVector> vectors = getTestingVectors();
-        NaiveBayesModel model = this.service.trainNaiveBayesModel(vectors);
+        this.service.trainNaiveBayesModel(vectors);
 
-        this.service.serializeNaiveBayesModel(model, modelPath);
+        this.service.serializeNaiveBayesModel();
 
         NaiveBayesModel myModel = this.service.deserializeNaiveBayesModel(modelPath);
 
-        assertEquals(model, myModel);
+        assertEquals(this.service.getClassifier().getModel(), myModel);
 
         myModel.setFeatureVectors(null);
 
-        assertNotEquals(model, myModel);
+        assertNotEquals(this.service.getClassifier().getModel(), myModel);
     }
 
     public List<MyTestFeatureVector> getTestingVectors() {
@@ -91,23 +91,16 @@ public class WSDServiceTest {
     @Test
     public void classifyTest() {
         List<MyTestFeatureVector> vectors = getTestingVectors();
-        NaiveBayesModel model = this.service.trainNaiveBayesModel(vectors);
+        this.service.trainNaiveBayesModel(vectors);
 
         MyTestFeatureVector testVec = new MyTestFeatureVector("-", Arrays.asList("I", "hated", "the", "poor", "acting"));
-        Prediction pred = this.service.classify(model, testVec);
+        Prediction pred = this.service.classify(testVec);
 
         assertEquals(pred.getPred(), testVec.getLabel());
 
         testVec = new MyTestFeatureVector("+", Arrays.asList("I", "loved", "the", "great", "movie"));
-        pred = this.service.classify(model, testVec);
+        pred = this.service.classify(testVec);
 
         assertEquals(pred.getPred(), testVec.getLabel());
-    }
-
-    @Test
-    public void trainTest() {
-        List<MyTestFeatureVector> vectors = getTestingVectors();
-        NaiveBayesModel model = this.service.trainNaiveBayesModel(vectors);
-        //TODO Validate per hand!
     }
 }

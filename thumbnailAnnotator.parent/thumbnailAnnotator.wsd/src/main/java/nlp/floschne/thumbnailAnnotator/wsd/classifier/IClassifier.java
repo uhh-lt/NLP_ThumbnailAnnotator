@@ -1,11 +1,15 @@
 package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 
+import lombok.Data;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.IFeatureVector;
 
 import java.util.List;
 
+@Data
 public abstract class IClassifier {
-    public abstract Prediction classify(IModel model, IFeatureVector featureVector);
+    protected IModel model;
 
-    public abstract IModel train(List<? extends IFeatureVector> featureVectors);
+    public abstract Prediction classify(IFeatureVector featureVector);
+
+    public abstract void train(List<? extends IFeatureVector> featureVectors);
 }

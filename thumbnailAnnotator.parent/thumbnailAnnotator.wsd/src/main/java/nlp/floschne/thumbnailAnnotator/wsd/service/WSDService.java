@@ -75,12 +75,19 @@ public class WSDService {
         return featureVectors;
     }
 
-    public NaiveBayesModel trainNaiveBayesModel(List<? extends IFeatureVector> featureVectors) {
-        return (NaiveBayesModel) this.classifier.train(featureVectors);
+    public void trainNaiveBayesModel(List<? extends IFeatureVector> featureVectors) {
+        StringBuilder sb = new StringBuilder("Training Naive Bayes Model with ");
+        sb.append(featureVectors.size()).append(" FeatureVector(s) for class(es): ");
+        for (IFeatureVector f : featureVectors)
+            sb.append(f.getLabel().getValue().toString()).append(", ");
+        sb.delete(sb.length() - 3, sb.length() - 1);
+        log.info(sb.toString());
+        this.classifier.train(featureVectors);
     }
 
-    public Prediction classify(NaiveBayesModel model, IFeatureVector featureVector) {
-        return this.classifier.classify(model, featureVector);
+    public Prediction classify(IFeatureVector featureVector) {
+        return this.classifier.classify(featureVector);
+    }
 
     public void serializeNaiveBayesModel() throws FileNotFoundException {
         assert this.classifier.getModel() instanceof NaiveBayesModel;
