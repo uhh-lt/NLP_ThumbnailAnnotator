@@ -2,13 +2,14 @@ package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 
 import lombok.Data;
 import lombok.ToString;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Data
 @ToString
-public class Prediction {
+public class Prediction implements Comparable<Prediction> {
     private Label pred;
     private Double prob;
     private Map<Label, Double> classProbabilities;
@@ -19,5 +20,10 @@ public class Prediction {
 
     public void addClass(Label l, Double p) {
         this.classProbabilities.put(l, p);
+    }
+
+    @Override
+    public int compareTo(@NotNull Prediction o) {
+        return this.prob.compareTo(o.prob);
     }
 }
