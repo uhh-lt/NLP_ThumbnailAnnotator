@@ -2,6 +2,7 @@ package nlp.floschne.thumbnailAnnotator.wsd.featureExtractor;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.Label;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 @ToString
 public class FeatureVector extends IFeatureVector {
 
