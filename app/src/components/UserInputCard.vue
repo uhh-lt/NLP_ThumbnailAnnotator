@@ -3,7 +3,7 @@
     <div class="card shadow-sm">
       <div class="card-header card-title text-md-center h5">User Input</div>
       <div class="card-body">
-        <form class="form-group" v-if="!isSubmitted" @submit.prevent="submit" novalidate>
+        <form class="form-group" v-if="!isSubmitted" @submit.prevent="crawlThumbnails" novalidate>
           <textarea
             :disabled="isSubmitted === true"
             :style="textAreaCursor"
@@ -12,17 +12,17 @@
             name="user_input"
             title="user_input"
             id="additionalInfo"
-            v-model.trim="form.value">
+            v-model.trim="authenticatedUserInputDto.value">
           </textarea>
 
           <div class="form-group">
-            <input name="access_key" id="access_key_input" class="form-control d-block mt-1" placeholder="User Access Key" type="text" v-model.trim="form.accessKey"/>
+            <input name="access_key" id="access_key_input" class="form-control d-block mt-1" placeholder="User Access Key" type="text" v-model.trim="authenticatedUserInputDto.accessKey"/>
           </div>
 
 
           <div class="form-group">
             <button type="submit" class="btn btn-primary btn-block mt-md-2" :disabled="submitting" value="Get Thumbnails!">
-              <span v-if="submitting">{{ form.submitting }} <img id="loader" src="../assets/loader.svg"/></span>
+              <span v-if="submitting"><img id="loader" src="../assets/loader.svg"/></span>
               <span v-else>Crawl Thumbnails!</span>
             </button>
           </div>
@@ -35,7 +35,7 @@
             <div class="alert alert-info">
               <p><strong>Here is the input you sent:</strong></p>
               <code>
-                {{ form }}
+                {{ authenticatedUserInputDto }}
               </code>
             </div>
           </div>
@@ -73,17 +73,16 @@
         isError: false,
         submitting: false,
         textAreaCursor: 'cursor: text',
-        form: {
+
+        authenticatedUserInputDto: {
           value: '',
           accessKey: ''
         },
+
         errorMessage: ''
       }
     },
     methods: {
-      login() {
-        this.crawlThumbnails();
-      },
       enableSubmitLoader() {
         this.submitting = true;
         this.textAreaCursor = 'cursor: not-allowed';
@@ -95,31 +94,31 @@
       crawlThumbnails() {
         this.enableSubmitLoader();
         let authInput = {
-          "accessKey": this.form.accessKey,
+          "accessKey": this.authenticatedUserInputDto.accessKey,
           "userInput": {
-            "value": this.form.value
+            "value": this.authenticatedUserInputDto.value
           }
         };
         axios.post(this.$hostname + "/crawlThumbnails/", authInput).then(response => {
-          this.loginSuccess(response);
+          this.crawlSuccess(response);
           this.disableSubmitLoader();
         }).catch(error => {
-          this.loginError(error);
+          this.crawlError(error);
           this.disableSubmitLoader();
         });
       },
-      loginSuccess(response) {
+      crawlSuccess(response) {
         if (response.status === 200) {
           this.isSubmitted = true;
           EventBus.$emit("sendResultData_event", response.data);
-          EventBus.$emit("sendUserInput_event", this.form.value)
+          EventBus.$emit("sendUserInput_event", this.authenticatedUserInputDto.value)
         } else {
           this.isSubmitted = true;
           this.isError = true;
           this.errorMessage = response.status
         }
       },
-      loginError(error) {
+      crawlError(error) {
         this.isSubmitted = true;
         this.isError = true;
         this.errorMessage = error;

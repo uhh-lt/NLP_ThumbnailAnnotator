@@ -1,7 +1,6 @@
 <template>
   <div class="clearfix">
     <div class="row">
-
       <div class="col-6 text-left">
         <h5><span class="badge badge-warning text-monospace">{{ this.captionTokenInstance.value }}</span></h5>
       </div>
@@ -73,8 +72,8 @@
     </b-collapse>
     <hr/>
 
-    <!--   START PREDICTION -->
-    <div v-if="predictionReady" class="row mt-2">
+
+    <div class="row mt-2">
       <div class="col-6 text-center">
         <h6>Predicted Thumbnail</h6>
       </div>
@@ -82,15 +81,14 @@
         <h6>Predicted Categories</h6>
       </div>
     </div>
-    <div v-if="predictionReady" class="row">
+
+    <div v-if="predictionReady && predictedThumbnailUrl !== null" class="row">
       <div class="col-6 text-center sense">
-        <!--        <img :src="captionTokenInstance.thumbnails[0].url" class="img-thumbnail" :alt="captionTokenInstance.thumbnails[0].url">-->
         <img :src="predictedThumbnailUrl" class="img-thumbnail" :alt="predictedThumbnailUrl">
       </div>
 
       <div class="col-6 text-left">
         <div class="h6 m-0" v-for="k, v, i in this.predictedCategory">
-
           <div class="badge-group w-100" v-if="i === 0">
             <span v-if="i === 0" class="badge badge-success mb-1 text-left w-50">
               {{v}}
@@ -110,7 +108,13 @@
         </div>
       </div>
     </div>
-    <!--    END PREDICTION -->
+    <div v-else class="row">
+      <div class="col-12">
+          <span class="badge badge-danger text-center w-100">
+            {{predictedCategory}}
+          </span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -142,6 +146,12 @@
     methods: {
       predict(captionTokenId) {
         axios.get(this.$hostname + "/predict?captionTokenId=" + captionTokenId).then(response => {
+          if (response.data.length === 0) {
+            this.predictedThumbnailUrl = null;
+            this.predictedCategory = "MODEL NOT TRAINED YET";
+            this.predictionReady = true;
+            return;
+          }
           let firstPredictedThumbnailId = Object.keys(response.data[0])[0];
           let firstPrediction = Object.values(response.data[0])[0];
 

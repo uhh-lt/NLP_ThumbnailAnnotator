@@ -108,6 +108,8 @@ public class ApiController {
      */
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
     public boolean logout(@RequestBody AccessKeyDTO accessKeyDTO) {
+        if(accessKeyDTO.getAccessKey() == null || accessKeyDTO.getAccessKey().isEmpty())
+            return false;
         return this.dummyAuthenticationService.logout(accessKeyDTO.getAccessKey());
     }
 

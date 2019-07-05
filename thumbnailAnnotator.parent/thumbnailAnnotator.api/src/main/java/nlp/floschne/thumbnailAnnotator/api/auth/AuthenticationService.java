@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j;
 import nlp.floschne.thumbnailAnnotator.api.dto.AccessKeyDTO;
 import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +33,7 @@ public class AuthenticationService {
         log.info("Authentication Service ready!");
     }
 
-    public AccessKeyDTO login(String user, String pw) {
+    public AccessKeyDTO login(@NotNull String user, @NotNull String pw) {
         if (this.dbService.checkPassword(user, pw)) {
             this.activeSessions.add(dbService.getUserByUsername(user).getAccessKey());
             log.info("User " + user + " logged in successfully!");
@@ -41,7 +42,7 @@ public class AuthenticationService {
         return null;
     }
 
-    public boolean registerUser(String username, String pw) {
+    public boolean registerUser(@NotNull String username, @NotNull String pw) {
         UserEntity user = this.dbService.registerUser(username, pw);
         if (user != null)
             log.info("Registered new User < " + username + " | " + pw + ">!");
@@ -50,12 +51,12 @@ public class AuthenticationService {
         return user != null;
     }
 
-    public boolean logout(String uuid) {
+    public boolean logout(@NotNull String uuid) {
         log.info("User " + uuid + " logged out successfully!");
         return this.activeSessions.remove(uuid);
     }
 
-    public boolean isActive(String uuid) {
+    public boolean isActive(@NotNull String uuid) {
         return this.activeSessions.contains(uuid);
     }
 }
