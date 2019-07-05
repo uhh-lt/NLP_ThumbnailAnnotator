@@ -112,27 +112,6 @@ public class ApiController {
     }
 
     /**
-     * Extracts the CaptionTokens in the {@link UserInput}
-     *
-     * @param authenticatedUserInputDTO the AuthUserInputDTO in form of JSON
-     * @return the {@link ExtractorResult} for the given {@link UserInput}
-     * @throws ResourceInitializationException
-     * @throws ExecutionException
-     * @throws InterruptedException
-     * @throws IOException
-     * @throws JWNLException
-     */
-    @Deprecated
-    @RequestMapping(value = "/extractCaptionTokens", method = RequestMethod.POST)
-    public ExtractorResult extractCaptionTokens(@RequestBody AuthenticatedUserInputDTO authenticatedUserInputDTO) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException, AuthException {
-        if (this.dummyAuthenticationService.isActive(authenticatedUserInputDTO.getAccessKey())) {
-            Future<ExtractorResult> resultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(authenticatedUserInputDTO.getUserInput());
-            return resultFuture.get();
-        } else throw new AuthException("AccessKey is not authorized!");
-        //TODO use entities!
-    }
-
-    /**
      * This is the main method of the API it extracts {@link CaptionToken} from a {@link UserInput}, crawls the {@link Thumbnail} for the
      * {@link CaptionToken} and returns the List of extracted {@link CaptionToken}.
      * It also caches the {@link CaptionTokenEntity} and returns the  {@link CaptionTokenEntity} that are already cached.
