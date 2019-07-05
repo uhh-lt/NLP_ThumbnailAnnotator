@@ -73,7 +73,7 @@
   import {VueTabs, VTab} from 'vue-nav-tabs'
 
   export default {
-    name: "LoginForm",
+    name: "UserForm",
     components: {VueTabs, VTab},
     data() {
       return {

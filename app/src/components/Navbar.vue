@@ -20,18 +20,18 @@
     </nav>
 
     <b-modal centered hide-header hide-footer :id="user_login_modal" title="a">
-      <login-form/>
+      <user-form/>
     </b-modal>
   </div>
 </template>
 
 <script>
 
-  import LoginForm from "./LoginForm";
+  import UserForm from "./UserForm";
 
   export default {
     name: "navbar",
-    components: {LoginForm},
+    components: {UserForm},
     data() {
       return {
         user_login_modal: "user_login_modal"
