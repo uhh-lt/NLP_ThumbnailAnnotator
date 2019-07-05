@@ -71,28 +71,35 @@
           });
         }
       },
+
       updatePriorities(ev) {
-        let nonPrioritized = this.captionTokenObj.thumbnails.filter(x => x.priority === 0).length - 1;
+        // TODO find and fix bug (there is one for sure!)
+        let numNonPrioritized = this.captionTokenObj.thumbnails.filter(x => x.priority === 0).length - 1;
+        let numPrioritized = this.captionTokenObj.thumbnails.length - numNonPrioritized;
 
-        // update the priority of the moved thumbnail for sure
-        let updatedThumbnailId = ev.moved.element.id;
-        let newPriority = this.captionTokenObj.thumbnails.length - ev.moved.newIndex - nonPrioritized;
-        this.setThumbnailPriority(updatedThumbnailId, newPriority);
-        this.generateFeatureVector('DUMMY', updatedThumbnailId, this.captionTokenObj.id);
+        // only update if the new position is somewhere in the range of the prioritized thumbnails
+        if ( ev.moved.newIndex <= numNonPrioritized) {
+          // update the priority of the moved thumbnail for sure
+          let newPriority = ev.moved.newIndex + 1;
 
+          let updatedThumbnailId = ev.moved.element.id;
+          this.setThumbnailPriority(updatedThumbnailId, newPriority, this.captionTokenObj.id);
 
-        // check if other thumbnail priorities have to be adapted (in order to have the correct priority regarding their positions)
-        let thumb = null;
-        for (thumb in this.captionTokenObj.thumbnails) {
-          if (this.captionTokenObj.thumbnails[thumb].id !== updatedThumbnailId && this.captionTokenObj.thumbnails[thumb].priority !== 0) {
-            let newPriority = this.captionTokenObj.thumbnails.length - this.captionTokenObj.thumbnails.findIndex(t => t.id === this.captionTokenObj.thumbnails[thumb].id) - nonPrioritized;
-            this.setThumbnailPriority(this.captionTokenObj.thumbnails[thumb].id, newPriority);
-            this.generateFeatureVector('DUMMY', this.captionTokenObj.thumbnails[thumb].id, this.captionTokenObj.id);
+          // check if other thumbnail priorities have to be adapted (in order to have the correct priority regarding their positions)
+          let thumbIdx;
+          let thumb;
+          for (thumbIdx in this.captionTokenObj.thumbnails) {
+            thumb = this.captionTokenObj.thumbnails[thumbIdx];
+            if (thumb.id !== updatedThumbnailId && thumb.priority !== 0) {
+              newPriority = numPrioritized - this.captionTokenObj.thumbnails.findIndex(t => t.id === thumb.id);
+              this.setThumbnailPriority(thumb.id, newPriority, this.captionTokenObj.id);
+            }
           }
         }
       },
-      setThumbnailPriority(thumbnailId, priority) {
-        axios.put(this.$hostname + "/setThumbnailPriority?id=" + thumbnailId + "&priority=" + priority).then(response => {
+
+      setThumbnailPriority(thumbnailId, priority, captionTokenId) {
+        axios.put(this.$hostname + "/setThumbnailPriority?thumbnailId=" + thumbnailId + "&priority=" + priority + "&captionTokenId=" + captionTokenId).then(response => {
           // update event for components that contain thumbnails
           EventBus.$emit("updatedThumbnail_event", response.data);
           // also update the captionToken to hold the new ordering
@@ -101,19 +108,11 @@
           console.log(error);
         });
       },
-      generateFeatureVector(username, thumbnailId, captionTokenId) {
-        axios.put(this.$hostname + "/generateFeatureVector?ownerUsername=" + username + "&thumbnailId=" + thumbnailId + "&captionTokenId=" + captionTokenId).catch(error => {
-          console.log(error);
-        });
-      },
+
     },
     created() {
+      console.log("CaptionTokenDetails created");
       this.captionTokenObj = this.captionToken;
-      let thumb = null;
-      for (thumb in this.captionTokenObj.thumbnails) {
-        this.generateFeatureVector('DUMMY', this.captionTokenObj.thumbnails[thumb].id, this.captionTokenObj.id); //FIXME how to get username in production?!
-        console.log('generateFeatureVector for ' + this.captionTokenObj.thumbnails[thumb].id)
-      }
     }
   }
 </script>

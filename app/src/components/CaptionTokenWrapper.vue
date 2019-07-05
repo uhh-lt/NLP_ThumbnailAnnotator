@@ -44,6 +44,7 @@
       }
     },
     created() {
+      console.log("CaptionTokenWrapper created");
       this.captionTokenObj = this.captionToken;
     }
   }

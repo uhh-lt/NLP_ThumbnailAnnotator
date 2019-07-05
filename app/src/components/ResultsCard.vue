@@ -89,6 +89,7 @@
       }
     },
     created() {
+      console.log("ResultCard created");
       EventBus.$on('sendResultData_event', this.receiveResultData);
       EventBus.$on('sendUserInput_event', this.receiveUserInput);
     }

@@ -11,4 +11,9 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 public class Label<T> {
     T value;
+
+    @Override
+    public String toString() {
+        return value.toString();
+    }
 }

@@ -46,7 +46,6 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class ApiController {
 
-
     private final DBService dbService;
 
     private final AuthenticationService dummyAuthenticationService;
@@ -59,6 +58,10 @@ public class ApiController {
         this.dummyAuthenticationService = dummyAuthenticationService;
         this.wsdService = wsdService;
         log.info("API Controller ready!");
+    }
+
+    private void initApplicationState() {
+        // TODO just run a simple extraction to load all the AnalysisEngines in core
     }
 
     /**
@@ -77,7 +80,7 @@ public class ApiController {
      * @return a access key that the user needs to provide to access the API Resources
      */
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public AccessKeyDTO login(@RequestBody LoginDataDTO loginDataDTO) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException {
+    public AccessKeyDTO login(@RequestBody LoginDataDTO loginDataDTO) {
         return this.dummyAuthenticationService.login(loginDataDTO.getUsername(), loginDataDTO.getPassword());
     }
 
@@ -89,7 +92,7 @@ public class ApiController {
      * @param accessKeyDTO The accessKey in form of JSON
      */
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public boolean logout(@RequestBody AccessKeyDTO accessKeyDTO) throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException {
+    public boolean logout(@RequestBody AccessKeyDTO accessKeyDTO) {
         return this.dummyAuthenticationService.logout(accessKeyDTO.getAccessKey());
     }
 
@@ -205,12 +208,12 @@ public class ApiController {
     /**
      * Get a single {@link ThumbnailEntity} by it's ID
      *
-     * @param id the ID of the {@link ThumbnailEntity}
+     * @param thumbnailId the ID of the {@link ThumbnailEntity}
      * @return the {@link ThumbnailEntity} identified by the ID or null if the accessKey is not active
      */
-    @RequestMapping(value = "/getThumbnail/{id}", method = RequestMethod.GET)
-    public ThumbnailEntity getThumbnail(@PathVariable String id) throws IOException {
-        return this.dbService.findThumbnailEntityById(id);
+    @RequestMapping(value = "/getThumbnailById", method = RequestMethod.GET)
+    public ThumbnailEntity getThumbnail(@RequestParam("thumbnailId") String thumbnailId) throws IOException {
+        return this.dbService.findThumbnailEntityById(thumbnailId);
     }
 
     /**
@@ -240,8 +243,8 @@ public class ApiController {
     /**
      * Sets the priority of a {@link ThumbnailEntity} identified by the ID to the specified value.
      *
-     * @param thumbnailId       the ID of the {@link ThumbnailEntity}
-     * @param priority the new priority of the {@link ThumbnailEntity} or null if the accessKey is not active
+     * @param thumbnailId the ID of the {@link ThumbnailEntity}
+     * @param priority    the new priority of the {@link ThumbnailEntity} or null if the accessKey is not active
      * @return the updated {@link ThumbnailEntity}
      */
     @RequestMapping(value = "/setThumbnailPriority", method = RequestMethod.PUT)
@@ -258,10 +261,7 @@ public class ApiController {
             @SuppressWarnings("unchecked")
             List<FeatureVector> featureVectors = (List) this.wsdService.extractFeatures(ct, t);
 
-            this.wsdService.trainNaiveBayesModel(featureVectors);
-            this.wsdService.serializeNaiveBayesModel();
-
-            this.dbService.saveFeatureVectors(this.dbService.findOwnerOfCaptionTokenId(captionTokenId).getUsername(), featureVectors);
+            this.wsdService.trainGlobalNaiveBayesModel(featureVectors);
         }
 
         return te;
@@ -275,20 +275,40 @@ public class ApiController {
      * @param captionTokenId the id of the CaptionToken the feature vector is created for
      */
     @RequestMapping(value = "/generateFeatureVector", method = RequestMethod.PUT)
-    public void generateFeatureVector(@RequestParam("ownerUsername") String ownerUsername, @RequestParam("thumbnailId") String thumbnailId, @RequestParam("captionTokenId") String captionTokenId) {
+    @Deprecated
+    public List<FeatureVectorEntity> generateFeatureVector(@RequestParam("ownerUsername") String ownerUsername, @RequestParam("thumbnailId") String thumbnailId, @RequestParam("captionTokenId") String captionTokenId) {
         try {
             CaptionToken ct = this.dbService.findCaptionTokenById(captionTokenId);
             Thumbnail t = this.dbService.findThumbnailById(thumbnailId);
 
             @SuppressWarnings("unchecked")
             List<FeatureVector> featureVectors = (List) this.wsdService.extractFeatures(ct, t);
-            this.dbService.saveFeatureVectors(ownerUsername, featureVectors);
+            return this.dbService.saveFeatureVectors(ownerUsername, featureVectors);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        return Collections.emptyList();
     }
+
+    /**
+     * Predicts a sorted list of pairs of {@link ThumbnailEntity} IDs and {@link Prediction} representing the Thumbnails that best "match" the {@link CaptionToken}.
+     * The first element of the list has the highest prediction score.
+     *
+     * @param captionTokenId the ID of the CaptionToken
+     * @return sorted list of pairs of {@link Thumbnail} and {@link Prediction} representing the Thumbnails that best "match" the {@link CaptionToken}.
+     * @throws IOException
+     */
+    @RequestMapping(value = "/predict", method = RequestMethod.GET)
+    public List<Pair<String, Prediction>> predict(@RequestParam("captionTokenId") String captionTokenId) throws IOException {
+        CaptionToken captionToken = this.dbService.findCaptionTokenById(captionTokenId);
+        List<Pair<Thumbnail, Prediction>> preds = this.wsdService.predictCategoryWithGlobalModel(captionToken);
+        List<Pair<String, Prediction>> result = new ArrayList<>();
+        for (Pair<Thumbnail, Prediction> pred : preds)
+            result.add(Pair.of(this.dbService.findThumbnailEntityByUrl(pred.getKey().getUrl()).getId(), pred.getValue()));
+        return result;
+    }
+
 
     /**
      * @return All the {@link CaptionTokenEntity} that are saved in the Redis Cache of all users

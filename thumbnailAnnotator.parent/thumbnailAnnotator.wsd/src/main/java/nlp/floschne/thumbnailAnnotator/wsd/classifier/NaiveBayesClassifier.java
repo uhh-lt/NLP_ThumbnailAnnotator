@@ -13,7 +13,8 @@ public class NaiveBayesClassifier extends IClassifier {
     public Prediction classify(IFeatureVector featureVector) {
         assert this.model instanceof NaiveBayesModel;
         NaiveBayesModel myModel = (NaiveBayesModel) this.model;
-        assert myModel.isTrained();
+        if(!myModel.isTrained())
+            return Prediction.getZeroPrediction(); // FIXME better throw an exception!?
 
         Double maxProb = Double.MIN_VALUE;
         Prediction pred = new Prediction();
@@ -40,6 +41,6 @@ public class NaiveBayesClassifier extends IClassifier {
     public void train(List<? extends IFeatureVector> featureVectors) {
         assert featureVectors != null && !featureVectors.isEmpty();
         assert featureVectors.get(0) instanceof FeatureVector;
-        ((NaiveBayesModel) model).addAll((List)featureVectors);
+        ((NaiveBayesModel) this.model).addAll((List)featureVectors);
     }
 }

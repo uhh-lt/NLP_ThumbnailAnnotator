@@ -61,15 +61,12 @@ public class WSDServiceTest {
     }
 
     @Test
-    public void serializeNaiveBayesModel() throws FileNotFoundException {
-        String modelPath = "/tmp/akk/myModel.bin";
-
+    public void serializeGlobalNaiveBayesModel() throws FileNotFoundException {
+        // TODO update test so that it makes sense
         List<MyTestFeatureVector> vectors = getTestingVectors();
-        this.service.trainNaiveBayesModel(vectors);
+        this.service.trainGlobalNaiveBayesModel(vectors);
 
-        this.service.serializeNaiveBayesModel();
-
-        NaiveBayesModel myModel = this.service.deserializeNaiveBayesModel(modelPath);
+        NaiveBayesModel myModel = this.service.deserializeGlobalNaiveBayesModel();
 
         assertEquals(this.service.getClassifier().getModel(), myModel);
 
@@ -89,17 +86,17 @@ public class WSDServiceTest {
     }
 
     @Test
-    public void classifyTest() {
+    public void classifyTest() throws FileNotFoundException {
         List<MyTestFeatureVector> vectors = getTestingVectors();
-        this.service.trainNaiveBayesModel(vectors);
+        this.service.trainGlobalNaiveBayesModel(vectors);
 
         MyTestFeatureVector testVec = new MyTestFeatureVector("-", Arrays.asList("I", "hated", "the", "poor", "acting"));
-        Prediction pred = this.service.classify(testVec);
+        Prediction pred = this.service.classifyWithGlobalModel(testVec);
 
         assertEquals(pred.getPred(), testVec.getLabel());
 
         testVec = new MyTestFeatureVector("+", Arrays.asList("I", "loved", "the", "great", "movie"));
-        pred = this.service.classify(testVec);
+        pred = this.service.classifyWithGlobalModel(testVec);
 
         assertEquals(pred.getPred(), testVec.getLabel());
     }

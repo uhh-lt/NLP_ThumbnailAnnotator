@@ -65,7 +65,7 @@ public class DBService {
 
     // check if already cached (if value AND sentence context match) // TODO better UDContext?!
     private CaptionTokenEntity captionTokenIsCached(@NotNull CaptionToken ct) {
-        if(this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent() &&
+        if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent() &&
                 this.captionTokenEntityRepository.findByValue(ct.getValue()).get().getSentenceContext().equals(ct.getSentenceContext()))
             return this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
         else
@@ -115,6 +115,20 @@ public class DBService {
         } else {
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
         }
+    }
+
+    public ThumbnailEntity findThumbnailEntityByUrl(@NotNull String url) throws IOException {
+        if (this.thumbnailEntityRepository.findByUrl(url).isPresent())
+            return this.thumbnailEntityRepository.findByUrl(url).get();
+        else
+            throw new IOException("Cannot find ThumbnailEntity with URL: " + url);
+    }
+
+    public ThumbnailEntity findThumbnailEntityByUrlAndPriority(@NotNull String url, Integer priority) throws IOException {
+        if (this.thumbnailEntityRepository.findByUrlAndPriority(url, priority).isPresent())
+            return this.thumbnailEntityRepository.findByUrlAndPriority(url, priority).get();
+        else
+            throw new IOException("Cannot find ThumbnailEntity with URL and priority: " + url + ":" + priority);
     }
 
     public CaptionToken findCaptionTokenById(@NotNull String id) throws IOException {
@@ -217,6 +231,7 @@ public class DBService {
     public void deleteAllCaptionTokenEntities() {
         this.thumbnailEntityRepository.deleteAll();
         this.captionTokenEntityRepository.deleteAll();
+        this.featureVectorEntityRepo.deleteAll();
     }
 
     public UserEntity registerUser(@NotNull String username, @NotNull String password) {

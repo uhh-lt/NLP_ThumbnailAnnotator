@@ -14,7 +14,7 @@
 
       <div class="col-2">
         <h6>
-          <b-btn v-b-toggle="context_collapse_id" class="badge badge-secondary text-monospace pointer">UDContext</b-btn>
+          <b-btn v-b-toggle="context_collapse_id" class="badge badge-secondary text-monospace pointer">UniDeps</b-btn>
         </h6>
       </div>
 
@@ -71,17 +71,63 @@
         </li>
       </ul>
     </b-collapse>
+    <hr/>
+
+    <!--   START PREDICTION -->
+    <div v-if="predictionReady" class="row mt-2">
+      <div class="col-6 text-center">
+        <h6>Predicted Thumbnail</h6>
+      </div>
+      <div class="col-6 text-center">
+        <h6>Predicted Categories</h6>
+      </div>
+    </div>
+    <div v-if="predictionReady" class="row">
+      <div class="col-6 text-center sense">
+        <!--        <img :src="captionTokenInstance.thumbnails[0].url" class="img-thumbnail" :alt="captionTokenInstance.thumbnails[0].url">-->
+        <img :src="predictedThumbnailUrl" class="img-thumbnail" :alt="predictedThumbnailUrl">
+      </div>
+
+      <div class="col-6 text-left">
+        <div class="h6 m-0" v-for="k, v, i in this.predictedCategory">
+
+          <div class="badge-group w-100" v-if="i === 0">
+            <span v-if="i === 0" class="badge badge-success mb-1 text-left w-50">
+              {{v}}
+            </span>
+            <span class="badge badge-success mb-1 text-right w-50">
+              {{k.toPrecision(3)}}
+            </span>
+          </div>
+          <div class="badge-group w-100" v-else>
+            <span class="badge badge-info text-left w-50">
+              {{v}}
+            </span>
+            <span class="badge badge-info text-right w-50">
+              {{k.toPrecision(3)}}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--    END PREDICTION -->
   </div>
 </template>
 
 <script>
+  import {EventBus} from "../main";
+  import axios from 'axios';
+
   export default {
     name: "CaptionToken",
     data: function () {
       return {
         context_collapse_id: "context_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
         details_collapse_id: "details_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
-        sense_collapse_id: "sense_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value
+        sense_collapse_id: "sense_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
+        predictionReady: false,
+        predictedCategory: null,
+        predictedThumbnailUrl: null,
       }
     },
     props: {
@@ -92,6 +138,38 @@
       id: {
         required: true
       }
+    },
+    methods: {
+      predict(captionTokenId) {
+        axios.get(this.$hostname + "/predict?captionTokenId=" + captionTokenId).then(response => {
+          let firstPredictedThumbnailId = Object.keys(response.data[0])[0];
+          let firstPrediction = Object.values(response.data[0])[0];
+
+          let predictedCategories = firstPrediction.classProbabilities;
+
+          console.log("predictedCategory: " + predictedCategories);
+          console.log("predictedThumbnailId: " + firstPredictedThumbnailId);
+
+          this.predictedCategory = predictedCategories;
+          this.getThumbnailUrl(firstPredictedThumbnailId);
+
+        }).catch(error => {
+          console.log(error);
+        });
+      },
+
+      getThumbnailUrl(thumbnailId) {
+        axios.get(this.$hostname + "/getThumbnailById?thumbnailId=" + thumbnailId).then(response => {
+          this.predictedThumbnailUrl = response.data.url;
+          this.predictionReady = true;
+        }).catch(error => {
+          console.log(error);
+        });
+      }
+    },
+    created() {
+      this.predict(this.captionTokenInstance.id);
+      console.log("CaptionToken created");
     }
   }
 </script>
@@ -111,5 +189,30 @@
   .sense {
     text-overflow: ellipsis;
     overflow: hidden;
+  }
+
+
+  .badge-group {
+    position: relative;
+    display: inline-flex;
+    vertical-align: middle;
+  }
+
+  .badge-group > .badge {
+    flex: 0 1 auto;
+  }
+
+  .badge-group > .badge:first-child {
+    margin-left: 0;
+  }
+
+  .badge-group > .badge:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .badge-group > .badge:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
 </style>

@@ -60,6 +60,7 @@
     created() {
       this.thumbnailObj = this.thumbnail;
       EventBus.$on('updatedThumbnail_event', this.updateThumbnail)
+      console.log("ThumbnailDetailsPanel created");
     }
   }
 </script>

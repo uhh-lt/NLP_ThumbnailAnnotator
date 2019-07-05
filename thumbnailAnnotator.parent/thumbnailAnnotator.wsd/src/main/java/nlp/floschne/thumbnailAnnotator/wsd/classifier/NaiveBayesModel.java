@@ -60,8 +60,8 @@ public class NaiveBayesModel extends IModel {
         this.featureVectors.add(featureVector);
 
         // update the features per class (all the features that belong to the class)
-        this.classFeatures.computeIfPresent(clazz, (label, strings) -> {
-            List<Object> addedFeatures = new ArrayList<>(strings);
+        this.classFeatures.computeIfPresent(clazz, (label, stringFeatures) -> {
+            List<Object> addedFeatures = new ArrayList<>(stringFeatures);
             addedFeatures.addAll(featureVector.getFeatures());
             return addedFeatures;
         });
