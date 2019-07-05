@@ -1,37 +1,57 @@
 <template>
   <div class="clearfix">
     <div class="row">
+
       <div class="col-6 text-left">
         <h5><span class="badge badge-warning text-monospace">{{ this.captionTokenInstance.value }}</span></h5>
       </div>
-      <div class="col-2">
-        <h6>
-          <b-btn v-b-toggle="context_collapse_id" class="badge badge-secondary text-monospace pointer">Context</b-btn>
-        </h6>
-      </div>
+
       <div class="col-2">
         <h6>
           <b-btn v-b-toggle="details_collapse_id" class="badge badge-secondary text-monospace pointer">Details</b-btn>
         </h6>
-
       </div>
+
       <div class="col-2">
         <h6>
-          <b-btn v-b-toggle="sense_collapse_id" class="badge badge-secondary text-monospace pointer">WSD</b-btn>
+          <b-btn v-b-toggle="context_collapse_id" class="badge badge-secondary text-monospace pointer">UDContext</b-btn>
         </h6>
+      </div>
 
+      <div class="col-2">
+        <h6>
+          <b-btn v-b-toggle="sense_collapse_id" class="badge badge-secondary text-monospace pointer">WordNet</b-btn>
+        </h6>
       </div>
     </div>
 
-    <br/>
-
     <b-collapse :id="details_collapse_id" class="text-left text-warning">
       <hr>
-      <code class="text-warning">{{this.captionTokenInstance.type}}</code>
-      <code class="text-warning">{{this.captionTokenInstance.posTags}}</code>
-      <code class="text-warning">{{this.captionTokenInstance.tokens}}</code>
+      <code class="text-warning">
+        <span class="w-25 d-inline-flex font-italic mb-1">Type: </span>
+        <span class="w-75 text-left">
+          {{this.captionTokenInstance.type}}
+        </span>
+      </code>
+      <code class="text-warning">
+        <span class="w-25 d-inline-flex font-italic mb-1">POSTags: </span>
+        <span class="w-75 text-left">
+          {{this.captionTokenInstance.posTags}}
+        </span>
+      </code>
+      <code class="text-warning">
+        <span class="w-25 d-inline-flex font-italic mb-1">Surface: </span>
+        <span class="w-75 text-left">
+          {{this.captionTokenInstance.tokens}}
+        </span>
+      </code>
+      <code class="text-warning">
+        <span class="w-25 d-inline-flex font-italic mb-1">Lemmata: </span>
+        <span class="w-75 text-left">
+          {{this.captionTokenInstance.lemmata}}
+        </span>
+      </code>
     </b-collapse>
-
 
     <b-collapse :id="context_collapse_id" class="text-left text-warning">
       <hr>
@@ -39,7 +59,6 @@
         <li v-for="c in this.captionTokenInstance.udContext"><code class="text-warning">{{c.type}}({{c.governor}},{{c.dependent}})</code></li>
       </ul>
     </b-collapse>
-
 
     <b-collapse :id="sense_collapse_id" class="text-left text-warning">
       <hr>
