@@ -81,7 +81,7 @@
       }
     },
     methods: {
-      submit() {
+      login() {
         this.crawlThumbnails();
       },
       enableSubmitLoader() {
@@ -101,14 +101,14 @@
           }
         };
         axios.post(this.$hostname + "/crawlThumbnails/", authInput).then(response => {
-          this.submitSuccess(response);
+          this.loginSuccess(response);
           this.disableSubmitLoader();
         }).catch(error => {
-          this.submitError(error);
+          this.loginError(error);
           this.disableSubmitLoader();
         });
       },
-      submitSuccess(response) {
+      loginSuccess(response) {
         if (response.status === 200) {
           this.isSubmitted = true;
           EventBus.$emit("sendResultData_event", response.data);
@@ -119,7 +119,7 @@
           this.errorMessage = response.status
         }
       },
-      submitError(error) {
+      loginError(error) {
         this.isSubmitted = true;
         this.isError = true;
         this.errorMessage = error;

@@ -64,7 +64,7 @@ public class WSDService {
         return this.loadModel(GLOBAL_MODEL);
     }
 
-    private synchronized IModel loadModel(String name) throws FileNotFoundException {
+    private synchronized IModel loadModel(String name) {
         // if in memory return it
         if (this.models.containsKey(name))
             return this.models.get(name);
@@ -74,10 +74,14 @@ public class WSDService {
             this.models.put(name, this.deserializeNaiveBayesModel(getModelPath(name)));
         } catch (FileNotFoundException e) {
             log.warn("Cannot load Model from " + getModelPath(name) + "! Creating new empty model!");
-            this.models.put(name, new NaiveBayesModel());
-            this.serializeNaiveBayesModel(name);
+            this.createNewModel(name);
         }
         return this.models.get(name);
+    }
+
+    public void createNewModel(String name) {
+        this.models.put(name, new NaiveBayesModel());
+        this.serializeNaiveBayesModel(name);
     }
 
     private Kryo initKryo() {
@@ -126,28 +130,34 @@ public class WSDService {
         return this.classifier.classify(featureVector);
     }
 
-    public synchronized Prediction classifyWithModel(IFeatureVector featureVector, String userName) throws FileNotFoundException {
+    public synchronized Prediction classifyWithModel(IFeatureVector featureVector, String userName) {
         this.classifier.setModel(loadModel(userName));
         return this.classifier.classify(featureVector);
     }
 
-    private void serializeGlobalNaiveBayesModel() throws FileNotFoundException {
+    private void serializeGlobalNaiveBayesModel() {
         this.serializeNaiveBayesModel(GLOBAL_MODEL);
     }
 
-    private void serializeNaiveBayesModel(String modelName) throws FileNotFoundException {
+    private void serializeNaiveBayesModel(String modelName) {
         String path = getModelPath(modelName);
         IModel model = this.models.get(modelName);
         if (model == null)
             throw new RuntimeException("Cannot find model " + modelName);
 
         log.info("Serializing Naive Bayes Model " + path);
-        File file = new File(path);
-        file.getParentFile().mkdirs();
+        try {
+            Output out;
+            File file = new File(path);
+            file.getParentFile().mkdirs();
 
-        Output out = new Output(new FileOutputStream(file, false));
-        this.kryo.writeClassAndObject(out, model);
-        out.close();
+            out = new Output(new FileOutputStream(file, false));
+            this.kryo.writeClassAndObject(out, model);
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            log.error("Cannot serialize model: " + path);
+        }
     }
 
     synchronized NaiveBayesModel deserializeGlobalNaiveBayesModel() throws FileNotFoundException {
@@ -177,7 +187,7 @@ public class WSDService {
      * @param captionToken
      * @return a sorted list of pairs of thumbnail and prediction. the first item is the thumbnail with the best prediction
      */
-    public synchronized List<Pair<Thumbnail, Prediction>> predictCategoryWithModel(CaptionToken captionToken, String model) throws FileNotFoundException {
+    public synchronized List<Pair<Thumbnail, Prediction>> predictCategoryWithModel(CaptionToken captionToken, String model) {
         // generate FeatureVectors for every thumbnail
         Map<Thumbnail, List<IFeatureVector>> thumbnailIFeatureVectorsMap = new HashMap<>();
         for (Thumbnail t : captionToken.getThumbnails())
@@ -194,7 +204,7 @@ public class WSDService {
             }
 
         // sort by highest prediction descending
-        if(!thumbnailPredictions.isEmpty()) {
+        if (!thumbnailPredictions.isEmpty()) {
             thumbnailPredictions.sort(Comparator.comparing(Pair::getValue));
             Collections.reverse(thumbnailPredictions);
         }

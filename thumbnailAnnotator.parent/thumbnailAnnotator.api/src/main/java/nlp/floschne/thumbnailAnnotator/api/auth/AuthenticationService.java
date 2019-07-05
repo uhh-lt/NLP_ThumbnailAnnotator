@@ -41,9 +41,13 @@ public class AuthenticationService {
         return null;
     }
 
-    public AccessKeyDTO registerUser(String username, String pw) {
+    public boolean registerUser(String username, String pw) {
         UserEntity user = this.dbService.registerUser(username, pw);
-        return new AccessKeyDTO(user.getAccessKey());
+        if (user != null)
+            log.info("Registered new User < " + username + " | " + pw + ">!");
+        else
+            log.warn("Cannot register User <" + username + "> because it already exists!");
+        return user != null;
     }
 
     public boolean logout(String uuid) {

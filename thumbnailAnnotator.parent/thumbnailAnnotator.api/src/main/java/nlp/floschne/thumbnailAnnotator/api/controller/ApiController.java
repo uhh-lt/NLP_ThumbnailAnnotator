@@ -6,7 +6,7 @@ import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.api.auth.AuthenticationService;
 import nlp.floschne.thumbnailAnnotator.api.dto.AccessKeyDTO;
 import nlp.floschne.thumbnailAnnotator.api.dto.AuthenticatedUserInputDTO;
-import nlp.floschne.thumbnailAnnotator.api.dto.LoginDataDTO;
+import nlp.floschne.thumbnailAnnotator.api.dto.UserDataDTO;
 import nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor.CaptionTokenExtractor;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.ExtractorResult;
@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.message.AuthException;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.ArrayList;
@@ -72,6 +73,20 @@ public class ApiController {
         response.sendRedirect("./swagger-ui.html");
     }
 
+    /**
+     * Tries to register a user with a given password. Please note, that this is just a dummy implementation that will  later
+     * be replaced by Oauth2 + JWT
+     *
+     * @return true or false when User was registered successfully or not respectively
+     */
+    @RequestMapping(value = "/register", method = RequestMethod.PUT)
+    public boolean register(@RequestBody UserDataDTO userDataDTO) {
+        if(this.dummyAuthenticationService.registerUser(userDataDTO.getUsername(), userDataDTO.getPassword())) {
+            this.wsdService.createNewModel(userDataDTO.getUsername());
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Tries to login a user with a given password. Please note, that this is just a dummy implementation that will  later
@@ -80,8 +95,8 @@ public class ApiController {
      * @return a access key that the user needs to provide to access the API Resources
      */
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public AccessKeyDTO login(@RequestBody LoginDataDTO loginDataDTO) {
-        return this.dummyAuthenticationService.login(loginDataDTO.getUsername(), loginDataDTO.getPassword());
+    public AccessKeyDTO login(@RequestBody UserDataDTO userDataDTO) {
+        return this.dummyAuthenticationService.login(userDataDTO.getUsername(), userDataDTO.getPassword());
     }
 
 
