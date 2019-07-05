@@ -113,7 +113,7 @@ public class WSDService {
     }
 
     public synchronized void trainNaiveBayesModel(List<? extends IFeatureVector> featureVectors, String modelName) throws FileNotFoundException {
-        StringBuilder sb = new StringBuilder("Training Naive Bayes Model " + modelName + " with ");
+        StringBuilder sb = new StringBuilder("Training Naive Bayes Model " + this.getModelPath(modelName) + " with ");
         sb.append(featureVectors.size()).append(" FeatureVector(s) for class(es): ");
         for (IFeatureVector f : featureVectors)
             sb.append(f.getLabel().getValue().toString()).append(", ");

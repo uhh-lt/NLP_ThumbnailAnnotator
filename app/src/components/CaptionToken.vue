@@ -119,8 +119,8 @@
 </template>
 
 <script>
-  import {EventBus} from "../main";
   import axios from 'axios';
+  import {EventBus} from "../main";
 
   export default {
     name: "CaptionToken",
@@ -132,6 +132,7 @@
         predictionReady: false,
         predictedCategory: null,
         predictedThumbnailUrl: null,
+        request_access_key: null
       }
     },
     props: {
@@ -145,41 +146,60 @@
     },
     methods: {
       predict(captionTokenId) {
-        axios.get(this.$hostname + "/predict?captionTokenId=" + captionTokenId).then(response => {
-          if (response.data.length === 0) {
-            this.predictedThumbnailUrl = null;
-            this.predictedCategory = "MODEL NOT TRAINED YET";
-            this.predictionReady = true;
-            return;
-          }
-          let firstPredictedThumbnailId = Object.keys(response.data[0])[0];
-          let firstPrediction = Object.values(response.data[0])[0];
+        // get the AccessKey from the current user!
+        EventBus.$emit("get_request_access_key");
+        // wait 250ms
+        setTimeout(() => {
+          axios.get(this.$hostname + "/predict?captionTokenId=" + captionTokenId + "&accessKey=" + this.request_access_key).then(response => {
+            // handle empty prediction which indicates that the model is not trained yet
+            if (response.data.length === 0) {
+              this.predictedThumbnailUrl = null;
+              this.predictedCategory = "MODEL NOT TRAINED YET";
+              this.predictionReady = true;
+              return;
+            }
 
-          let predictedCategories = firstPrediction.classProbabilities;
+            let firstPredictedThumbnailId = Object.keys(response.data[0])[0];
+            let firstPrediction = Object.values(response.data[0])[0];
 
-          console.log("predictedCategory: " + predictedCategories);
-          console.log("predictedThumbnailId: " + firstPredictedThumbnailId);
+            this.predictedCategory = firstPrediction.classProbabilities;
 
-          this.predictedCategory = predictedCategories;
-          this.getThumbnailUrl(firstPredictedThumbnailId);
+            this.getThumbnailUrl(firstPredictedThumbnailId);
 
-        }).catch(error => {
-          console.log(error);
-        });
+          }).catch(error => {
+            console.log(error);
+          });
+        }, 250);
       },
 
       getThumbnailUrl(thumbnailId) {
-        axios.get(this.$hostname + "/getThumbnailById?thumbnailId=" + thumbnailId).then(response => {
-          this.predictedThumbnailUrl = response.data.url;
-          this.predictionReady = true;
-        }).catch(error => {
-          console.log(error);
-        });
+        // get the AccessKey from the current user!
+        EventBus.$emit("get_request_access_key");
+        // wait 250ms
+        setTimeout(() => {
+          axios.get(this.$hostname + "/getThumbnailById?thumbnailId=" + thumbnailId + "&accessKey=" + this.request_access_key).then(response => {
+            this.predictedThumbnailUrl = response.data.url;
+            this.predictionReady = true;
+          }).catch(error => {
+            console.log(error);
+          });
+        }, 250);
+      },
+
+      updateRequestAccessKey(requestAccessKey) {
+        if (requestAccessKey === null || requestAccessKey.length === 0) {
+          if (!alert('ERROR GETTING ACCESS KEY OF CURRENT USER! REFRESHING PAGE AND LOGIN AGAIN!')) {
+            window.location.reload();
+          }
+        }
+        this.request_access_key = requestAccessKey;
       }
+
     },
     created() {
-      this.predict(this.captionTokenInstance.id);
+      EventBus.$on("sent_request_access_key_event", this.updateRequestAccessKey);
       console.log("CaptionToken created");
+      this.predict(this.captionTokenInstance.id);
     }
   }
 </script>

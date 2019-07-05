@@ -3,7 +3,7 @@
     <v-tab title="Login">
       <div class="card text-white bg-primary">
         <div class="card-body">
-          <form @submit.prevent="login" novalidate>
+          <form v-if="!logged_in" @submit.prevent="login" novalidate>
             <div class="form-group">
               <input name="username" id="login_username_input" class="form-control d-block mt-1" placeholder="Username" type="text" v-model.trim="userDto.username"/>
             </div>
@@ -19,12 +19,16 @@
             </div>
           </form>
 
-          <div class="badge-success rounded text-center" v-if="this.accessKeyDto.accessKey !== ''">
+          <div v-if="logged_in && this.accessKeyDto.accessKey === null" class="badge-danger rounded text-center">
+            <h6>Already logged in! <br> Please logout first!</h6>
+          </div>
+
+          <div class="badge-success rounded text-center" v-if="!this.logout_successful && this.accessKeyDto.accessKey !== null">
             <h4 class="m-0">Login successfull!</h4>
             <span>AccessKey: {{accessKeyDto.accessKey}}</span>
           </div>
-          <div v-if="this.login_failed" class="badge-danger">
-            <h4>Login Failed! Wrong username or password?!</h4>
+          <div v-if="this.login_failed" class="badge-danger rounded text-center">
+            <h6>Login Failed! Wrong username or password?!</h6>
           </div>
 
         </div>
@@ -69,11 +73,7 @@
     <v-tab title="Logout">
       <div class="card text-white bg-primary">
         <div class="card-body">
-          <form @submit.prevent="logout" novalidate>
-            <div class="form-group">
-              <input name="access_key" id="logout_access_key" class="form-control d-block mt-1" placeholder="Access Key" type="text" v-model.trim="accessKeyDto.accessKey"/>
-            </div>
-
+          <form v-if="logged_in" @submit.prevent="logout" novalidate>
             <div class="form-group">
               <button type="submit" class="btn btn-warning btn-block mt-md-2" value="Logout">
                 <span>Logout!</span>
@@ -81,14 +81,13 @@
             </div>
           </form>
 
+          <div v-if="!logged_in && this.accessKeyDto.accessKey === null" class="badge-danger rounded text-center">
+            <h6>Not logged in! <br> Please login first!</h6>
+          </div>
+
           <div class="badge-success rounded text-center" v-if="this.logout_successful">
             <h6 class="m-0">Logged out successfully!</h6>
           </div>
-
-          <div class="badge-success rounded text-center" v-if="!this.logout_successful && this.logout_failed">
-            <h6 class="m-0">Error while logging out! Wrong Access Key?!</h6>
-          </div>
-
         </div>
       </div>
     </v-tab>
@@ -97,6 +96,7 @@
 
 <script>
   import axios from 'axios';
+  import {EventBus} from "../main";
   import {VueTabs, VTab} from 'vue-nav-tabs'
 
   export default {
@@ -105,15 +105,16 @@
     data() {
       return {
         userDto: {
-          username: '',
-          password: ''
+          username: null,
+          password: null
         },
 
         accessKeyDto: {
-          accessKey: ''
+          accessKey: null
         },
 
         login_failed: false,
+        logged_in: false,
 
         logout_successful: false,
         logout_failed: false,
@@ -125,41 +126,58 @@
     },
     methods: {
       resetFlags(which) {
-        if(which === "all" || which === "login")
+        if (which === "all" || which === "login") {
           this.login_failed = false;
+          this.logged_in = false;
+        }
 
-        if(which === "all" || which === "logout") {
+        if (which === "all" || which === "logout") {
           this.logout_successful = false;
           this.logout_failed = false;
         }
 
-        if(which === "all" || which === "register") {
+        if (which === "all" || which === "register") {
           this.register_sent = false;
           this.register_successful = false;
           this.register_failed = false;
         }
       },
       login() {
-        axios.post(this.$hostname + "/login/", this.userDto).then(response => {
-          this.loginSuccess(response);
-        }).catch(error => {
-          this.loginError(error);
-        });
+        // check if already logged in
+        EventBus.$emit("is_logged_in_event");
+        // wait for 250ms
+        setTimeout(() => {
+          if (!this.logged_in) {
+            axios.post(this.$hostname + "/login/", this.userDto).then(response => {
+              this.loginSuccess(response);
+            }).catch(error => {
+              this.loginError(error);
+            });
+          } else
+            this.login_failed = false;
+        }, 250);
       },
       loginSuccess(response) {
         if (response.status === 200) {
           this.login_failed = false;
           this.accessKeyDto.accessKey = response.data.accessKey;
+          this.logged_in = true;
         } else {
           this.login_failed = true;
-          this.accessKeyDto.accessKey = '';
+          this.accessKeyDto.accessKey = null;
         }
+
+        EventBus.$emit("user_logged_in_event", {
+          userName: this.userDto.username,
+          accessKey: this.accessKeyDto.accessKey
+        });
+
         this.resetFlags("logout");
         this.resetFlags("register");
       },
       loginError(error) {
         this.login_failed = true;
-        this.accessKeyDto.accessKey = '';
+        this.accessKeyDto.accessKey = null;
         this.resetFlags("logout");
         this.resetFlags("register");
       },
@@ -180,33 +198,35 @@
           this.register_successful = false;
           this.register_failed = false;
         }
-        this.resetFlags("logout");
-        this.resetFlags("login");
       },
       registerError(error) {
         this.register_sent = false;
         this.register_successful = false;
         this.register_failed = true;
-        this.resetFlags("logout");
-        this.resetFlags("login");
       },
 
       logout() {
-        console.log(this.accessKeyDto);
-        axios.post(this.$hostname + "/logout/", this.accessKeyDto).then(response => {
-          this.logoutSuccess(response);
-        }).catch(error => {
-          this.logoutError(error);
-        });
+        // get the AccessKey from the current user!
+        EventBus.$emit("get_request_access_key");
+        // wait for 250ms
+        setTimeout(() => {
+          axios.post(this.$hostname + "/logout/", this.accessKeyDto).then(response => {
+            this.logoutSuccess(response);
+          }).catch(error => {
+            this.logoutError(error);
+          });
+        }, 250);
       },
       logoutSuccess(response) {
         if (response.status === 200 && response.data === true) {
           this.logout_successful = true;
+          this.logged_in = false;
         } else {
           this.logout_successful = false;
           this.logout_failed = true;
         }
-          this.resetFlags("register");
+        EventBus.$emit("user_logged_out_event");
+        this.resetFlags("register");
         this.resetFlags("login");
       },
       logoutError(error) {
@@ -214,10 +234,26 @@
         this.logout_failed = true;
         this.resetFlags("register");
         this.resetFlags("login");
+      },
+      updateRequestAccessKey(requestAccessKey) {
+        if (requestAccessKey === null || requestAccessKey.length === 0) {
+          if (!alert('ERROR GETTING ACCESS KEY OF CURRENT USER! REFRESHING PAGE AND LOGIN AGAIN!')) {
+            window.location.reload();
+          }
+        }
+        this.accessKeyDto.accessKey = requestAccessKey;
+      },
+      updateIsLoggedIn(flag) {
+        this.logged_in = flag;
       }
     },
     created() {
       this.resetFlags("all");
+      EventBus.$on("sent_request_access_key_event", this.updateRequestAccessKey);
+      EventBus.$on("sent_logged_in_flag", this.updateIsLoggedIn);
+      // check if already logged in
+      EventBus.$emit("is_logged_in_event");
+      console.log("UserForm created");
     }
   }
 </script>

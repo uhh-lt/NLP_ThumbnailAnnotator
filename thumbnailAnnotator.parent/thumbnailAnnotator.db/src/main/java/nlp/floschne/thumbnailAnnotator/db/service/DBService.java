@@ -251,9 +251,9 @@ public class DBService {
     }
 
     public UserEntity getUserByAccessKey(@NotNull String accessKey) {
-        if (!this.userEntityRepository.findByAccessKey(accessKey).isPresent())
+        if (this.userEntityRepository.findByAccessKey(accessKey).isPresent())
             return this.userEntityRepository.findByAccessKey(accessKey).get();
-        else return null;
+        return null;
     }
 
     public UserEntity getUserByUsername(@NotNull String username) {

@@ -15,10 +15,6 @@
             v-model.trim="authenticatedUserInputDto.value">
           </textarea>
 
-          <div class="form-group">
-            <input name="access_key" id="access_key_input" class="form-control d-block mt-1" placeholder="User Access Key" type="text" v-model.trim="authenticatedUserInputDto.accessKey"/>
-          </div>
-
 
           <div class="form-group">
             <button type="submit" class="btn btn-primary btn-block mt-md-2" :disabled="submitting" value="Get Thumbnails!">
@@ -75,8 +71,8 @@
         textAreaCursor: 'cursor: text',
 
         authenticatedUserInputDto: {
-          value: '',
-          accessKey: ''
+          value: null,
+          accessKey: null
         },
 
         errorMessage: ''
@@ -91,21 +87,31 @@
         this.submitting = false;
         this.textAreaCursor = 'cursor: text';
       },
+      sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      },
       crawlThumbnails() {
         this.enableSubmitLoader();
-        let authInput = {
-          "accessKey": this.authenticatedUserInputDto.accessKey,
-          "userInput": {
-            "value": this.authenticatedUserInputDto.value
-          }
-        };
-        axios.post(this.$hostname + "/crawlThumbnails/", authInput).then(response => {
-          this.crawlSuccess(response);
-          this.disableSubmitLoader();
-        }).catch(error => {
-          this.crawlError(error);
-          this.disableSubmitLoader();
-        });
+
+        // get the AccessKey from the current user!
+        EventBus.$emit("get_request_access_key");
+        // wait for 250ms
+        setTimeout(() => {
+          let authInput = {
+            "accessKey": this.authenticatedUserInputDto.accessKey,
+            "userInput": {
+              "value": this.authenticatedUserInputDto.value
+            }
+          };
+
+          axios.post(this.$hostname + "/crawlThumbnails/", authInput).then(response => {
+            this.crawlSuccess(response);
+            this.disableSubmitLoader();
+          }).catch(error => {
+            this.crawlError(error);
+            this.disableSubmitLoader();
+          });
+        }, 250);
       },
       crawlSuccess(response) {
         if (response.status === 200) {
@@ -125,7 +131,19 @@
       },
       reload() {
         window.location = ''
+      },
+      updateRequestAccessKey(requestAccessKey) {
+        if (requestAccessKey === null || requestAccessKey.length === 0) {
+          if (!alert('ERROR GETTING ACCESS KEY OF CURRENT USER! REFRESHING PAGE AND LOGIN AGAIN!')) {
+            window.location.reload();
+          }
+        }
+        this.authenticatedUserInputDto.accessKey = requestAccessKey;
       }
+    },
+    created() {
+      EventBus.$on("sent_request_access_key_event", this.updateRequestAccessKey);
+      console.log("UserInputCard created");
     }
   }
 </script>

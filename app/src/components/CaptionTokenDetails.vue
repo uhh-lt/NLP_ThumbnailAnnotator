@@ -36,7 +36,8 @@
     components: {CaptionToken, Thumbnail, draggable},
     data() {
       return {
-        captionTokenObj: null
+        captionTokenObj: null,
+        request_access_key: null
       }
     },
     props: {
@@ -63,7 +64,8 @@
     methods: {
       updateCaptionToken(captionTokenId) {
         if (this.captionTokenObj.id === captionTokenId) {
-          axios.get(this.$hostname + "/getCaptionToken/" + this.captionTokenObj.id).then(response => {
+          axios.get(this.$hostname + "/getCaptionTokenById?captionTokenId=" + this.captionTokenObj.id +
+            "&accessKey=" + this.request_access_key).then(response => {
             if (response.status === 200)
               this.captionTokenObj = response.data;
           }).catch(error => {
@@ -78,7 +80,7 @@
         let numPrioritized = this.captionTokenObj.thumbnails.length - numNonPrioritized;
 
         // only update if the new position is somewhere in the range of the prioritized thumbnails
-        if ( ev.moved.newIndex <= numNonPrioritized) {
+        if (ev.moved.newIndex <= numNonPrioritized) {
           // update the priority of the moved thumbnail for sure
           let newPriority = ev.moved.newIndex + 1;
 
@@ -99,20 +101,39 @@
       },
 
       setThumbnailPriority(thumbnailId, priority, captionTokenId) {
-        axios.put(this.$hostname + "/setThumbnailPriority?thumbnailId=" + thumbnailId + "&priority=" + priority + "&captionTokenId=" + captionTokenId).then(response => {
-          // update event for components that contain thumbnails
-          EventBus.$emit("updatedThumbnail_event", response.data);
-          // also update the captionToken to hold the new ordering
-          this.updateCaptionToken(this.captionTokenObj.id);
-        }).catch(error => {
-          console.log(error);
-        });
+        // get the AccessKey from the current user!
+        EventBus.$emit("get_request_access_key");
+        // wait 250ms
+        setTimeout(() => {
+          axios.put(this.$hostname + "/setThumbnailPriority?thumbnailId=" + thumbnailId +
+            "&priority=" + priority +
+            "&captionTokenId=" + captionTokenId +
+            "&accessKey=" + this.request_access_key).then(response => {
+
+            // update event for components that contain thumbnails
+            EventBus.$emit("updatedThumbnail_event", response.data);
+            // also update the captionToken to hold the new ordering
+            this.updateCaptionToken(this.captionTokenObj.id);
+          }).catch(error => {
+            console.log(error);
+          });
+        }, 250);
       },
+
+      updateRequestAccessKey(requestAccessKey) {
+        if (requestAccessKey === null || requestAccessKey.length === 0) {
+          if (!alert('ERROR GETTING ACCESS KEY OF CURRENT USER! REFRESHING PAGE AND LOGIN AGAIN!')) {
+            window.location.reload();
+          }
+        }
+        this.request_access_key = requestAccessKey;
+      }
 
     },
     created() {
-      console.log("CaptionTokenDetails created");
       this.captionTokenObj = this.captionToken;
+      EventBus.$on("sent_request_access_key_event", this.updateRequestAccessKey);
+      console.log("CaptionTokenDetails created");
     }
   }
 </script>
