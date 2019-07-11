@@ -180,8 +180,13 @@ public class ShutterstockSource implements IThumbnailSource {
 
         List<Thumbnail> thumbnails = createThumbnailsFromJsonResponse(searchImagesResponse, limit);
 
-        for (Thumbnail t : thumbnails)
-            setThumbnailDetails(t);
+        thumbnails.parallelStream().forEach(thumbnail -> {
+            try {
+                setThumbnailDetails(thumbnail);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         return thumbnails;
     }

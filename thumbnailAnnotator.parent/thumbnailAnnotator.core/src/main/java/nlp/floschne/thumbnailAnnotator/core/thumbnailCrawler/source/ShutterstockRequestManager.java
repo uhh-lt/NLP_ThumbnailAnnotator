@@ -1,6 +1,8 @@
 package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
@@ -20,7 +22,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,6 +33,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ShutterstockRequestManager {
 
+    /*
+    A lot of stuff in this class is now obsolete since we have now a higher rate limit and most probably
+    will only need one single API key. This class was designed to rotate multiple keys to cheat
+    higher rate limits...
+     */
 
     private class ShutterstockCredentials {
         private final UsernamePasswordCredentials credentials;
@@ -89,40 +99,8 @@ public class ShutterstockRequestManager {
         return instance;
     }
 
-    /**
-     * KEY and SECRET from https://developers.shutterstock.com/user/me/apps
-     */
-    private static final String CONSUMER_KEY_1 = "a23c2-918bb-11c18-e9fa2-268dd-35f02";
-    private static final String CONSUMER_SECRET_1 = "a4b74-ccd2c-a0fb2-c37ad-bface-75a3e";
 
-    private static final String CONSUMER_KEY_2 = "98987-31f4d-0dc30-9f060-bcf36-bf729";
-    private static final String CONSUMER_SECRET_2 = "ca74b-3edd8-a5e18-69871-c013d-89d37";
-
-    private static final String CONSUMER_KEY_3 = "a2e0a-6e12d-a6f15-b6ffa-f1a00-8046a";
-    private static final String CONSUMER_SECRET_3 = "8e9de-4ffd6-7a35f-6def9-ddc9f-22368";
-
-    private static final String CONSUMER_KEY_4 = "524be-6f277-f96e0-1d3c0-1c604-dccbc";
-    private static final String CONSUMER_SECRET_4 = "f3d20-44518-8b363-f5718-c4a43-ad002";
-
-    private static final String CONSUMER_KEY_5 = "6276e-1d14b-28fa1-762b7-e3720-85d6e";
-    private static final String CONSUMER_SECRET_5 = "383b2-cfe7a-03951-7ff92-91606-4f18b";
-
-    private static final String CONSUMER_KEY_6 = "171f4-83ac3-d70d1-29424-9ac9e-344ac";
-    private static final String CONSUMER_SECRET_6 = "460b0-e8d62-859bc-d4710-b6c29-43ae6";
-
-    private static final String CONSUMER_KEY_7 = "d399a-ba0c6-0664c-a4aec-c203c-57c1b";
-    private static final String CONSUMER_SECRET_7 = "f62e0-9bad8-cfe6f-bdb18-7fb7c-9ed84";
-
-    private static final String CONSUMER_KEY_8 = "f491e-32251-27406-65be0-0b305-4b512";
-    private static final String CONSUMER_SECRET_8 = "9312d-ff3e1-9bc00-f4c34-108dd-8eece";
-
-    private static final String CONSUMER_KEY_9 = "3dd52-db536-4df8a-4ba65-a95d0-5a5cd";
-    private static final String CONSUMER_SECRET_9 = "cacaf-7b347-97974-dedf9-2f4ad-99f86";
-
-    private static final String CONSUMER_KEY_10 = "0fc88-b865c-ad0fe-81eff-12763-9bdc4";
-    private static final String CONSUMER_SECRET_10 = "92d94-a150c-6db0f-49a74-819c4-557fc";
-
-    private static final Integer HOURLY_RATE_LIMIT = 250;
+    private static final Integer HOURLY_RATE_LIMIT = 60 * 1000;
     private static final Long MS_IN_HOUR = (long) 1000 * 60 * 60;
 
     private List<ShutterstockCredentials> credentialsList;
@@ -130,25 +108,25 @@ public class ShutterstockRequestManager {
     private AtomicInteger currentCredentialsIndex;
 
     private static final Boolean USE_KEYS_EQUALLY = true;
+    private static final String KEY_FILE = "shutterstock_api_keys.json";
 
     private ShutterstockRequestManager() {
         this.credentialsList = new ArrayList<>();
         this.credentialsList = Collections.synchronizedList(this.credentialsList);
 
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_1, CONSUMER_SECRET_1));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_2, CONSUMER_SECRET_2));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_3, CONSUMER_SECRET_3));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_4, CONSUMER_SECRET_4));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_5, CONSUMER_SECRET_5));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_6, CONSUMER_SECRET_6));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_7, CONSUMER_SECRET_7));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_8, CONSUMER_SECRET_8));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_9, CONSUMER_SECRET_9));
-        this.credentialsList.add(new ShutterstockCredentials(CONSUMER_KEY_10, CONSUMER_SECRET_10));
+        // load the keys from the KEY_FILE
+        try {
+            InputStream keyInputStream = Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream(KEY_FILE));
+            InputStreamReader inputStreamReader = new InputStreamReader(keyInputStream, StandardCharsets.UTF_8);
+            JsonArray keys = new GsonBuilder().create().fromJson(inputStreamReader, JsonArray.class);
+            for (JsonElement key : keys)
+                this.credentialsList.add(new ShutterstockCredentials(((JsonObject) key).get("key").getAsString(), ((JsonObject) key).get("secret").getAsString()));
 
-        this.currentCredentialsIndex = new AtomicInteger(0);
-
-//        Collections.shuffle(this.credentialsList);
+            this.currentCredentialsIndex = new AtomicInteger(0);
+        } catch (NullPointerException e) {
+            log.error("Cannot parse key file '" + KEY_FILE + "' from resources!");
+            throw new RuntimeException(e);
+        }
     }
 
     private synchronized Integer getAndIncrementCurrentCredentialsIndex() {
@@ -190,7 +168,7 @@ public class ShutterstockRequestManager {
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         UsernamePasswordCredentials creds = this.getCredentials();
 
-        log.info("Using Shutterstock Credentials: " + creds);
+        log.info("Using Shutterstock Credentials: " + creds.getUserName());
         credsProvider.setCredentials(new AuthScope(target.getHostName(), target.getPort()), creds);
 
         // Create model and get and then execute
