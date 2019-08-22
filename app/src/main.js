@@ -1,18 +1,20 @@
+import 'es6-promise/auto'
+import 'babel-polyfill'
+
 import Vue from 'vue'
 import App from './App.vue'
+import BootstrapVue from 'bootstrap-vue'
+import {library} from '@fortawesome/fontawesome-svg-core'
+import {faUser} from '@fortawesome/free-solid-svg-icons'
+import {faGithub} from '@fortawesome/free-brands-svg-icons'
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
 export const EventBus = new Vue();
 
-import BootstrapVue from 'bootstrap-vue'
 Vue.use(BootstrapVue);
 
 // Vue.prototype.$hostname = 'http://api:8081'; // use with docker-compose
 Vue.prototype.$hostname = 'http://localhost:8081/thumbnail-api'; // use for localhost
-
-import {library} from '@fortawesome/fontawesome-svg-core'
-import {faUser} from '@fortawesome/free-solid-svg-icons'
-import {faGithub, faVuejs} from '@fortawesome/free-brands-svg-icons'
-import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
 library.add(faGithub, faUser);
 
