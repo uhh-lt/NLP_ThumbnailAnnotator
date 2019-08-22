@@ -1,4 +1,3 @@
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/uhh-lt/NLP_ThumbnailAnnotator.svg?columns=all)](https://waffle.io/uhh-lt/NLP_ThumbnailAnnotator)
 [![Build Status](https://travis-ci.org/uhh-lt/NLP_ThumbnailAnnotator.svg?branch=master)](https://travis-ci.org/uhh-lt/NLP_ThumbnailAnnotator)
 
 
