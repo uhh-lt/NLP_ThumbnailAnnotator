@@ -3,9 +3,16 @@
     <navbar/>
     <div class="container-fluid">
       <div class="row pt-md-2">
-        <UserInputCard/>
-        <SampleInput v-if="!resultsReady"/>
-        <ResultsCard />
+        <div class="col-md-6">
+          <UserInputCard/>
+        </div>
+        <div v-if="!resultsReady" class="col-md-6">
+          <SampleInput v-bind:siddhartha="false"/>
+          <SampleInput v-bind:siddhartha="true"/>
+        </div>
+        <div v-if="resultsReady" class="col-md-6">
+          <ResultsCard/>
+        </div>
       </div>
     </div>
   </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="col-md-6 mt-5">
+  <div class="mt-5">
     <div class="card shadow-sm">
       <div class="card-header card-title text-md-center h5">User Input</div>
       <div class="card-body">

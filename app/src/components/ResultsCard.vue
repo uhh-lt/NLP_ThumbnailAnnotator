@@ -1,5 +1,5 @@
 <template>
-  <div v-if="resultsReceived" class="col-md-6 mt-5">
+  <div v-if="resultsReceived" class="mt-5">
     <div class="card shadow-sm">
       <div class="card-header card-title text-md-center h5">Thumbnail-annotated text</div>
       <div class="card-body">
