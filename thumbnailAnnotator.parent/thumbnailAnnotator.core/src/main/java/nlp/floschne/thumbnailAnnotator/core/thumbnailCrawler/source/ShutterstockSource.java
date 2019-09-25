@@ -60,6 +60,7 @@ public class ShutterstockSource implements IThumbnailSource {
     private static final String IMAGE_LICENCES = "&license[]=commercial&license[]=editorial&license[]=enhanced&license[]=sensitive";
     private static final String IMAGE_QUERY_PARAMETER = "&query=";
     private static final String SORT_PARAMETER = "&sort=";
+    private static final String PAGE_PARAMETER = "&page=1";
     private static final String PER_PAGE_PARAMETER = "&per_page=";
 
     private static final String OPERATOR_AND = "AND";
@@ -80,6 +81,7 @@ public class ShutterstockSource implements IThumbnailSource {
                 IMAGE_LICENCES +
                 IMAGE_QUERY_PARAMETER + URLEncoder.encode(queryParameter, "UTF-8") +
                 SORT_PARAMETER + sortBy.toString() +
+                PAGE_PARAMETER +
                 PER_PAGE_PARAMETER + per_page.toString();
     }
 
