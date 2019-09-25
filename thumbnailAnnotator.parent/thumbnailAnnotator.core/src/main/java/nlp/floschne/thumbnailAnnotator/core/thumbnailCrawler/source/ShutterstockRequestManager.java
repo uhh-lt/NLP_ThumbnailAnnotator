@@ -39,58 +39,6 @@ public class ShutterstockRequestManager {
     higher rate limits...
      */
 
-    private class ShutterstockCredentials {
-        private final UsernamePasswordCredentials credentials;
-        private final AtomicInteger usageCounter;
-        private final AtomicBoolean watchRuns;
-
-        private final Timer resetTimer;
-        private final StopWatch hourWatch;
-
-        private final Object monitor = new Object();
-
-        ShutterstockCredentials(String consumerKey, String consumerSecret) {
-            this.credentials = new UsernamePasswordCredentials(consumerKey, consumerSecret);
-
-            this.usageCounter = new AtomicInteger(0);
-            this.watchRuns = new AtomicBoolean(false);
-
-            this.resetTimer = new Timer(true);
-            this.hourWatch = new StopWatch();
-        }
-
-        public UsernamePasswordCredentials getCredentials() {
-            synchronized (this.monitor) {
-
-                // start the reset timer if it hasn't started yet
-                if (this.watchRuns.compareAndSet(false, true)) {
-                    this.hourWatch.start();
-                    // reset usage counter after 1 hour every hour
-                    this.resetTimer.scheduleAtFixedRate(new TimerTask() {
-                        @Override
-                        public void run() {
-                            usageCounter.set(0);
-                            hourWatch.reset();
-                            hourWatch.start();
-                        }
-                    }, MS_IN_HOUR, MS_IN_HOUR);
-                }
-
-                // return null if the number of request exceeds the rate limit
-                if (this.usageCounter.get() >= HOURLY_RATE_LIMIT)
-                    return null;
-                else {
-                    this.usageCounter.incrementAndGet();
-                    return this.credentials;
-                }
-            }
-        }
-
-        public Long getMilliSecondsUntilReset() {
-            return MS_IN_HOUR - this.hourWatch.getTime();
-        }
-    }
-
     private static ShutterstockRequestManager instance;
 
     public static ShutterstockRequestManager getInstance() {
@@ -99,15 +47,10 @@ public class ShutterstockRequestManager {
         return instance;
     }
 
-
-    private static final Integer HOURLY_RATE_LIMIT = 60 * 1000;
-    private static final Long MS_IN_HOUR = (long) 1000 * 60 * 60;
-
-    private List<ShutterstockCredentials> credentialsList;
+    private List<UsernamePasswordCredentials> credentialsList;
 
     private AtomicInteger currentCredentialsIndex;
 
-    private static final Boolean USE_KEYS_EQUALLY = true;
     private static final String KEY_FILE = "shutterstock_api_keys.json";
 
     private ShutterstockRequestManager() {
@@ -120,7 +63,7 @@ public class ShutterstockRequestManager {
             InputStreamReader inputStreamReader = new InputStreamReader(keyInputStream, StandardCharsets.UTF_8);
             JsonArray keys = new GsonBuilder().create().fromJson(inputStreamReader, JsonArray.class);
             for (JsonElement key : keys)
-                this.credentialsList.add(new ShutterstockCredentials(((JsonObject) key).get("key").getAsString(), ((JsonObject) key).get("secret").getAsString()));
+                this.credentialsList.add(new UsernamePasswordCredentials(((JsonObject) key).get("key").getAsString(), ((JsonObject) key).get("secret").getAsString()));
 
             this.currentCredentialsIndex = new AtomicInteger(0);
         } catch (NullPointerException e) {
@@ -135,32 +78,19 @@ public class ShutterstockRequestManager {
         return tmp;
     }
 
-    private synchronized UsernamePasswordCredentials getCredentials() throws ConnectException {
-        long shortestWaitingTime = Long.MAX_VALUE;
-        if (USE_KEYS_EQUALLY) {
-            int i = 0;
-            while (i < this.credentialsList.size()) { // try it for at max. the number of available keys
-                ShutterstockCredentials screds = this.credentialsList.get(this.getAndIncrementCurrentCredentialsIndex());
-                UsernamePasswordCredentials creds = screds.getCredentials();
-                if (creds != null)
-                    return creds;
-                else {
-                    shortestWaitingTime = Math.min(screds.getMilliSecondsUntilReset(), shortestWaitingTime);
-                }
-            }
-        } else {
-            for (ShutterstockCredentials screds : this.credentialsList) {
-                UsernamePasswordCredentials creds = screds.getCredentials();
-                if (creds != null)
-                    return creds;
-                else
-                    shortestWaitingTime = Math.min(screds.getMilliSecondsUntilReset(), shortestWaitingTime);
-            }
+    private UsernamePasswordCredentials getCredentials() throws ConnectException {
+        int i = 0;
+        while (i < this.credentialsList.size()) { // try it for at max. the number of available keys
+            UsernamePasswordCredentials creds = this.credentialsList.get(this.getAndIncrementCurrentCredentialsIndex());
+            if (creds != null)
+                return creds;
+            i++;
         }
-        throw new ConnectException("Rate Limit for all API keys exceeded! Seconds until reset: " + shortestWaitingTime);
+        throw new ConnectException("Rate Limit for all API keys exceeded!");
     }
 
-    public synchronized JsonObject makeGetRequest(String resourceUrl) throws IOException {
+    // package private by intention
+    JsonObject makeGetRequest(String resourceUrl) throws IOException {
         // Set host
         HttpHost target = new HttpHost("api.shutterstock.com", 443, "https");
 
