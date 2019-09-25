@@ -22,7 +22,13 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,11 +71,19 @@ public class DBService {
 
     // check if already cached (if value AND sentence context match) // TODO better UDContext?!
     private CaptionTokenEntity captionTokenIsCached(@NotNull CaptionToken ct) {
-        if (this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent() &&
-                this.captionTokenEntityRepository.findByValue(ct.getValue()).get().getSentenceContext().equals(ct.getSentenceContext()))
-            return this.captionTokenEntityRepository.findByValue(ct.getValue()).get();
-        else
+        // trivial case: if there is no cte with the same value it's obviously not cached
+        if (!this.captionTokenEntityRepository.findByValue(ct.getValue()).isPresent())
             return null;
+
+        // non-trivial case: since there is a problem with indexing by SentenceContext, we have to check manually..
+        List<CaptionTokenEntity> cteWithSameValue = this.captionTokenEntityRepository.findAllByValue(ct.getValue());
+        if (cteWithSameValue.size() >= 1) {
+            for (CaptionTokenEntity cte : cteWithSameValue)
+                if (cte.getSentenceContext().equals(ct.getSentenceContext()))
+//                if (cte.getUdContext().equals(ct.getUdContext()))
+                    return cte;
+        }
+        return null;
     }
 
     public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) throws IOException {
