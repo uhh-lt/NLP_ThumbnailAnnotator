@@ -5,7 +5,7 @@
 
       <ul class="navbar-nav bd-navbar-nav flex-row">
         <li class="nav-item">
-          <a class="nav-link" href="https://github.com/uhh-lt/NLP_ThumbnailAnnotation/" target="_blank"
+          <a class="nav-link" href="https://github.com/uhh-lt/NLP_ThumbnailAnnotator/" target="_blank"
              rel="noopener"
              aria-label="GitHub">
             <font-awesome-icon size="2x" :icon="{ prefix: 'fab', iconName: 'github' }"/>

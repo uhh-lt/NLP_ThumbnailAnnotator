@@ -44,9 +44,6 @@ public abstract class RepositoryTestBase<E extends Entity> {
     @Autowired
     protected UserEntityRepository userEntityRepository;
 
-    @Autowired
-    protected FeatureVectorEntityRepo featureVectorEntityRepo;
-
     public enum RepoType {
         THUMBNAIL_URL, CAPTION_TOKEN, USER, FEATURE_VECTOR
     }
@@ -69,9 +66,6 @@ public abstract class RepositoryTestBase<E extends Entity> {
                 break;
             case USER:
                 this.repo = (CrudRepository<E, String>) userEntityRepository;
-                break;
-            case FEATURE_VECTOR:
-                this.repo = (CrudRepository<E, String>) featureVectorEntityRepo;
                 break;
         }
     }

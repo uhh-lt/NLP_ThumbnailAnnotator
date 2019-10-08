@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
  * Crawls for Thumbnails that match to a list of CaptionTokens
  */
 public class ThumbnailCrawler {
-    private static final Integer MAX_PARALLEL_THREADS = 16;
+    private static final Integer MAX_PARALLEL_THREADS = 50;
 
     /**
      * Agent that crawls Thumbnails for a {@link CaptionToken}
@@ -35,7 +35,7 @@ public class ThumbnailCrawler {
         // package private by intention
         CrawlerAgent(CaptionToken captionToken) {
             this.captionToken = captionToken;
-            this.limit = 16;
+            this.limit = 40;
         }
 
         /**
@@ -43,7 +43,6 @@ public class ThumbnailCrawler {
          */
         @Override
         public CaptionToken call() throws IOException {
-            // TODO replace dummy implementation
             List<Thumbnail> thumbnails = null;
             try {
                 thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), limit);
@@ -52,6 +51,8 @@ public class ThumbnailCrawler {
                 throw new IOException("There went something wrong while crawling Thumbnails!\n" + e.getMessage());
             }
             assert thumbnails != null;
+            // remove tokens if the search was too specific, so that there where to less results
+            // TODO remove this since it can produce errors if there is only one token
             if (thumbnails.size() < limit / 2) {
                 try {
                     thumbnails.addAll(thumbnailSource.queryThumbnails(this.captionToken.getTokens().get(this.captionToken.getTokens().size() - 1), limit));
@@ -89,6 +90,11 @@ public class ThumbnailCrawler {
 
     public Future<CaptionToken> startCrawlingThumbnails(CaptionToken captionToken) {
         return this.threadPool.submit(new CrawlerAgent(captionToken));
+    }
+
+    public Thumbnail findThumbnailWithCategory(CaptionToken captionToken, String category) throws IOException {
+        // TODO implement checks and validate input and output
+        return this.thumbnailSource.queryThumbnails(captionToken.getValue(), 1, category).get(0);
     }
 
 }

@@ -34,9 +34,6 @@ public abstract class MapperTestBase<E extends Entity, D extends DomainObject> {
     @Autowired
     protected CaptionTokenMapper captionTokenMapper;
 
-    @Autowired
-    protected FeatureVectorMapper featureVectorMapper;
-
     public enum MapperType {
         THUMBNAIL_URL, CAPTION_TOKEN, FEATURE_VECTOR
     }
@@ -57,9 +54,6 @@ public abstract class MapperTestBase<E extends Entity, D extends DomainObject> {
                 break;
             case CAPTION_TOKEN:
                 this.mapper = (IMapper<E, D>) captionTokenMapper;
-                break;
-            case FEATURE_VECTOR:
-                this.mapper = (IMapper<E, D>) featureVectorMapper;
                 break;
         }
     }

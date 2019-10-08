@@ -3,66 +3,32 @@ package nlp.floschne.thumbnailAnnotator.wsd.featureExtractor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
-import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
+import nlp.floschne.thumbnailAnnotator.core.domain.DomainObject;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.Label;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-@ToString
-public class FeatureVector extends IFeatureVector {
+@EqualsAndHashCode(callSuper = false)
+public class FeatureVector implements Iterable<Object> {
+    protected List<Object> features;
 
-    private List<String> captionTokenPosTags;
-    private List<String> captionTokenTokens;
-    private List<String> captionTokenLemmata;
-
-    private List<String> captionTokenUdContext;
-    private SentenceContext captionTokenSentenceContext;
-
-    //    private List<String> thumbnailDescriptionTokens; TODO include!? requires tokenization -> UIMA
-    private List<String> thumbnailKeywords;
-
-    public FeatureVector(String label, List<String> captionTokenPosTags, List<String> captionTokenTokens, List<String> captionTokenLemmata, List<String> captionTokenUdContext, SentenceContext captionTokenSentenceContext, List<String> thumbnailKeywords) {
-        super(new Label<>(label));
-        this.captionTokenPosTags = captionTokenPosTags;
-        this.captionTokenTokens = captionTokenTokens;
-        this.captionTokenLemmata = captionTokenLemmata;
-        this.captionTokenUdContext = captionTokenUdContext;
-        this.captionTokenSentenceContext = captionTokenSentenceContext;
-        this.thumbnailKeywords = thumbnailKeywords;
-        this.features = this.getAllFeatures();
+    protected FeatureVector() {
+        this.features = new ArrayList<>();
     }
 
-    public static FeatureVector createDummyTestingFeatureVector() {
-        return new FeatureVector(
-                "labelDummy",
-                Arrays.asList("POS3", "POS4"),
-                Arrays.asList("Token3", "Token4"),
-                Arrays.asList("Lemma3", "Lemma4"),
-                Arrays.asList("subj(a, b)", "det(c)"),
-                SentenceContext.createDummyDomainTestingSentenceContext(),
-                Arrays.asList("keyword3", "keyword4")
-        );
+    protected FeatureVector(List<?>... features) {
+        this();
+        for(List<?> featureList : features)
+            this.features.addAll(featureList);
     }
 
-    private List<Object> getAllFeatures() {
-        List<Object> allFeatures = new ArrayList<>();
-        allFeatures.addAll(this.captionTokenPosTags);
-        allFeatures.addAll(this.captionTokenTokens);
-        allFeatures.addAll(this.captionTokenLemmata);
-
-        allFeatures.addAll(this.captionTokenUdContext);
-        allFeatures.addAll(this.captionTokenSentenceContext.getSLemmata());
-        allFeatures.addAll(this.captionTokenSentenceContext.getSPosTags());
-        allFeatures.addAll(this.captionTokenSentenceContext.getSTokens());
-
-        allFeatures.addAll(this.thumbnailKeywords);
-
-        return allFeatures;
+    @NotNull
+    @Override
+    public Iterator<Object> iterator() {
+        return features.iterator();
     }
 }

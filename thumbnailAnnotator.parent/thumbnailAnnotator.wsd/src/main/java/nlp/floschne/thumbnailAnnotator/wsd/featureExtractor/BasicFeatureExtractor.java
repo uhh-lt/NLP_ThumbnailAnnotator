@@ -2,6 +2,7 @@ package nlp.floschne.thumbnailAnnotator.wsd.featureExtractor;
 
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -11,13 +12,11 @@ import java.util.List;
 public class BasicFeatureExtractor implements IFeatureExtractor {
 
     @Override
-    public FeatureVector extractFeatures(CaptionToken ct, Thumbnail t, String label) {
+    public TrainingFeatureVector extractTrainingFeatures(CaptionToken ct, Thumbnail t, String label) {
 
-        List<String> captionTokenUdContext = new ArrayList<>();
-        for (CaptionToken.UDependency ud : ct.getUdContext())
-            captionTokenUdContext.add(ud.toString());
+        List<String> captionTokenUdContext = getUDContextFeatures(ct);
 
-        return new FeatureVector(
+        return new TrainingFeatureVector(
                 label,
                 ct.getPosTags(),
                 ct.getTokens(),
@@ -28,4 +27,24 @@ public class BasicFeatureExtractor implements IFeatureExtractor {
         );
     }
 
+    @NotNull
+    private List<String> getUDContextFeatures(CaptionToken ct) {
+        List<String> captionTokenUdContext = new ArrayList<>();
+        for (CaptionToken.UDependency ud : ct.getUdContext())
+            captionTokenUdContext.add(ud.toString());
+        return captionTokenUdContext;
+    }
+
+    @Override
+    public FeatureVector extractFeatures(CaptionToken ct) {
+        List<String> captionTokenUdContext = getUDContextFeatures(ct);
+        return new FeatureVector(
+                ct.getTokens(),
+                ct.getLemmata(),
+                ct.getPosTags(),
+                captionTokenUdContext,
+                ct.getSentenceContext().getSTokens(),
+                ct.getSentenceContext().getSLemmata(),
+                ct.getSentenceContext().getSPosTags());
+    }
 }

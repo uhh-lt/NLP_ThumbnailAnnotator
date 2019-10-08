@@ -1,24 +1,47 @@
 <template>
-  <div class="card text-white bg-primary">
+  <div class="card text-white bg-primary container-fluid">
     <div class="card-body">
       <caption-token
         v-bind:captionTokenInstance="captionTokenObj"
         v-bind:id="id"
       />
-
       <hr>
-      <draggable v-model="captionTokenObj.thumbnails" @change="updatePriorities">
-        <thumbnail v-for="thumbnail in captionTokenObj.thumbnails"
-                   v-bind:key="thumbnail.id + '_' + id"
-                   v-bind:id="thumbnail.id + '_' + id"
-                   v-bind:thumbnail="thumbnail"
-                   v-bind:captionTokenId="captionTokenObj.id"
-        />
+
+      <div class="card bg-info mb-0">
+        <div class="card-header text-center p-0">
+          Training Area
+        </div>
+        <div class="card-body p-1 text-center">
+          <span class="small" v-if="trainingList.length === 0 && !training">Drag n' Drop a Thumbnail to train your model!</span>
+
+          <draggable tag="ul" :list="trainingList" group="group1" @change="train">
+            <thumbnail v-for="thumbnail in trainingList"
+                       v-bind:key="thumbnail.id + '_' + id"
+                       v-bind:id="thumbnail.id + '_' + id"
+                       v-bind:thumbnail="thumbnail"
+                       v-bind:captionTokenId="captionTokenObj.id"
+            />
+          </draggable>
+        </div>
+        <div v-if="training" class="card-footer p-0 text-center bg-success">
+          <span class="h4">Training in progress...</span>
+        </div>
+
+        </div>
+      </div>
+      <hr>
+
+      <draggable tag="ul"  class="p-0" :list="captionTokenObj.thumbnails" group="group1">
+          <thumbnail v-for="thumbnail in captionTokenObj.thumbnails"
+                     v-bind:key="thumbnail.id + '_' + id"
+                     v-bind:id="thumbnail.id + '_' + id"
+                     v-bind:thumbnail="thumbnail"
+                     v-bind:captionTokenId="captionTokenObj.id"
+          />
       </draggable>
 
 
     </div>
-  </div>
 </template>
 
 <script>
@@ -27,7 +50,7 @@
 
   import CaptionToken from "./CaptionToken";
   import Thumbnail from "./Thumbnail";
-  import draggable from 'vuedraggable'
+  import draggable from "vuedraggable";
 
   import axios from 'axios';
 
@@ -37,8 +60,10 @@
     data() {
       return {
         captionTokenObj: null,
-        request_access_key: null
-      }
+        request_access_key: null,
+        training: false,
+        trainingList: []
+      };
     },
     props: {
       captionToken: {
@@ -47,18 +72,6 @@
       },
       id: {
         required: true
-      }
-    },
-    computed: {
-      idToIdxMap: function () {
-        let map = {}
-
-        let i = 0;
-        let t = null;
-        for (t in this.thumbnails)
-          map[t.id] = i++;
-
-        return map
       }
     },
     methods: {
@@ -74,47 +87,18 @@
         }
       },
 
-      updatePriorities(ev) {
-        // TODO find and fix bug (there is one for sure!)
-        let numNonPrioritized = this.captionTokenObj.thumbnails.filter(x => x.priority === 0).length - 1;
-        let numPrioritized = this.captionTokenObj.thumbnails.length - numNonPrioritized;
-
-        // only update if the new position is somewhere in the range of the prioritized thumbnails
-        if (ev.moved.newIndex <= numNonPrioritized) {
-          // update the priority of the moved thumbnail for sure
-          let newPriority = ev.moved.newIndex + 1;
-
-          let updatedThumbnailId = ev.moved.element.id;
-          this.setThumbnailPriority(updatedThumbnailId, newPriority, this.captionTokenObj.id);
-
-          // check if other thumbnail priorities have to be adapted (in order to have the correct priority regarding their positions)
-          let thumbIdx;
-          let thumb;
-          for (thumbIdx in this.captionTokenObj.thumbnails) {
-            thumb = this.captionTokenObj.thumbnails[thumbIdx];
-            if (thumb.id !== updatedThumbnailId && thumb.priority !== 0) {
-              newPriority = numPrioritized - this.captionTokenObj.thumbnails.findIndex(t => t.id === thumb.id);
-              this.setThumbnailPriority(thumb.id, newPriority, this.captionTokenObj.id);
-            }
-          }
-        }
-      },
-
-      setThumbnailPriority(thumbnailId, priority, captionTokenId) {
+      trainModel(thumbnailId, captionTokenId) {
         // get the AccessKey from the current user!
         EventBus.$emit("get_request_access_key");
         // wait 250ms
         setTimeout(() => {
-          axios.put(this.$hostname + "/setThumbnailPriority?thumbnailId=" + thumbnailId +
-            "&priority=" + priority +
+          axios.post(this.$hostname + "/trainModel?thumbnailId=" + thumbnailId +
             "&captionTokenId=" + captionTokenId +
             "&accessKey=" + this.request_access_key).then(response => {
-
-            // update event for components that contain thumbnails
-            EventBus.$emit("updatedThumbnail_event", response.data);
-            // also update the captionToken to hold the new ordering
-            this.updateCaptionToken(this.captionTokenObj.id);
+                // start the prediction if there was no error
+                EventBus.$emit("start_prediction_event", this.captionTokenObj.id)
           }).catch(error => {
+              this.training = false;
             console.log(error);
           });
         }, 250);
@@ -127,8 +111,18 @@
           }
         }
         this.request_access_key = requestAccessKey;
-      }
+      },
 
+      train: function(evt) {
+          this.training = true;
+          let thumbnailId = evt.added.element.id;
+          let captionTokenId = this.captionTokenObj.id;
+          this.trainModel(thumbnailId, captionTokenId);
+          setTimeout(() => {
+              this.training = false;
+              this.trainingList = [];
+          }, 1000);
+      },
     },
     created() {
       this.captionTokenObj = this.captionToken;

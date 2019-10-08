@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <li style="list-style: none">
     <div class="float-left" :id="thumbnail_details_popover_target_id">
       <img :src="thumbnailObj.url" class="img-thumbnail" :alt="thumbnailObj.url"
            :id="thumbnail_large_image_popover_target_id">
@@ -23,7 +23,7 @@
         {{ this.thumbnailObj.priority }}
       </code>
     </b-popover>
-  </div>
+  </li>
 </template>
 
 <script>
@@ -70,8 +70,8 @@
 
 <style scoped>
   .img-thumbnail {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     margin: 1px;
     padding: 0;
   }

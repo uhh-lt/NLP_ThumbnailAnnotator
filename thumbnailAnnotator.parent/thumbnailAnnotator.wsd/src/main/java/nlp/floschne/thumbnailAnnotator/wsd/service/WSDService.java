@@ -7,12 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
-import nlp.floschne.thumbnailAnnotator.wsd.classifier.*;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.IClassifier;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.IModel;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.Label;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.NaiveBayesModel;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.Prediction;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.IFeatureExtractor;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.IFeatureVector;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.MyTestFeatureVector;
-import org.apache.commons.lang3.tuple.Pair;
+import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +22,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -71,7 +77,7 @@ public class WSDService {
 
         // otherwise try to deserialize or create new
         try {
-            this.models.put(name, this.deserializeNaiveBayesModel(getModelPath(name)));
+            this.models.put(name, this.deserializeNaiveBayesModel(name));
         } catch (FileNotFoundException e) {
             log.warn("Cannot load Model from " + getModelPath(name) + "! Creating new empty model!");
             this.createNewModel(name);
@@ -93,30 +99,42 @@ public class WSDService {
         kryo.register(Object.class);
         kryo.register(SentenceContext.class);
         kryo.register(Label.class);
-        kryo.register(FeatureVector.class);
-        kryo.register(MyTestFeatureVector.class);
+        kryo.register(TrainingFeatureVector.class);
         kryo.register(NaiveBayesModel.class);
 
         return kryo;
     }
 
-    public List<IFeatureVector> extractFeatures(CaptionToken ct, Thumbnail t) {
-        List<IFeatureVector> featureVectors = new ArrayList<>();
+    // package private by intention
+    List<TrainingFeatureVector> extractTrainingFeatures(CaptionToken ct, Thumbnail t) {
+        List<TrainingFeatureVector> trainingFeatureVectors = new ArrayList<>();
         for (Thumbnail.Category c : t.getCategories())
-            featureVectors.add(this.featureExtractor.extractFeatures(ct, t, c.getName()));
+            trainingFeatureVectors.add(this.featureExtractor.extractTrainingFeatures(ct, t, c.getName()));
 
-        return featureVectors;
+        return trainingFeatureVectors;
     }
 
-    public synchronized void trainGlobalNaiveBayesModel(List<? extends IFeatureVector> featureVectors) throws FileNotFoundException {
+
+    // package private by intention
+    FeatureVector extractFeatures(CaptionToken ct) {
+        return this.featureExtractor.extractFeatures(ct);
+    }
+
+    public synchronized void trainGlobalNaiveBayesModel(List<? extends TrainingFeatureVector> featureVectors) throws FileNotFoundException {
         this.trainNaiveBayesModel(featureVectors, GLOBAL_MODEL);
     }
 
-    public synchronized void trainNaiveBayesModel(List<? extends IFeatureVector> featureVectors, String modelName) throws FileNotFoundException {
+    public synchronized void trainNaiveBayesModel(CaptionToken ct, Thumbnail t, String modelName) throws FileNotFoundException {
+        List<TrainingFeatureVector> trainingFeatureVectors = this.extractTrainingFeatures(ct, t);
+
+        this.trainNaiveBayesModel(trainingFeatureVectors, modelName);
+    }
+
+    private synchronized void trainNaiveBayesModel(List<? extends TrainingFeatureVector> featureVectors, String modelName) throws FileNotFoundException {
         StringBuilder sb = new StringBuilder("Training Naive Bayes Model " + this.getModelPath(modelName) + " with ");
         sb.append(featureVectors.size()).append(" FeatureVector(s) for class(es): ");
-        for (IFeatureVector f : featureVectors)
-            sb.append(f.getLabel().getValue().toString()).append(", ");
+        for (TrainingFeatureVector tfv : featureVectors)
+            sb.append(tfv.getLabel().getValue().toString()).append(", ");
         sb.delete(sb.length() - 2, sb.length() - 1);
         log.info(sb.toString());
 
@@ -125,13 +143,20 @@ public class WSDService {
         this.serializeNaiveBayesModel(modelName);
     }
 
-    public synchronized Prediction classifyWithGlobalModel(IFeatureVector featureVector) throws FileNotFoundException {
+    public synchronized Prediction classifyWithModel(CaptionToken ct, String modelName) {
+        FeatureVector featureVector = this.extractFeatures(ct);
+
+        return this.classifyWithModel(featureVector, modelName);
+    }
+
+    // package private by intention
+    synchronized Prediction classifyWithGlobalModel(FeatureVector featureVector) throws FileNotFoundException {
         this.setClassifierModel(GLOBAL_MODEL);
         return this.classifier.classify(featureVector);
     }
 
-    public synchronized Prediction classifyWithModel(IFeatureVector featureVector, String userName) {
-        this.classifier.setModel(loadModel(userName));
+    private synchronized Prediction classifyWithModel(FeatureVector featureVector, String modelName) {
+        this.classifier.setModel(loadModel(modelName));
         return this.classifier.classify(featureVector);
     }
 
@@ -160,7 +185,7 @@ public class WSDService {
         }
     }
 
-    synchronized NaiveBayesModel deserializeGlobalNaiveBayesModel() throws FileNotFoundException {
+    public synchronized NaiveBayesModel deserializeGlobalNaiveBayesModel() throws FileNotFoundException {
         return this.deserializeNaiveBayesModel(GLOBAL_MODEL);
     }
 
@@ -177,38 +202,5 @@ public class WSDService {
 
     public final IClassifier getClassifier() {
         return this.classifier;
-    }
-
-    public synchronized List<Pair<Thumbnail, Prediction>> predictCategoryWithGlobalModel(CaptionToken captionToken) throws FileNotFoundException {
-        return this.predictCategoryWithModel(captionToken, GLOBAL_MODEL);
-    }
-
-    /**
-     * @param captionToken
-     * @return a sorted list of pairs of thumbnail and prediction. the first item is the thumbnail with the best prediction
-     */
-    public synchronized List<Pair<Thumbnail, Prediction>> predictCategoryWithModel(CaptionToken captionToken, String model) {
-        // generate FeatureVectors for every thumbnail
-        Map<Thumbnail, List<IFeatureVector>> thumbnailIFeatureVectorsMap = new HashMap<>();
-        for (Thumbnail t : captionToken.getThumbnails())
-            thumbnailIFeatureVectorsMap.put(t, this.extractFeatures(captionToken, t));
-
-
-        // classify the FeatureVectors
-        List<Pair<Thumbnail, Prediction>> thumbnailPredictions = new ArrayList<>();
-        for (Map.Entry<Thumbnail, List<IFeatureVector>> e : thumbnailIFeatureVectorsMap.entrySet())
-            for (IFeatureVector featureVector : e.getValue()) {
-                Prediction p = this.classifyWithModel(featureVector, model);
-                if (!p.equals(Prediction.getZeroPrediction()))
-                    thumbnailPredictions.add(Pair.of(e.getKey(), p));
-            }
-
-        // sort by highest prediction descending
-        if (!thumbnailPredictions.isEmpty()) {
-            thumbnailPredictions.sort(Comparator.comparing(Pair::getValue));
-            Collections.reverse(thumbnailPredictions);
-        }
-
-        return thumbnailPredictions;
     }
 }

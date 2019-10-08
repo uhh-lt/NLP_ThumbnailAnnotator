@@ -92,7 +92,6 @@
       },
       crawlThumbnails() {
         this.enableSubmitLoader();
-
         // get the AccessKey from the current user!
         EventBus.$emit("get_request_access_key");
         // wait for 250ms

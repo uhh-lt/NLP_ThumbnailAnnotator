@@ -4,17 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
-import nlp.floschne.thumbnailAnnotator.db.entity.FeatureVectorEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.mapper.CaptionTokenMapper;
-import nlp.floschne.thumbnailAnnotator.db.mapper.FeatureVectorMapper;
 import nlp.floschne.thumbnailAnnotator.db.mapper.ThumbnailMapper;
 import nlp.floschne.thumbnailAnnotator.db.repository.CaptionTokenEntityRepository;
-import nlp.floschne.thumbnailAnnotator.db.repository.FeatureVectorEntityRepo;
 import nlp.floschne.thumbnailAnnotator.db.repository.ThumbnailEntityRepository;
 import nlp.floschne.thumbnailAnnotator.db.repository.UserEntityRepository;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @ComponentScan(basePackages = {"nlp.floschne.thumbnailAnnotator.db"})
@@ -42,13 +36,9 @@ public class DBService {
 
     private final UserEntityRepository userEntityRepository;
 
-    private final FeatureVectorEntityRepo featureVectorEntityRepo;
-
     private final CaptionTokenMapper captionTokenMapper;
 
     private final ThumbnailMapper thumbnailMapper;
-
-    private final FeatureVectorMapper featureVectorMapper;
 
 
     @Autowired
@@ -56,14 +46,12 @@ public class DBService {
                      CaptionTokenEntityRepository captionTokenEntityRepository,
                      CaptionTokenMapper captionTokenMapper,
                      UserEntityRepository userEntityRepository,
-                     FeatureVectorEntityRepo featureVectorEntityRepo, ThumbnailMapper thumbnailMapper, FeatureVectorMapper featureVectorMapper) {
+                     ThumbnailMapper thumbnailMapper) {
         this.thumbnailEntityRepository = thumbnailEntityRepository;
         this.captionTokenEntityRepository = captionTokenEntityRepository;
         this.userEntityRepository = userEntityRepository;
         this.captionTokenMapper = captionTokenMapper;
-        this.featureVectorEntityRepo = featureVectorEntityRepo;
         this.thumbnailMapper = thumbnailMapper;
-        this.featureVectorMapper = featureVectorMapper;
 
 
         log.info("DB Service ready!");
@@ -138,13 +126,6 @@ public class DBService {
             throw new IOException("Cannot find ThumbnailEntity with URL: " + url);
     }
 
-    public ThumbnailEntity findThumbnailEntityByUrlAndPriority(@NotNull String url, Integer priority) throws IOException {
-        if (this.thumbnailEntityRepository.findByUrlAndPriority(url, priority).isPresent())
-            return this.thumbnailEntityRepository.findByUrlAndPriority(url, priority).get();
-        else
-            throw new IOException("Cannot find ThumbnailEntity with URL and priority: " + url + ":" + priority);
-    }
-
     public CaptionToken findCaptionTokenById(@NotNull String id) throws IOException {
         if (this.captionTokenEntityRepository.findById(id).isPresent()) {
             CaptionTokenEntity ct = this.captionTokenEntityRepository.findById(id).get();
@@ -164,70 +145,6 @@ public class DBService {
         }
     }
 
-    public CaptionTokenEntity findBestMatchingCaptionTokenByUDContext(@NotNull CaptionToken captionToken) {
-        // first, find all CaptionTokenEntities with the CaptionToken's value
-        List<CaptionTokenEntity> cts = this.captionTokenEntityRepository.findAllByValue(captionToken.getValue());
-
-        // second, find the (best) matching CaptionToken by the UDContext
-        CaptionTokenEntity best = null;
-        for (CaptionTokenEntity ct : cts)
-            if (ct.getUdContext().containsAll(captionToken.getUdContext()))
-                best = ct;
-
-        if (best != null)
-            Collections.sort(best.getThumbnails());
-        return best;
-    }
-
-    public List<CaptionTokenEntity> findCaptionTokensByUsername(@NotNull String username) throws IOException {
-        UserEntity owner;
-        if (this.userEntityRepository.findByUsername(username).isPresent())
-            owner = this.userEntityRepository.findByUsername(username).get();
-        else
-            throw new IOException("Cannot find UserEntity with username: " + username);
-
-        return owner.getCaptionTokenEntities();
-    }
-
-    public List<CaptionTokenEntity> findCaptionTokensByAccessKey(@NotNull String accessKey) throws IOException {
-        UserEntity owner;
-        if (this.userEntityRepository.findByAccessKey(accessKey).isPresent())
-            owner = this.userEntityRepository.findByAccessKey(accessKey).get();
-        else
-            throw new IOException("Cannot find UserEntity with AccessKey: " + accessKey);
-
-        return owner.getCaptionTokenEntities();
-    }
-
-    public List<CaptionTokenEntity> findCaptionTokenEntitiesOfAccessKey(@NotNull CaptionToken captionToken, @NotNull String accessKey) throws IOException {
-        List<CaptionTokenEntity> all = this.findCaptionTokensByAccessKey(accessKey);
-        return all.stream()
-                .filter(captionTokenEntity -> captionToken.getValue().equals(captionTokenEntity.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    public ThumbnailEntity incrementThumbnailPriorityById(@NotNull String id) throws IOException {
-        if (this.thumbnailEntityRepository.findById(id).isPresent()) {
-            ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
-            thumbnailEntity.setPriority(thumbnailEntity.getPriority() + 1);
-            this.thumbnailEntityRepository.save(thumbnailEntity);
-            return this.thumbnailEntityRepository.findById(id).get();
-        } else
-            throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
-    }
-
-
-    public ThumbnailEntity decrementThumbnailPriorityById(@NotNull String id) throws IOException {
-        if (this.thumbnailEntityRepository.findById(id).isPresent()) {
-            ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
-            thumbnailEntity.setPriority(thumbnailEntity.getPriority() - 1);
-            this.thumbnailEntityRepository.save(thumbnailEntity);
-            return this.thumbnailEntityRepository.findById(id).get();
-        } else
-            throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
-    }
-
-
     public ThumbnailEntity setThumbnailPriorityById(@NotNull String id, @NotNull Integer priority) throws IOException {
         if (this.thumbnailEntityRepository.findById(id).isPresent()) {
             ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
@@ -236,16 +153,6 @@ public class DBService {
             return this.thumbnailEntityRepository.findById(id).get();
         } else
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
-    }
-
-    public List<CaptionTokenEntity> findAllCaptionTokens() {
-        return (List<CaptionTokenEntity>) this.captionTokenEntityRepository.findAll();
-    }
-
-    public void deleteAllCaptionTokenEntities() {
-        this.thumbnailEntityRepository.deleteAll();
-        this.captionTokenEntityRepository.deleteAll();
-        this.featureVectorEntityRepo.deleteAll();
     }
 
     public UserEntity registerUser(@NotNull String username, @NotNull String password) {
@@ -276,11 +183,6 @@ public class DBService {
         else return null;
     }
 
-    public List<UserEntity> getUsers() {
-        return (List<UserEntity>) this.userEntityRepository.findAll();
-    }
-
-
     // TODO implement sufficient test!
     // TODO rewrite this ugly piece of code... (stream / filter API)
     public Pair<List<CaptionTokenEntity>, List<CaptionToken>> getCachedAndUncachedCaptionTokens(@NotNull List<CaptionToken> extractedCaptionTokens, @NotNull String accessKey) throws IOException {
@@ -299,29 +201,9 @@ public class DBService {
         return Pair.of(new ArrayList<>(cached), new ArrayList<>(uncachedSet));
     }
 
-    public List<FeatureVectorEntity> saveFeatureVectors(String ownerUsername, List<FeatureVector> featureVectors) {
-        List<FeatureVectorEntity> featureVectorEntities = this.featureVectorMapper.mapToEntityList(featureVectors);
-        for (FeatureVectorEntity fve : featureVectorEntities)
-            fve.setOwnerUserName(ownerUsername);
-
-        return (List<FeatureVectorEntity>) this.featureVectorEntityRepo.saveAll(featureVectorEntities);
-    }
-
-    public FeatureVector findFeatureVectorById(String featureVectorId) throws IOException {
-        Optional<FeatureVectorEntity> featureVector = this.featureVectorEntityRepo.findById(featureVectorId);
-        if (featureVector.isPresent())
-            return this.featureVectorMapper.mapFromEntity(featureVector.get());
-        else
-            throw new IOException("Cannot find FeatureVectorEntity with ID: " + featureVectorId);
-    }
-
-    public UserEntity findOwnerOfCaptionTokenId(String captionTokenId) throws IOException {
+    public void sortThumbnailsOfCaptionTokenEntity(String captionTokenId) throws IOException {
         CaptionTokenEntity cte = this.findCaptionTokenEntityById(captionTokenId);
-        List<UserEntity> allUsers = (List<UserEntity>) this.userEntityRepository.findAll();
-        for (UserEntity user : allUsers) {
-            if (user.getCaptionTokenEntities().contains(cte))
-                return user;
-        }
-        throw new IOException("Cannot find Owner of CaptionTokenEntity with ID: " + captionTokenId);
+        cte.sortThumbnails();
+        this.captionTokenEntityRepository.save(cte);
     }
 }

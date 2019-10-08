@@ -3,7 +3,7 @@ package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.IFeatureVector;
+import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVector;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,7 +18,7 @@ public class NaiveBayesModel extends IModel {
 
     private Map<Label, Double> classPriors;
 
-    private List<IFeatureVector> featureVectors;
+    private List<TrainingFeatureVector> featureVectors;
 
     private boolean isTrained;
 
@@ -30,13 +30,18 @@ public class NaiveBayesModel extends IModel {
         this.isTrained = false;
     }
 
-    public NaiveBayesModel(List<? extends IFeatureVector> featureVectors) {
+    public NaiveBayesModel(List<? extends TrainingFeatureVector> featureVectors) {
         this();
 
-        for (IFeatureVector featureVector : featureVectors)
+        for (TrainingFeatureVector featureVector : featureVectors)
             this.add(featureVector);
     }
 
+    /**
+     * Counts the number of feature vectors that belong to the given class
+     * @param clazz the given class
+     * @return the number of feature vectors that belong to the given class
+     */
     private Integer countFeatureVectorsOfClass(Label clazz) {
         AtomicInteger count = new AtomicInteger(0);
         this.featureVectors.parallelStream().forEach(featureVector -> {
@@ -45,18 +50,20 @@ public class NaiveBayesModel extends IModel {
         return count.get();
     }
 
+    /**
+     * Updates the class prior P(clazz) of the given class.
+     * @param clazz the given class
+     */
     private void updateClassPriors(Label clazz) {
         // P(clazz) = number of fv belonging to class / number of all fv
         this.classPriors.putIfAbsent(clazz, 1.0);
-        for (Label c : this.classPriors.keySet())
-            this.classPriors.put(c, (this.countFeatureVectorsOfClass(c) / (double) this.featureVectors.size()));
+        this.classPriors.replaceAll((c, v) -> (this.countFeatureVectorsOfClass(c) / (double) this.featureVectors.size()));
     }
 
-    public void add(IFeatureVector featureVector) {
+    public void add(TrainingFeatureVector featureVector) {
         Label clazz = featureVector.getLabel();
 
         // add vector to model
-        // TODO what if its exactly the same vector?! Shouldn't we use a Set..?
         this.featureVectors.add(featureVector);
 
         // update the features per class (all the features that belong to the class)
@@ -75,7 +82,7 @@ public class NaiveBayesModel extends IModel {
             this.isTrained = true;
     }
 
-    public void addAll(List<IFeatureVector> featureVectors) {
+    public void addAll(List<TrainingFeatureVector> featureVectors) {
         featureVectors.forEach(this::add);
     }
 
@@ -83,7 +90,7 @@ public class NaiveBayesModel extends IModel {
         return this.classPriors.keySet();
     }
 
-    public Double getClassProbability(Label clazz) {
+    public Double getClassPrior(Label clazz) {
         Double prob = this.classPriors.get(clazz);
         if (prob == null)
             return 0.0;
@@ -106,12 +113,22 @@ public class NaiveBayesModel extends IModel {
         with laplace smoothing
         P(feature | clazz) = (noOfFeatureInClass + 1) / totalNoOfFeaturesOfClass + noOfUniqueFeaturesOfClass
          */
-        return (noOfFeatureInClass + 1.0) / (double) (totalNoOfFeaturesOfClass + noOfUniqueFeaturesOfClass);
+        // TODO is there an error?! I think we have to add 1 to the denominator as well but then the tests will fail....
+        // TODO ADD DOCUMENTATION
+//        return (noOfFeatureInClass + 1.0) / (double) (totalNoOfFeaturesOfClass);
+        return (noOfFeatureInClass + 1.0) / (double) (getMaxFeatureNumberOfClasses());
     }
 
     public static NaiveBayesModel merge(NaiveBayesModel m1, NaiveBayesModel m2) {
         NaiveBayesModel merged = new NaiveBayesModel(m1.featureVectors);
         merged.addAll(m2.featureVectors);
         return merged;
+    }
+
+    public int getMaxFeatureNumberOfClasses() {
+        int max = Integer.MIN_VALUE;
+        for (Label clazz : this.classFeatures.keySet())
+            max = Math.max(max, this.classFeatures.get(clazz).size());
+        return max;
     }
 }

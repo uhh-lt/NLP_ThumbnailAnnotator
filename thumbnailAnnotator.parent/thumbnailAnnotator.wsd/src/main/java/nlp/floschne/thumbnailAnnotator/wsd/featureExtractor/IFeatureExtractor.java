@@ -5,5 +5,7 @@ import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 
 
 public interface IFeatureExtractor {
-    IFeatureVector extractFeatures(CaptionToken ct, Thumbnail t, String label);
+    TrainingFeatureVector extractTrainingFeatures(CaptionToken ct, Thumbnail t, String label);
+
+    FeatureVector extractFeatures(CaptionToken ct);
 }

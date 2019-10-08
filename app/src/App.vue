@@ -10,7 +10,7 @@
           <SampleInput v-bind:siddhartha="false"/>
           <SampleInput v-bind:siddhartha="true"/>
         </div>
-        <div v-if="resultsReady" class="col-md-6">
+        <div class="col-md-6">
           <ResultsCard/>
         </div>
       </div>

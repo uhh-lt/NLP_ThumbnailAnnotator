@@ -1,23 +1,13 @@
 package nlp.floschne.thumbnailAnnotator.db.service;
 
-import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
-import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
-import nlp.floschne.thumbnailAnnotator.db.entity.FeatureVectorEntity;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.NaiveBayesClassifier;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.BasicFeatureExtractor;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import nlp.floschne.thumbnailAnnotator.wsd.service.WSDService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.assertNotEquals;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
@@ -145,24 +135,5 @@ public class DBServiceTest {
 
     @Test
     public void getCachedAndUncachedCaptionTokens() {
-    }
-
-    @Test
-    public void saveFeatureVectors() {
-        CaptionToken c = CaptionToken.createDummyTestingCaptionToken();
-        Thumbnail t = Thumbnail.createDummyTestingThumbnail();
-
-        @SuppressWarnings("unchecked")
-        List<FeatureVector> featureVectors = (List) this.wsdService.extractFeatures(c, t);
-
-        List<FeatureVectorEntity> featureVectorEntities = this.dbService.saveFeatureVectors("dummy", featureVectors);
-
-        assertEquals(featureVectors.size(), featureVectorEntities.size());
-
-        featureVectorEntities.stream().forEach(fve -> {
-            assertEquals("dummy", fve.getOwnerUserName());
-            assertNotNull(fve.getId());
-            assertNotEquals("", fve.getId());
-        });
     }
 }

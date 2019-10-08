@@ -1,5 +1,5 @@
 <template>
-  <div class="clearfix">
+  <div class="clearfix mb-0">
     <div class="row">
       <div class="col-6 text-left">
         <h5><span class="badge badge-warning text-monospace">{{ this.captionTokenInstance.value }}</span></h5>
@@ -62,7 +62,7 @@
     <b-collapse :id="sense_collapse_id" class="text-left text-warning">
       <hr>
       <ul class="list-unstyled">
-        <li v-for="sense, n in this.captionTokenInstance.wordNetSenses" class="mb-1">
+        <li v-for="(sense, n) in this.captionTokenInstance.wordNetSenses" class="mb-1">
           <code :id="sense_collapse_id + n" class="text-warning sense">{{sense}}</code>
           <b-tooltip :target="sense_collapse_id + n">
             {{sense}}
@@ -74,35 +74,35 @@
 
 
     <div class="row mt-2">
-      <div class="col-6 text-center">
-        <h6>Predicted Thumbnail</h6>
+      <div class="col-4 text-center">
+        <h6>Thumbnail</h6>
       </div>
-      <div class="col-6 text-center">
+      <div class="col-8 text-center">
         <h6>Predicted Categories</h6>
       </div>
     </div>
 
     <div v-if="predictionReady && predictedThumbnailUrl !== null" class="row">
-      <div class="col-6 text-center sense">
+      <div class="col-4 text-center sense">
         <img :src="predictedThumbnailUrl" class="img-thumbnail" :alt="predictedThumbnailUrl">
       </div>
 
-      <div class="col-6 text-left">
-        <div class="h6 m-0" v-for="k, v, i in this.predictedCategory">
-          <div class="badge-group w-100" v-if="i === 0">
-            <span v-if="i === 0" class="badge badge-success mb-1 text-left w-50">
-              {{v}}
+      <div class="col-8 text-left">
+        <div v-for="(val, cat, i) in this.predictedCategories">
+          <div class="badge-group w-100 mb-2" v-if="i === 0">
+            <span v-if="i === 0" class="badge badge-success text-left w-50">
+              {{cat}}
             </span>
-            <span class="badge badge-success mb-1 text-right w-50">
-              {{k.toPrecision(3)}}
+            <span class="badge badge-success text-center w-50">
+              {{val.toPrecision(8)}}
             </span>
           </div>
-          <div class="badge-group w-100" v-else>
+          <div class="badge-group w-100 mb-0" v-else>
             <span class="badge badge-info text-left w-50">
-              {{v}}
+              {{cat}}
             </span>
-            <span class="badge badge-info text-right w-50">
-              {{k.toPrecision(3)}}
+            <span class="badge badge-info text-center w-50">
+              {{val.toPrecision(8)}}
             </span>
           </div>
         </div>
@@ -111,7 +111,7 @@
     <div v-else class="row">
       <div class="col-12">
           <span class="badge badge-danger text-center w-100">
-            {{predictedCategory}}
+            MODEL NOT TRAINED YET
           </span>
       </div>
     </div>
@@ -130,7 +130,7 @@
         details_collapse_id: "details_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
         sense_collapse_id: "sense_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
         predictionReady: false,
-        predictedCategory: null,
+        predictedCategories: null,
         predictedThumbnailUrl: null,
         request_access_key: null
       }
@@ -152,33 +152,16 @@
         setTimeout(() => {
           axios.get(this.$hostname + "/predict?captionTokenId=" + captionTokenId + "&accessKey=" + this.request_access_key).then(response => {
             // handle empty prediction which indicates that the model is not trained yet
-            if (response.data.length === 0) {
-              this.predictedThumbnailUrl = null;
-              this.predictedCategory = "MODEL NOT TRAINED YET";
-              this.predictionReady = true;
+            if (response.data === null || response.data.length === 0) {
+              this.predictionReady = false;
               return;
             }
 
-            let firstPredictedThumbnailId = Object.keys(response.data[0])[0];
-            let firstPrediction = Object.values(response.data[0])[0];
+            let predictedThumbnailUrl = Object.keys(response.data)[0];
+            let categoryPrediction = Object.values(response.data)[0];
 
-            this.predictedCategory = firstPrediction.classProbabilities;
-
-            this.getThumbnailUrl(firstPredictedThumbnailId);
-
-          }).catch(error => {
-            console.log(error);
-          });
-        }, 250);
-      },
-
-      getThumbnailUrl(thumbnailId) {
-        // get the AccessKey from the current user!
-        EventBus.$emit("get_request_access_key");
-        // wait 250ms
-        setTimeout(() => {
-          axios.get(this.$hostname + "/getThumbnailById?thumbnailId=" + thumbnailId + "&accessKey=" + this.request_access_key).then(response => {
-            this.predictedThumbnailUrl = response.data.url;
+            this.predictedCategories = categoryPrediction.classProbabilities;
+            this.predictedThumbnailUrl = predictedThumbnailUrl;
             this.predictionReady = true;
           }).catch(error => {
             console.log(error);
@@ -198,8 +181,9 @@
     },
     created() {
       EventBus.$on("sent_request_access_key_event", this.updateRequestAccessKey);
-      console.log("CaptionToken created");
+      EventBus.$on("start_prediction_event", this.predict);
       this.predict(this.captionTokenInstance.id);
+      console.log("CaptionToken created");
     }
   }
 </script>

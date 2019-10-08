@@ -6,9 +6,7 @@ import nlp.floschne.thumbnailAnnotator.wsd.classifier.NaiveBayesClassifier;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.NaiveBayesModel;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.Prediction;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.BasicFeatureExtractor;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.IFeatureVector;
-import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.MyTestFeatureVector;
+import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVector;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +18,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNotEquals;
 
 
@@ -41,21 +42,21 @@ public class WSDServiceTest {
         CaptionToken c = CaptionToken.createDummyTestingCaptionToken();
         Thumbnail t = Thumbnail.createDummyTestingThumbnail();
 
-        List<IFeatureVector> featureVectors = this.service.extractFeatures(c, t);
+        List<TrainingFeatureVector> featureVectors = this.service.extractTrainingFeatures(c, t);
 
         assertFalse(featureVectors.isEmpty());
         assertEquals(featureVectors.size(), t.getCategories().size());
 
-        for (IFeatureVector f : featureVectors) {
-            assertTrue(f instanceof FeatureVector);
-            assertEquals(((FeatureVector) f).getCaptionTokenLemmata(), c.getLemmata());
-            assertEquals(((FeatureVector) f).getCaptionTokenPosTags(), c.getPosTags());
-            assertEquals(((FeatureVector) f).getCaptionTokenUdContext(), Arrays.asList(c.getUdContext().stream().map(CaptionToken.UDependency::toString).toArray(String[]::new)));
-            assertEquals(((FeatureVector) f).getCaptionTokenSentenceContext(), c.getSentenceContext());
-            assertEquals(((FeatureVector) f).getCaptionTokenTokens(), c.getTokens());
-            assertEquals(((FeatureVector) f).getThumbnailKeywords(), t.getKeywords());
+        for (TrainingFeatureVector f : featureVectors) {
+            assertNotNull(f);
+            assertEquals(f.getCaptionTokenLemmata(), c.getLemmata());
+            assertEquals(f.getCaptionTokenPosTags(), c.getPosTags());
+            assertEquals(f.getCaptionTokenUdContext(), Arrays.asList(c.getUdContext().stream().map(CaptionToken.UDependency::toString).toArray(String[]::new)));
+            assertEquals(f.getCaptionTokenSentenceContext(), c.getSentenceContext());
+            assertEquals(f.getCaptionTokenTokens(), c.getTokens());
+            assertEquals(f.getThumbnailKeywords(), t.getKeywords());
 
-            if (!(f.getLabel().equals((t.getCategories().get(0).getName())) || f.getLabel().equals((t.getCategories().get(1).getName()))))
+            if (!(f.getLabel().toString().equals((t.getCategories().get(0).getName())) || f.getLabel().toString().equals((t.getCategories().get(1).getName()))))
                 fail("The label of the FeatureVector does not match any of the Thumbnail's categories!");
         }
     }
@@ -63,7 +64,7 @@ public class WSDServiceTest {
     @Test
     public void serializeGlobalNaiveBayesModel() throws FileNotFoundException {
         // TODO update test so that it makes sense
-        List<MyTestFeatureVector> vectors = getTestingVectors();
+        List<TrainingFeatureVector> vectors = getTestingVectors();
         this.service.trainGlobalNaiveBayesModel(vectors);
 
         NaiveBayesModel myModel = this.service.deserializeGlobalNaiveBayesModel();
@@ -75,29 +76,29 @@ public class WSDServiceTest {
         assertNotEquals(this.service.getClassifier().getModel(), myModel);
     }
 
-    public List<MyTestFeatureVector> getTestingVectors() {
-        List<MyTestFeatureVector> vectors = new ArrayList<>();
-        vectors.add(new MyTestFeatureVector("+", Arrays.asList("I", "loved", "the", "movie")));
-        vectors.add(new MyTestFeatureVector("-", Arrays.asList("poor", "acting")));
-        vectors.add(new MyTestFeatureVector("+", Arrays.asList("a", "great", "movie", "good", "movie")));
-        vectors.add(new MyTestFeatureVector("-", Arrays.asList("I", "hated", "the", "movie")));
-        vectors.add(new MyTestFeatureVector("+", Arrays.asList("great", "acting", "good", "movie")));
+    public List<TrainingFeatureVector> getTestingVectors() {
+        List<TrainingFeatureVector> vectors = new ArrayList<>();
+        vectors.add(new TrainingFeatureVector("+", Arrays.asList("I", "loved", "the", "movie")));
+        vectors.add(new TrainingFeatureVector("-", Arrays.asList("poor", "acting")));
+        vectors.add(new TrainingFeatureVector("+", Arrays.asList("a", "great", "movie", "good", "movie")));
+        vectors.add(new TrainingFeatureVector("-", Arrays.asList("I", "hated", "the", "movie")));
+        vectors.add(new TrainingFeatureVector("+", Arrays.asList("great", "acting", "good", "movie")));
         return vectors;
     }
 
     @Test
     public void classifyTest() throws FileNotFoundException {
-        List<MyTestFeatureVector> vectors = getTestingVectors();
+        List<TrainingFeatureVector> vectors = getTestingVectors();
         this.service.trainGlobalNaiveBayesModel(vectors);
 
-        MyTestFeatureVector testVec = new MyTestFeatureVector("-", Arrays.asList("I", "hated", "the", "poor", "acting"));
+        TrainingFeatureVector testVec = new TrainingFeatureVector("-", Arrays.asList("I", "hated", "the", "poor", "acting"));
         Prediction pred = this.service.classifyWithGlobalModel(testVec);
 
-        assertEquals(pred.getPred(), testVec.getLabel());
+        assertEquals(pred.getMostProbable(), testVec.getLabel());
 
-        testVec = new MyTestFeatureVector("+", Arrays.asList("I", "loved", "the", "great", "movie"));
+        testVec = new TrainingFeatureVector("+", Arrays.asList("I", "loved", "the", "great", "movie"));
         pred = this.service.classifyWithGlobalModel(testVec);
 
-        assertEquals(pred.getPred(), testVec.getLabel());
+        assertEquals(pred.getMostProbable(), testVec.getLabel());
     }
 }

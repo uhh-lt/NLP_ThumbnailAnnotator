@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 @Data
 @ToString
 public class Prediction implements Comparable<Prediction> {
-    private Label pred;
-    private Double prob;
+    private Label mostProbable;
+    private Double highestProbability;
     private Map<Label, Double> classProbabilities;
 
     public Prediction() {
@@ -24,16 +24,30 @@ public class Prediction implements Comparable<Prediction> {
         this.sortByValueDesc();
     }
 
+    // NOT idempotent! don't call this twice!!
+    public void normalize() {
+        Double factor = this.calcNormalizationFactor();
+        classProbabilities.replaceAll((label, prob) -> prob / factor);
+        this.highestProbability /= factor;
+    }
+
+    private Double calcNormalizationFactor() {
+        Double normFactor = 0.0;
+        for(Double p : this.classProbabilities.values())
+            normFactor += p;
+        return normFactor;
+    }
+
     public static Prediction getZeroPrediction() {
         Prediction p = new Prediction();
-        p.prob = 0.0;
-        p.pred = new Label<>("NO_PREDICTION");
+        p.highestProbability = 0.0;
+        p.mostProbable = new Label<>("NO_PREDICTION");
         return p;
     }
 
     @Override
     public int compareTo(@NotNull Prediction o) {
-        return this.prob.compareTo(o.prob);
+        return this.highestProbability.compareTo(o.highestProbability);
     }
 
     private void sortByValueDesc() {
