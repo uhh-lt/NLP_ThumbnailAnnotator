@@ -11,10 +11,8 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @ToString
-public class Thumbnail extends DomainObject implements Comparable<Thumbnail> {
+public class Thumbnail extends DomainObject {
     protected String url;
-
-    protected Integer priority;
 
     protected String description;
 
@@ -24,17 +22,8 @@ public class Thumbnail extends DomainObject implements Comparable<Thumbnail> {
 
     protected List<String> keywords;
 
-    @Override
-    public int compareTo(Thumbnail o) {
-        if (o == null || o.priority == null)
-            return this.priority;
-        return o.priority - this.priority;
-    }
-
-
     public static Thumbnail createDummyTestingThumbnail() {
         return new Thumbnail("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg",
-                2,
                 "desc",
                 133437L,
                 Arrays.asList(new Thumbnail.Category(3, "c"), new Thumbnail.Category(1, "d")),

@@ -19,9 +19,6 @@
 
     <b-popover :target="thumbnail_large_image_popover_target_id" triggers="hover" placement="top">
       <img :src="thumbnailObj.url" :alt="thumbnailObj.url">
-      <code class="badge badge-danger badge-pill">
-        {{ this.thumbnailObj.priority }}
-      </code>
     </b-popover>
   </li>
 </template>

@@ -180,8 +180,6 @@ public class ApiController {
             }
 
         }
-        for (CaptionTokenEntity cte : results)
-            cte.sortThumbnails();
         return results;
     }
 

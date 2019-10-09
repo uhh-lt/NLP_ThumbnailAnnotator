@@ -106,10 +106,6 @@ public class CaptionToken extends DomainObject {
                 .toHashCode();
     }
 
-    public void sortThumbnails() {
-        Collections.sort(this.thumbnails);
-    }
-
     public static CaptionToken createDummyTestingCaptionToken() {
         return new CaptionToken(
                 "smaller car",

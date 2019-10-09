@@ -102,21 +102,17 @@ public class DBService {
     }
 
     public CaptionTokenEntity findCaptionTokenEntityById(@NotNull String id) throws IOException {
-        if (this.captionTokenEntityRepository.findById(id).isPresent()) {
-            CaptionTokenEntity ct = this.captionTokenEntityRepository.findById(id).get();
-            Collections.sort(ct.getThumbnails());
-            return ct;
-        } else {
+        if (this.captionTokenEntityRepository.findById(id).isPresent())
+            return this.captionTokenEntityRepository.findById(id).get();
+        else
             throw new IOException("Cannot find CaptionTokenEntity with ID: " + id);
-        }
     }
 
     public ThumbnailEntity findThumbnailEntityById(@NotNull String id) throws IOException {
-        if (this.thumbnailEntityRepository.findById(id).isPresent()) {
+        if (this.thumbnailEntityRepository.findById(id).isPresent())
             return this.thumbnailEntityRepository.findById(id).get();
-        } else {
+        else
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
-        }
     }
 
     public ThumbnailEntity findThumbnailEntityByUrl(@NotNull String url) throws IOException {
@@ -129,7 +125,6 @@ public class DBService {
     public CaptionToken findCaptionTokenById(@NotNull String id) throws IOException {
         if (this.captionTokenEntityRepository.findById(id).isPresent()) {
             CaptionTokenEntity ct = this.captionTokenEntityRepository.findById(id).get();
-            Collections.sort(ct.getThumbnails());
             return this.captionTokenMapper.mapFromEntity(ct);
         } else {
             throw new IOException("Cannot find CaptionTokenEntity with ID: " + id);
@@ -143,16 +138,6 @@ public class DBService {
         } else {
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
         }
-    }
-
-    public ThumbnailEntity setThumbnailPriorityById(@NotNull String id, @NotNull Integer priority) throws IOException {
-        if (this.thumbnailEntityRepository.findById(id).isPresent()) {
-            ThumbnailEntity thumbnailEntity = this.thumbnailEntityRepository.findById(id).get();
-            thumbnailEntity.setPriority(priority);
-            this.thumbnailEntityRepository.save(thumbnailEntity);
-            return this.thumbnailEntityRepository.findById(id).get();
-        } else
-            throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
     }
 
     public UserEntity registerUser(@NotNull String username, @NotNull String password) {
@@ -199,11 +184,5 @@ public class DBService {
         uncachedSet.removeAll(this.captionTokenMapper.mapFromEntityList(new ArrayList<>(cached)));
 
         return Pair.of(new ArrayList<>(cached), new ArrayList<>(uncachedSet));
-    }
-
-    public void sortThumbnailsOfCaptionTokenEntity(String captionTokenId) throws IOException {
-        CaptionTokenEntity cte = this.findCaptionTokenEntityById(captionTokenId);
-        cte.sortThumbnails();
-        this.captionTokenEntityRepository.save(cte);
     }
 }

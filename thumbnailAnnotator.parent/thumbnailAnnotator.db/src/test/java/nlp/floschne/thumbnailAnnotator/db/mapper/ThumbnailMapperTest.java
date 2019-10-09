@@ -26,7 +26,6 @@ public class ThumbnailMapperTest extends MapperTestBase<ThumbnailEntity, Thumbna
 
     @Override
     public void assertEqual(ThumbnailEntity entity, Thumbnail domain) {
-        assertEquals(entity.getPriority(), domain.getPriority());
         assertEquals(entity.getUrl(), domain.getUrl());
         assertEquals(entity.getDescription(), domain.getDescription());
         assertEquals(entity.getShutterstockId(), domain.getShutterstockId());

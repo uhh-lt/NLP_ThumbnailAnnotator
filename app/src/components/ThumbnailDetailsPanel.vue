@@ -8,12 +8,6 @@
       </a>
     </div>
     <div class="card-body p-1 text-center">
-      <h6>
-        <code class="badge badge-danger badge-pill">
-          Priority: {{ this.thumbnailObj.priority }}
-        </code>
-      </h6>
-      <hr>
       <code class="text-warning">{{this.thumbnailObj.description}}</code>
       <hr>
       <div>

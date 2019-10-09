@@ -129,7 +129,7 @@ public class ShutterstockSource implements IThumbnailSource {
 
                 List<String> keywords = this.extractKeywordsFromJsonResponse(obj.getAsJsonObject());
 
-                result.add(new Thumbnail(url, 0, desc, id, categories, keywords));
+                result.add(new Thumbnail(url, desc, id, categories, keywords));
                 if (result.size() == limit)
                     break;
             }

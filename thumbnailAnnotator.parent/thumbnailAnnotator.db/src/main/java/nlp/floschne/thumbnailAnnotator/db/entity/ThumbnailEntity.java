@@ -1,6 +1,10 @@
 package nlp.floschne.thumbnailAnnotator.db.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
@@ -14,12 +18,10 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @RedisHash("thumbnail_url_entity")
-public class ThumbnailEntity extends Entity implements Comparable<ThumbnailEntity> {
+public class ThumbnailEntity extends Entity {
 
     @Indexed
     private String url;
-
-    private Integer priority;
 
     private String description;
 
@@ -30,15 +32,9 @@ public class ThumbnailEntity extends Entity implements Comparable<ThumbnailEntit
 
     private List<String> keywords;
 
-    @Override
-    public int compareTo(ThumbnailEntity o) {
-        return o.priority.compareTo(this.priority);
-    }
-
     public static ThumbnailEntity createDummyTestingThumbnailEntity() {
         return new ThumbnailEntity(
                 "https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg",
-                1,
                 "desc1",
                 13337L,
                 Arrays.asList(new Thumbnail.Category(1, "a"), new Thumbnail.Category(2, "b")),

@@ -36,10 +36,6 @@ public class CaptionTokenEntity extends Entity {
 
     private SentenceContext sentenceContext;
 
-    public void sortThumbnails() {
-        Collections.sort(this.thumbnails);
-    }
-
     public static CaptionTokenEntity createDummyTestingCaptionTokenEntity() {
         return new CaptionTokenEntity(
                 "bigger ship",
