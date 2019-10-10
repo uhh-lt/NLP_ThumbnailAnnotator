@@ -29,6 +29,8 @@ public class CaptionTokenEntityRepositoryTest extends RepositoryTestBase<Caption
         assertEquals(a.getPosTags(), b.getPosTags());
         assertEquals(a.getTokens(), b.getTokens());
         assertEquals(a.getLemmata(), b.getLemmata());
+        assertEquals(a.getBiGrams(), b.getBiGrams());
+        assertEquals(a.getTriGrams(), b.getTriGrams());
         assertEquals(a, b);
     }
 

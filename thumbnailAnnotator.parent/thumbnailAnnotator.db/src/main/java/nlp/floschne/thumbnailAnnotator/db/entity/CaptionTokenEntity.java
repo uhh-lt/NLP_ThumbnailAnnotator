@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +37,29 @@ public class CaptionTokenEntity extends Entity {
 
     private SentenceContext sentenceContext;
 
+    private List<String> biGrams;
+    private List<String> triGrams;
+
+    public List<String> getPosTags() {
+        return posTags != null ? posTags : new ArrayList<>();
+    }
+
+    public List<String> getTokens() {
+        return tokens != null ? tokens : new ArrayList<>();
+    }
+
+    public List<String> getLemmata() {
+        return lemmata != null ? lemmata : new ArrayList<>();
+    }
+
+    public List<String> getBiGrams() {
+        return biGrams != null ? biGrams : new ArrayList<>();
+    }
+
+    public List<String> getTriGrams() {
+        return triGrams != null ? triGrams : new ArrayList<>();
+    }
+
     public static CaptionTokenEntity createDummyTestingCaptionTokenEntity() {
         return new CaptionTokenEntity(
                 "bigger ship",
@@ -46,7 +70,9 @@ public class CaptionTokenEntity extends Entity {
                 Collections.singletonList("A ship is a vehicle that swims on the water."),
                 Collections.singletonList(ThumbnailEntity.createDummyTestingThumbnailEntity()),
                 Arrays.asList("big", "ship"),
-                SentenceContext.createDummyEntityTestingSentenceContext()
+                SentenceContext.createDummyEntityTestingSentenceContext(),
+                Collections.singletonList("bigger ship"),
+                null
         );
     }
 }

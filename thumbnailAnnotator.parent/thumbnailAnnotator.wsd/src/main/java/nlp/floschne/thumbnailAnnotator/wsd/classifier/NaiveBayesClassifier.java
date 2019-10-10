@@ -93,7 +93,7 @@ public class NaiveBayesClassifier extends IClassifier {
         else
             mostInfluentialFeatures.sort((o1, o2) -> o2.getRight().compareTo(o1.getRight()));
 
-        return mostInfluentialFeatures.subList(0, NUMBER_OF_INFLUENTIAL_FEATURES);
+        return mostInfluentialFeatures.subList(0, mostInfluentialFeatures.size() <= NUMBER_OF_INFLUENTIAL_FEATURES ? mostInfluentialFeatures.size() - 1 : NUMBER_OF_INFLUENTIAL_FEATURES);
     }
 
     @Override
