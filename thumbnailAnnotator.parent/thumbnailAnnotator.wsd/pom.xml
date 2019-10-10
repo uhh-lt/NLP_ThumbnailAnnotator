@@ -81,7 +81,6 @@
 
     </dependencies>
 
-
     <build>
         <plugins>
             <plugin>
@@ -89,14 +88,12 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${org.springframework.boot.version}</version>
                 <configuration>
-                    <skip>false</skip>
                     <profiles>
                         <profile>local</profile>
                         <profile>docker</profile>
                     </profiles>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 
