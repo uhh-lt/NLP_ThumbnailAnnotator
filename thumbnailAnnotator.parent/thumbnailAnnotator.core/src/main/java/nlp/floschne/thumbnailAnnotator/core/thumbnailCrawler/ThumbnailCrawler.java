@@ -94,7 +94,10 @@ public class ThumbnailCrawler {
 
     public Thumbnail findThumbnailWithCategory(CaptionToken captionToken, String category) throws IOException {
         // TODO implement checks and validate input and output
-        return this.thumbnailSource.queryThumbnails(captionToken.getValue(), 1, category).get(0);
+        List<Thumbnail> thumbnails = this.thumbnailSource.queryThumbnails(captionToken.getValue(), 1, category);
+        if (thumbnails == null || thumbnails.isEmpty())
+            return null;
+        return thumbnails.get(0);
     }
 
 }

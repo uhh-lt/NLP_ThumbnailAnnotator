@@ -113,10 +113,8 @@ public class NaiveBayesModel extends IModel {
         with laplace smoothing
         P(feature | clazz) = (noOfFeatureInClass + 1) / totalNoOfFeaturesOfClass + noOfUniqueFeaturesOfClass
          */
-        // TODO is there an error?! I think we have to add 1 to the denominator as well but then the tests will fail....
         // TODO ADD DOCUMENTATION
-//        return (noOfFeatureInClass + 1.0) / (double) (totalNoOfFeaturesOfClass);
-        return (noOfFeatureInClass + 1.0) / (double) (getMaxFeatureNumberOfClasses());
+        return (noOfFeatureInClass + 1.0) / ((double) getMaxFeatureNumberOfClasses() + 1.0);
     }
 
     public static NaiveBayesModel merge(NaiveBayesModel m1, NaiveBayesModel m2) {
@@ -125,7 +123,7 @@ public class NaiveBayesModel extends IModel {
         return merged;
     }
 
-    public int getMaxFeatureNumberOfClasses() {
+    private int getMaxFeatureNumberOfClasses() {
         int max = Integer.MIN_VALUE;
         for (Label clazz : this.classFeatures.keySet())
             max = Math.max(max, this.classFeatures.get(clazz).size());

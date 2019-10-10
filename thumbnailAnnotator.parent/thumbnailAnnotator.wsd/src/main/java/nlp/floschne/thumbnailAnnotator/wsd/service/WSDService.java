@@ -92,6 +92,7 @@ public class WSDService {
 
     private Kryo initKryo() {
         Kryo kryo = new Kryo();
+        kryo.register(List.class);
         kryo.register(ArrayList.class);
         kryo.register(java.util.Arrays.asList().getClass());
         kryo.register(HashSet.class);

@@ -2,9 +2,13 @@ package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 
 import lombok.Data;
 import lombok.ToString;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -14,13 +18,16 @@ public class Prediction implements Comparable<Prediction> {
     private Label mostProbable;
     private Double highestProbability;
     private Map<Label, Double> classProbabilities;
+    private Map<Label, List<Pair<Object, Double>>> influentialFeatures;
 
     public Prediction() {
         this.classProbabilities = new LinkedHashMap<>();
+        this.influentialFeatures = new HashMap<>();
     }
 
-    public void addClass(Label l, Double p) {
+    public void addClass(Label l, Double p, List<Pair<Object, Double>> mostInfluentialFeatures) {
         this.classProbabilities.put(l, p);
+        this.influentialFeatures.put(l, mostInfluentialFeatures);
         this.sortByValueDesc();
     }
 
@@ -33,16 +40,9 @@ public class Prediction implements Comparable<Prediction> {
 
     private Double calcNormalizationFactor() {
         Double normFactor = 0.0;
-        for(Double p : this.classProbabilities.values())
+        for (Double p : this.classProbabilities.values())
             normFactor += p;
         return normFactor;
-    }
-
-    public static Prediction getZeroPrediction() {
-        Prediction p = new Prediction();
-        p.highestProbability = 0.0;
-        p.mostProbable = new Label<>("NO_PREDICTION");
-        return p;
     }
 
     @Override

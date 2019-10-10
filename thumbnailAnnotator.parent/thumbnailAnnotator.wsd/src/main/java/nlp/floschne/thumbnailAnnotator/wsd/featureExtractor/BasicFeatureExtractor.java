@@ -18,11 +18,13 @@ public class BasicFeatureExtractor implements IFeatureExtractor {
 
         return new TrainingFeatureVector(
                 label,
-                ct.getPosTags(),
-                ct.getTokens(),
-                ct.getLemmata(),
+//                ct.getPosTags(),
+//                ct.getTokens(),
+//                ct.getLemmata(),
                 captionTokenUdContext,
-                ct.getSentenceContext(),
+                ct.getSentenceContext().getSTokens(),
+                ct.getSentenceContext().getSLemmata(),
+                ct.getSentenceContext().getSPosTags(),
                 t.getKeywords()
         );
     }
@@ -39,9 +41,9 @@ public class BasicFeatureExtractor implements IFeatureExtractor {
     public FeatureVector extractFeatures(CaptionToken ct) {
         List<String> captionTokenUdContext = getUDContextFeatures(ct);
         return new FeatureVector(
-                ct.getTokens(),
-                ct.getLemmata(),
-                ct.getPosTags(),
+//                ct.getTokens(),
+//                ct.getLemmata(),
+//                ct.getPosTags(),
                 captionTokenUdContext,
                 ct.getSentenceContext().getSTokens(),
                 ct.getSentenceContext().getSLemmata(),

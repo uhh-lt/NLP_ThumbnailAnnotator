@@ -88,7 +88,7 @@
       </div>
 
       <div class="col-8 text-left">
-        <div v-for="(val, cat, i) in this.predictedCategories">
+        <div v-for="(val, cat, i) in predictedCategories" :id="cat + '_popover_target'">
           <div class="badge-group w-100 mb-2" v-if="i === 0">
             <span v-if="i === 0" class="badge badge-success text-left w-50">
               {{cat}}
@@ -105,6 +105,19 @@
               {{val.toPrecision(8)}}
             </span>
           </div>
+
+          <b-popover :target="cat + '_popover_target'" triggers="hover" placement="right">
+            <div v-for="(feat) in predictedInfluentialFeatures[cat]" class="row">
+                <div class="badge badge-dark text-left col-9">
+                  {{Object.keys(feat)[0]}}
+                </div>
+                <div class="badge badge-dark col-3">
+                  {{Object.values(feat)[0].toPrecision(5)}}
+                </div>
+            </div>
+          </b-popover>
+
+
         </div>
       </div>
     </div>
@@ -119,73 +132,75 @@
 </template>
 
 <script>
-  import axios from 'axios';
-  import {EventBus} from "../main";
+    import axios from 'axios';
+    import {EventBus} from "../main";
 
-  export default {
-    name: "CaptionToken",
-    data: function () {
-      return {
-        context_collapse_id: "context_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
-        details_collapse_id: "details_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
-        sense_collapse_id: "sense_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
-        predictionReady: false,
-        predictedCategories: null,
-        predictedThumbnailUrl: null,
-        request_access_key: null
-      }
-    },
-    props: {
-      captionTokenInstance: {
-        type: Object,
-        required: true
-      },
-      id: {
-        required: true
-      }
-    },
-    methods: {
-      predict(captionTokenId) {
-        // get the AccessKey from the current user!
-        EventBus.$emit("get_request_access_key");
-        // wait 250ms
-        setTimeout(() => {
-          axios.get(this.$hostname + "/predict?captionTokenId=" + captionTokenId + "&accessKey=" + this.request_access_key).then(response => {
-            // handle empty prediction which indicates that the model is not trained yet
-            if (response.data === null || response.data.length === 0) {
-              this.predictionReady = false;
-              return;
+    export default {
+        name: "CaptionToken",
+        data: function () {
+            return {
+                context_collapse_id: "context_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
+                details_collapse_id: "details_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
+                sense_collapse_id: "sense_collapse" + "_" + this.id + "_" + this.captionTokenInstance.value,
+                predictionReady: false,
+                predictedCategories: null,
+                predictedInfluentialFeatures: null,
+                predictedThumbnailUrl: null,
+                request_access_key: null
+            }
+        },
+        props: {
+            captionTokenInstance: {
+                type: Object,
+                required: true
+            },
+            id: {
+                required: true
+            }
+        },
+        methods: {
+            predict(captionTokenId) {
+                // get the AccessKey from the current user!
+                EventBus.$emit("get_request_access_key");
+                // wait 250ms
+                setTimeout(() => {
+                    axios.get(this.$hostname + "/predict?captionTokenId=" + captionTokenId + "&accessKey=" + this.request_access_key).then(response => {
+                        // handle empty prediction which indicates that the model is not trained yet
+                        if (response.data === null || response.data.length === 0) {
+                            this.predictionReady = false;
+                            return;
+                        }
+
+                        let predictedThumbnailUrl = Object.keys(response.data)[0];
+                        let categoryPrediction = Object.values(response.data)[0];
+
+                        this.predictedCategories = categoryPrediction.classProbabilities;
+                        this.predictedInfluentialFeatures = categoryPrediction.influentialFeatures;
+                        this.predictedThumbnailUrl = predictedThumbnailUrl;
+                        this.predictionReady = true;
+                    }).catch(error => {
+                        console.log(error);
+                    });
+                }, 250);
+            },
+
+            updateRequestAccessKey(requestAccessKey) {
+                if (requestAccessKey === null || requestAccessKey.length === 0) {
+                    if (!alert('ERROR GETTING ACCESS KEY OF CURRENT USER! REFRESHING PAGE AND LOGIN AGAIN!')) {
+                        window.location.reload();
+                    }
+                }
+                this.request_access_key = requestAccessKey;
             }
 
-            let predictedThumbnailUrl = Object.keys(response.data)[0];
-            let categoryPrediction = Object.values(response.data)[0];
-
-            this.predictedCategories = categoryPrediction.classProbabilities;
-            this.predictedThumbnailUrl = predictedThumbnailUrl;
-            this.predictionReady = true;
-          }).catch(error => {
-            console.log(error);
-          });
-        }, 250);
-      },
-
-      updateRequestAccessKey(requestAccessKey) {
-        if (requestAccessKey === null || requestAccessKey.length === 0) {
-          if (!alert('ERROR GETTING ACCESS KEY OF CURRENT USER! REFRESHING PAGE AND LOGIN AGAIN!')) {
-            window.location.reload();
-          }
+        },
+        created() {
+            EventBus.$on("sent_request_access_key_event", this.updateRequestAccessKey);
+            EventBus.$on("start_prediction_event", this.predict);
+            this.predict(this.captionTokenInstance.id);
+            console.log("CaptionToken created");
         }
-        this.request_access_key = requestAccessKey;
-      }
-
-    },
-    created() {
-      EventBus.$on("sent_request_access_key_event", this.updateRequestAccessKey);
-      EventBus.$on("start_prediction_event", this.predict);
-      this.predict(this.captionTokenInstance.id);
-      console.log("CaptionToken created");
     }
-  }
 </script>
 
 <style scoped>
