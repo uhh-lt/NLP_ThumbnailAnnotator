@@ -15,7 +15,7 @@ function resolve (dir) {
 module.exports = {
   entry: './src/index.js',
   output: {
-    path: __dirname + '/dist',
+    path: resolve('dist'),
     filename: 'index.js'
   },
 
@@ -51,7 +51,6 @@ module.exports = {
         test: /\.css$/,
         use: [
           MiniCssExtractPlugin.loader,
-          // "vue-style-loader",
           "css-loader"
         ]
       },
