@@ -7,13 +7,13 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 RUN sed "s/http:\/\/localhost:8081/${SERVER}/g" -i'' ./src/index.js
+# TODO fix loader bug
 RUN set "s/..\/assets\/loader.svg/.\/dist\/loader.svg/g" -i'' ./src/components/UserInputCard.vue
 RUN npm run build
 
 # production stage
 FROM nginx:1.13.12-alpine as production-stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html/dist
-COPY --from=build-stage /app/index.html /usr/share/nginx/html
+COPY --from=build-stage /app/dist/* /usr/share/nginx/html/
 
 EXPOSE 80
 
