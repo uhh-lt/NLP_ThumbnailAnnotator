@@ -1,5 +1,4 @@
 {
-  "build": "webpack --config build/webpack.config.dev.js",
   "name": "thumbnail_annotator_app",
   "version": "1.0.0",
   "description": "WebGUI of the ThumbnailAnnotator",
