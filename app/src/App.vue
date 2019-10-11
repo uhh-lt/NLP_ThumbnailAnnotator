@@ -1,17 +1,20 @@
 <template>
   <div id="app">
-    <navbar/>
+    <navbar />
     <div class="container-fluid">
       <div class="row pt-md-2">
         <div class="col-md-6">
-          <UserInputCard/>
+          <UserInputCard />
         </div>
-        <div v-if="!resultsReady" class="col-md-6">
-          <SampleInput v-bind:siddhartha="false"/>
-          <SampleInput v-bind:siddhartha="true"/>
+        <div
+          v-if="!resultsReady"
+          class="col-md-6"
+        >
+          <SampleInput :siddhartha="false" />
+          <SampleInput :siddhartha="true" />
         </div>
         <div class="col-md-6">
-          <ResultsCard/>
+          <ResultsCard />
         </div>
       </div>
     </div>
@@ -19,35 +22,34 @@
 </template>
 
 <script>
-  import 'bootstrap/dist/css/bootstrap.css'
-  import 'bootstrap-vue/dist/bootstrap-vue.css'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
-  import {EventBus} from "./main";
+import { EventBus } from './index'
 
-  import Navbar from "./components/Navbar";
-  import UserInputCard from "./components/UserInputCard"
-  import ResultsCard from "./components/ResultsCard";
-  import SampleInput from "./components/SampleInput";
+import Navbar from './components/Navbar'
+import UserInputCard from './components/UserInputCard'
+import ResultsCard from './components/ResultsCard'
+import SampleInput from './components/SampleInput'
 
-
-  export default {
-    name: 'app',
-    components: {SampleInput, ResultsCard, UserInputCard, Navbar},
-    data() {
-      return {
-        resultsReady: false
-      }
-    },
-    methods: {
-      showResultsHandler() {
-        this.resultsReady = true;
-      }
-    },
-    created() {
-      EventBus.$on('resultDataReady_event', this.showResultsHandler);
-      console.log('API Hostname: ' + this.$hostname)
+export default {
+  name: 'App',
+  components: { SampleInput, ResultsCard, UserInputCard, Navbar },
+  data () {
+    return {
+      resultsReady: false
+    }
+  },
+  created () {
+    EventBus.$on('resultDataReady_event', this.showResultsHandler)
+    console.log('API Hostname: ' + this.$hostname)
+  },
+  methods: {
+    showResultsHandler () {
+      this.resultsReady = true
     }
   }
+}
 </script>
 
 <style>

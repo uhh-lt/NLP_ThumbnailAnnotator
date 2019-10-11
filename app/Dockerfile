@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN sed "s/http:\/\/localhost:8081/${SERVER}/g" -i'' ./src/main.js
+RUN sed "s/http:\/\/localhost:8081/${SERVER}/g" -i'' ./src/index.js
 RUN set "s/..\/assets\/loader.svg/.\/dist\/loader.svg/g" -i'' ./src/components/UserInputCard.vue
 RUN npm run build
 

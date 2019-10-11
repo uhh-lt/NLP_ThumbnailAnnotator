@@ -1,7 +1,9 @@
 <template>
   <div class="mt-5">
     <div class="card shadow-sm">
-      <div class="card-header card-title text-md-center h5">Example Input</div>
+      <div class="card-header card-title text-md-center h5">
+        Example Input
+      </div>
       <div class="card-body">
         <code v-if="siddhartha">
           Siddhartha learned something new on every step of his path, for the world was transformed, and his heart was enchanted. He saw the sun rising over the mountains with their forests
@@ -34,16 +36,16 @@
 </template>
 
 <script>
-  export default {
-    name: "SampleInput",
-    props: {
-      siddhartha: {
-        required: true,
-        type: Boolean,
-        default: false
-      }
-    },
+export default {
+  name: 'SampleInput',
+  props: {
+    siddhartha: {
+      required: true,
+      type: Boolean,
+      default: false
+    }
   }
+}
 </script>
 
 <style scoped>
