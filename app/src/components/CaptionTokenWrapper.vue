@@ -1,9 +1,7 @@
 <template>
   <span>
-    <div class="badge badge-warning m-1 float-left">
-      <a
-        :id="thumbnail_carousel_popover_target_id"
-        v-b-modal="captionToken_details_modal_target_id"
+    <span class="badge badge-warning m-1 float-left">
+      <a v-b-modal="captionToken_details_modal_target_id"
         href="#"
         class="text-body"
       >{{ this.captionTokenObj.value }}</a>
@@ -22,29 +20,18 @@
           :caption-token="captionTokenObj"
         />
       </b-modal>
-    </div>
-
-    <b-popover
-      :target="thumbnail_carousel_popover_target_id"
-      triggers="hover"
-    >
-      <thumbnail-carousel
-        :id="id"
-        :thumbnails="captionTokenObj.thumbnails"
-      />
-    </b-popover>
+    </span>
   </span>
 </template>
 
 <script>
 import CaptionToken from './CaptionToken'
 import Thumbnail from './Thumbnail'
-import ThumbnailCarousel from './ThumbnailCarousel'
 import CaptionTokenDetails from './CaptionTokenDetails'
 
 export default {
   name: 'CaptionTokenWrapper',
-  components: { CaptionTokenDetails, ThumbnailCarousel, Thumbnail, CaptionToken },
+  components: { CaptionTokenDetails, Thumbnail, CaptionToken },
   props: {
     captionToken: {
       type: Object,
@@ -57,7 +44,6 @@ export default {
   data () {
     return {
       captionToken_details_modal_target_id: 'caption-token-details-modal-target-' + this.id,
-      thumbnail_carousel_popover_target_id: 'thumbnail-carousel-popover-target-' + this.id,
       captionTokenObj: null
     }
   },
