@@ -22,19 +22,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 @Service
 @Slf4j
 public class WSDService {
-    private static final String MODEL_BASE_DIR = "/tmp/thumbnailAnnotator/models/";
-    private static final String MODEL_SUFFIX = ".model";
-    private static final String GLOBAL_MODEL = "globalModel";
-
     private final Kryo kryo;
 
     private final IFeatureExtractor featureExtractor;
@@ -43,21 +41,43 @@ public class WSDService {
 
     private final Map<String, IModel> models;
 
+    private Properties properties;
+
+    private String modelBaseDirectory;
+    private String globalModelName;
+    private String modelSuffix;
+
     @Autowired
-    public WSDService(IFeatureExtractor featureExtractor, IClassifier classifier) throws FileNotFoundException {
+    public WSDService(IFeatureExtractor featureExtractor, IClassifier classifier) throws IOException {
         this.kryo = initKryo();
         this.featureExtractor = featureExtractor;
         this.classifier = classifier;
 
         this.models = new HashMap<>();
-        this.loadGlobalModel();
 
+        this.properties = this.loadProperties();
+        this.modelBaseDirectory = this.properties.getProperty("model.baseDirectory");
+        this.globalModelName = this.properties.getProperty("model.global.name");
+        this.modelSuffix = this.properties.getProperty("model.suffix");
+
+        this.loadGlobalModel();
         log.info("WSD Service ready!");
+    }
+
+    private Properties loadProperties() throws IOException {
+        String rootPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+        String settingsPath = rootPath + "settings.properties";
+
+        Properties props = new Properties();
+        props.load(new FileInputStream(settingsPath));
+
+        log.info("Loaded WSD Module properties");
+        return props;
     }
 
 
     private String getModelPath(String modelName) {
-        return MODEL_BASE_DIR + modelName + MODEL_SUFFIX;
+        return this.modelBaseDirectory + modelName + this.modelSuffix;
     }
 
     private synchronized void setClassifierModel(String modelName) throws FileNotFoundException {
@@ -67,7 +87,7 @@ public class WSDService {
     // TODO this needs to get moved to classifier or better IModel...
     // TODO initialize with some basic training data
     private IModel loadGlobalModel() throws FileNotFoundException {
-        return this.loadModel(GLOBAL_MODEL);
+        return this.loadModel(this.globalModelName);
     }
 
     private synchronized IModel loadModel(String name) {
@@ -122,7 +142,7 @@ public class WSDService {
     }
 
     public synchronized void trainGlobalNaiveBayesModel(List<? extends TrainingFeatureVector> featureVectors) throws FileNotFoundException {
-        this.trainNaiveBayesModel(featureVectors, GLOBAL_MODEL);
+        this.trainNaiveBayesModel(featureVectors, this.globalModelName);
     }
 
     public synchronized void trainNaiveBayesModel(CaptionToken ct, Thumbnail t, String modelName) throws FileNotFoundException {
@@ -152,7 +172,7 @@ public class WSDService {
 
     // package private by intention
     synchronized Prediction classifyWithGlobalModel(FeatureVector featureVector) throws FileNotFoundException {
-        this.setClassifierModel(GLOBAL_MODEL);
+        this.setClassifierModel(this.globalModelName);
         return this.classifier.classify(featureVector);
     }
 
@@ -162,7 +182,7 @@ public class WSDService {
     }
 
     private void serializeGlobalNaiveBayesModel() {
-        this.serializeNaiveBayesModel(GLOBAL_MODEL);
+        this.serializeNaiveBayesModel(this.globalModelName);
     }
 
     private void serializeNaiveBayesModel(String modelName) {
@@ -187,7 +207,7 @@ public class WSDService {
     }
 
     public synchronized NaiveBayesModel deserializeGlobalNaiveBayesModel() throws FileNotFoundException {
-        return this.deserializeNaiveBayesModel(GLOBAL_MODEL);
+        return this.deserializeNaiveBayesModel(this.globalModelName);
     }
 
     private synchronized NaiveBayesModel deserializeNaiveBayesModel(String modelName) throws FileNotFoundException {
