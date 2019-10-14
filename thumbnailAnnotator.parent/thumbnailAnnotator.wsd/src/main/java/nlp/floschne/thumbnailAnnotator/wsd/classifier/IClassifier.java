@@ -3,7 +3,7 @@ package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 import lombok.Data;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 public abstract class IClassifier {
@@ -11,5 +11,5 @@ public abstract class IClassifier {
 
     public abstract Prediction classify(FeatureVector featureVector);
 
-    public abstract void train(List<? extends FeatureVector> featureVectors);
+    public abstract void train(Set<? extends FeatureVector> featureVectors);
 }

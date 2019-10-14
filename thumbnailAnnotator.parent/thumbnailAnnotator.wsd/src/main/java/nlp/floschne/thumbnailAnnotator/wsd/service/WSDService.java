@@ -8,8 +8,8 @@ import nlp.floschne.thumbnailAnnotator.core.domain.CaptionToken;
 import nlp.floschne.thumbnailAnnotator.core.domain.SentenceContext;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.IClassifier;
-import nlp.floschne.thumbnailAnnotator.wsd.classifier.IModel;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.Label;
+import nlp.floschne.thumbnailAnnotator.wsd.classifier.NaiveBayesClassifier;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.NaiveBayesModel;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.Prediction;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
@@ -18,6 +18,7 @@ import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVecto
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -39,7 +41,7 @@ public class WSDService {
 
     private final IClassifier classifier;
 
-    private final Map<String, IModel> models;
+    private final Map<String, NaiveBayesModel> models;
 
     private Properties properties;
 
@@ -56,9 +58,15 @@ public class WSDService {
         this.models = new HashMap<>();
 
         this.properties = this.loadProperties();
-        this.modelBaseDirectory = this.properties.getProperty("model.baseDirectory");
-        this.globalModelName = this.properties.getProperty("model.global.name");
-        this.modelSuffix = this.properties.getProperty("model.suffix");
+
+        this.modelBaseDirectory = this.properties.getProperty("wsd.model.baseDirectory");
+        this.modelBaseDirectory = this.modelBaseDirectory.replaceFirst("^~", System.getProperty("user.home"));
+        this.globalModelName = this.properties.getProperty("wsd.model.global.name");
+        this.modelSuffix = this.properties.getProperty("wsd.model.suffix");
+
+        ((NaiveBayesClassifier) classifier).setNormalize(Boolean.parseBoolean(this.properties.getProperty("wsd.classifier.normalize", "true")));
+        ((NaiveBayesClassifier) classifier).setUseLogits(Boolean.parseBoolean(this.properties.getProperty("wsd.classifier.logits", "true")));
+        ((NaiveBayesClassifier) classifier).setNumberOfInfluentialFeatures(Integer.parseInt(this.properties.getProperty("wsd.classifier.numberOfInfluentialFeatures", "10")));
 
         this.loadGlobalModel();
         log.info("WSD Service ready!");
@@ -75,6 +83,38 @@ public class WSDService {
         return props;
     }
 
+    public void mergeModelIntoGlobalModel(String modelName) throws FileNotFoundException {
+        if (Boolean.parseBoolean(this.properties.getProperty("wsd.model.global.mergeUserModelOnLogout", "false"))) {
+            NaiveBayesModel global = this.loadGlobalModel();
+            global.mergeWith(this.loadModel(modelName));
+            log.info("Merged '" + modelName + this.modelSuffix + "' into '" + this.globalModelName + this.modelSuffix + "'");
+            this.serializeGlobalNaiveBayesModel();
+        }
+    }
+
+    @PreDestroy
+    private void preDestroyCallback() throws FileNotFoundException {
+        // merge all active models into global
+        if (Boolean.parseBoolean(this.properties.getProperty("wsd.model.global.mergeAllOnExit", "true"))) {
+            NaiveBayesModel global = this.loadGlobalModel();
+            for (String modelName : this.models.keySet()) {
+                if (!modelName.equals(this.globalModelName)) {
+                    global.mergeWith(this.loadModel(modelName));
+                    log.info("Merged '" + modelName + this.modelSuffix + "' into '" + this.globalModelName + this.modelSuffix + "'");
+                }
+            }
+        }
+
+        // serialize all active models
+        if (Boolean.parseBoolean(this.properties.getProperty("wsd.model.global.saveOnExit", "true")))
+            for (String modelName : this.models.keySet())
+                this.serializeNaiveBayesModel(modelName);
+
+        // TODO think about doing this for all models in the folder and not only the active ones
+
+        log.info("WSD Service shutdown!");
+    }
+
 
     private String getModelPath(String modelName) {
         return this.modelBaseDirectory + modelName + this.modelSuffix;
@@ -86,11 +126,11 @@ public class WSDService {
 
     // TODO this needs to get moved to classifier or better IModel...
     // TODO initialize with some basic training data
-    private IModel loadGlobalModel() throws FileNotFoundException {
+    private NaiveBayesModel loadGlobalModel() throws FileNotFoundException {
         return this.loadModel(this.globalModelName);
     }
 
-    private synchronized IModel loadModel(String name) {
+    private synchronized NaiveBayesModel loadModel(String name) throws FileNotFoundException {
         // if in memory return it
         if (this.models.containsKey(name))
             return this.models.get(name);
@@ -98,16 +138,30 @@ public class WSDService {
         // otherwise try to deserialize or create new
         try {
             this.models.put(name, this.deserializeNaiveBayesModel(name));
+            return this.models.get(name);
         } catch (FileNotFoundException e) {
-            log.warn("Cannot load Model from " + getModelPath(name) + "! Creating new empty model!");
-            this.createNewModel(name);
+            log.warn("Cannot load Model from " + getModelPath(name) + "!");
+            return this.createNewModel(name);
         }
-        return this.models.get(name);
     }
 
-    public void createNewModel(String name) {
+    public NaiveBayesModel createNewModel(String name) {
+        log.warn("Creating new model " + getModelPath(name) + "!");
         this.models.put(name, new NaiveBayesModel());
+        NaiveBayesModel newModel = this.models.get(name);
+
+        if (Boolean.parseBoolean(this.properties.getProperty("wsd.model.user.initWithGlobalModel", "true"))) {
+            log.warn("Initializing new model with global model!");
+            try {
+                assert newModel != null;
+                newModel.mergeWith(this.loadGlobalModel());
+            } catch (FileNotFoundException e) {
+                log.warn("Cannot load global model from " + getModelPath(name) + "! Creating new empty model!");
+            }
+        }
+
         this.serializeNaiveBayesModel(name);
+        return newModel;
     }
 
     private Kryo initKryo() {
@@ -141,17 +195,17 @@ public class WSDService {
         return this.featureExtractor.extractFeatures(ct);
     }
 
-    public synchronized void trainGlobalNaiveBayesModel(List<? extends TrainingFeatureVector> featureVectors) throws FileNotFoundException {
+    public synchronized void trainGlobalNaiveBayesModel(Set<? extends TrainingFeatureVector> featureVectors) throws FileNotFoundException {
         this.trainNaiveBayesModel(featureVectors, this.globalModelName);
     }
 
     public synchronized void trainNaiveBayesModel(CaptionToken ct, Thumbnail t, String modelName) throws FileNotFoundException {
         List<TrainingFeatureVector> trainingFeatureVectors = this.extractTrainingFeatures(ct, t);
 
-        this.trainNaiveBayesModel(trainingFeatureVectors, modelName);
+        this.trainNaiveBayesModel(new HashSet<>(trainingFeatureVectors), modelName);
     }
 
-    private synchronized void trainNaiveBayesModel(List<? extends TrainingFeatureVector> featureVectors, String modelName) throws FileNotFoundException {
+    private synchronized void trainNaiveBayesModel(Set<? extends TrainingFeatureVector> featureVectors, String modelName) throws FileNotFoundException {
         StringBuilder sb = new StringBuilder("Training Naive Bayes Model " + this.getModelPath(modelName) + " with ");
         sb.append(featureVectors.size()).append(" FeatureVector(s) for class(es): ");
         for (TrainingFeatureVector tfv : featureVectors)
@@ -164,7 +218,7 @@ public class WSDService {
         this.serializeNaiveBayesModel(modelName);
     }
 
-    public synchronized Prediction classifyWithModel(CaptionToken ct, String modelName) {
+    public synchronized Prediction classifyWithModel(CaptionToken ct, String modelName) throws FileNotFoundException {
         FeatureVector featureVector = this.extractFeatures(ct);
 
         return this.classifyWithModel(featureVector, modelName);
@@ -176,18 +230,14 @@ public class WSDService {
         return this.classifier.classify(featureVector);
     }
 
-    private synchronized Prediction classifyWithModel(FeatureVector featureVector, String modelName) {
+    private synchronized Prediction classifyWithModel(FeatureVector featureVector, String modelName) throws FileNotFoundException {
         this.classifier.setModel(loadModel(modelName));
         return this.classifier.classify(featureVector);
     }
 
-    private void serializeGlobalNaiveBayesModel() {
-        this.serializeNaiveBayesModel(this.globalModelName);
-    }
-
     private void serializeNaiveBayesModel(String modelName) {
         String path = getModelPath(modelName);
-        IModel model = this.models.get(modelName);
+        NaiveBayesModel model = this.models.get(modelName);
         if (model == null)
             throw new RuntimeException("Cannot find model " + modelName);
 
@@ -204,6 +254,10 @@ public class WSDService {
             e.printStackTrace();
             log.error("Cannot serialize model: " + path);
         }
+    }
+
+    public synchronized void serializeGlobalNaiveBayesModel() {
+        this.serializeNaiveBayesModel(this.globalModelName);
     }
 
     public synchronized NaiveBayesModel deserializeGlobalNaiveBayesModel() throws FileNotFoundException {

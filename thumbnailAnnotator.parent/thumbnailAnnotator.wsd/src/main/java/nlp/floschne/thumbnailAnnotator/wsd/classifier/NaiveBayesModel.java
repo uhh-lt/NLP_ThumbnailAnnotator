@@ -18,19 +18,19 @@ public class NaiveBayesModel extends IModel {
 
     private Map<Label, Double> classPriors;
 
-    private List<TrainingFeatureVector> featureVectors;
+    private Set<TrainingFeatureVector> featureVectors;
 
     private boolean isTrained;
 
     public NaiveBayesModel() {
         this.classFeatures = new HashMap<>();
         this.classPriors = new HashMap<>();
-        this.featureVectors = new ArrayList<>();
+        this.featureVectors = new HashSet<>();
 
         this.isTrained = false;
     }
 
-    public NaiveBayesModel(List<? extends TrainingFeatureVector> featureVectors) {
+    public NaiveBayesModel(Set<? extends TrainingFeatureVector> featureVectors) {
         this();
 
         for (TrainingFeatureVector featureVector : featureVectors)
@@ -82,7 +82,7 @@ public class NaiveBayesModel extends IModel {
             this.isTrained = true;
     }
 
-    public void addAll(List<TrainingFeatureVector> featureVectors) {
+    public void addAll(Set<TrainingFeatureVector> featureVectors) {
         featureVectors.forEach(this::add);
     }
 
@@ -121,6 +121,10 @@ public class NaiveBayesModel extends IModel {
         NaiveBayesModel merged = new NaiveBayesModel(m1.featureVectors);
         merged.addAll(m2.featureVectors);
         return merged;
+    }
+
+    public void mergeWith(NaiveBayesModel other) {
+        this.addAll(other.getFeatureVectors());
     }
 
     private int getMaxFeatureNumberOfClasses() {

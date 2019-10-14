@@ -18,16 +18,19 @@ public class Prediction implements Comparable<Prediction> {
     private Label mostProbable;
     private Double highestProbability;
     private Map<Label, Double> classProbabilities;
+    private Map<Label, Double> classPriors;
     private Map<Label, List<Pair<Object, Double>>> influentialFeatures;
 
     public Prediction() {
         this.classProbabilities = new LinkedHashMap<>();
         this.influentialFeatures = new HashMap<>();
+        this.classPriors = new HashMap<>();
     }
 
-    public void addClass(Label l, Double p, List<Pair<Object, Double>> mostInfluentialFeatures) {
+    public void addClass(Label l, Double p, List<Pair<Object, Double>> mostInfluentialFeatures, Double prior) {
         this.classProbabilities.put(l, p);
         this.influentialFeatures.put(l, mostInfluentialFeatures);
+        this.classPriors.put(l, prior);
         this.sortByValueDesc();
     }
 

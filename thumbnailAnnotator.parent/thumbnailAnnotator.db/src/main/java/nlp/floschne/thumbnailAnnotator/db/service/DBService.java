@@ -76,10 +76,12 @@ public class DBService {
 
     public CaptionTokenEntity updateThumbnailsOfCaptionTokenEntity(@NotNull String id, List<Thumbnail> thumbnails) throws IOException {
         CaptionTokenEntity cte = this.findCaptionTokenEntityById(id);
-        List<ThumbnailEntity> thumbnailEntities = this.thumbnailMapper.mapToEntityList(thumbnails);
+        // remove old ones from cache since they're not needed anymore
+        this.thumbnailEntityRepository.deleteAll(cte.getThumbnails());
 
+        List<ThumbnailEntity> newThumbnails = this.thumbnailMapper.mapToEntityList(thumbnails);
         List<Long> beforeIds = cte.getThumbnails().stream().map(ThumbnailEntity::getShutterstockId).collect(Collectors.toList());
-        cte.setThumbnails(thumbnailEntities);
+        cte.setThumbnails(newThumbnails);
         this.saveCaptionTokenEntity(cte);
         List<Long> afterIds = cte.getThumbnails().stream().map(ThumbnailEntity::getShutterstockId).collect(Collectors.toList());
 
@@ -139,13 +141,6 @@ public class DBService {
             return this.thumbnailEntityRepository.findById(id).get();
         else
             throw new IOException("Cannot find ThumbnailEntity with ID: " + id);
-    }
-
-    public ThumbnailEntity findThumbnailEntityByUrl(@NotNull String url) throws IOException {
-        if (this.thumbnailEntityRepository.findByUrl(url).isPresent())
-            return this.thumbnailEntityRepository.findByUrl(url).get();
-        else
-            throw new IOException("Cannot find ThumbnailEntity with URL: " + url);
     }
 
     public CaptionToken findCaptionTokenById(@NotNull String id) throws IOException {

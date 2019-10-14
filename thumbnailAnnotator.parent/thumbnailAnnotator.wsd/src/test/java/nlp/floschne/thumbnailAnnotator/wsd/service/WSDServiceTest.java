@@ -17,7 +17,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -59,7 +61,7 @@ public class WSDServiceTest {
     @Test
     public void serializeGlobalNaiveBayesModel() throws FileNotFoundException {
         // TODO update test so that it makes sense
-        List<TrainingFeatureVector> vectors = getTestingVectors();
+        Set<TrainingFeatureVector> vectors = getTestingVectors();
         this.service.trainGlobalNaiveBayesModel(vectors);
 
         NaiveBayesModel myModel = this.service.deserializeGlobalNaiveBayesModel();
@@ -71,8 +73,8 @@ public class WSDServiceTest {
         assertNotEquals(this.service.getClassifier().getModel(), myModel);
     }
 
-    public List<TrainingFeatureVector> getTestingVectors() {
-        List<TrainingFeatureVector> vectors = new ArrayList<>();
+    public Set<TrainingFeatureVector> getTestingVectors() {
+        Set<TrainingFeatureVector> vectors = new HashSet<>();
         vectors.add(new TrainingFeatureVector("+", Arrays.asList("I", "loved", "the", "movie")));
         vectors.add(new TrainingFeatureVector("-", Arrays.asList("poor", "acting")));
         vectors.add(new TrainingFeatureVector("+", Arrays.asList("a", "great", "movie", "good", "movie")));
@@ -84,7 +86,7 @@ public class WSDServiceTest {
     @Test
     @Ignore // TODO fix this or remove it since it's not representable for the application
     public void classifyTest() throws FileNotFoundException {
-        List<TrainingFeatureVector> vectors = getTestingVectors();
+        Set<TrainingFeatureVector> vectors = getTestingVectors();
         this.service.trainGlobalNaiveBayesModel(vectors);
 
         TrainingFeatureVector testVec = new TrainingFeatureVector("-", Arrays.asList("I", "hated", "the", "poor", "acting"));

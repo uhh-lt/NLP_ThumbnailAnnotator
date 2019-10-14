@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.security.auth.message.AuthException;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.ArrayList;
@@ -105,9 +106,14 @@ public class ApiController {
      * @param accessKeyDTO The accessKey in form of JSON
      */
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public boolean logout(@RequestBody AccessKeyDTO accessKeyDTO) {
+    public boolean logout(@RequestBody AccessKeyDTO accessKeyDTO) throws FileNotFoundException {
         if (accessKeyDTO.getAccessKey() == null || accessKeyDTO.getAccessKey().isEmpty())
             return false;
+
+        // merge the model of the user into the global model (if set in settings.properties)
+        String modelName = this.dbService.getUserByAccessKey(accessKeyDTO.getAccessKey()).getUsername();
+        this.wsdService.mergeModelIntoGlobalModel(modelName);
+
         return this.dummyAuthenticationService.logout(accessKeyDTO.getAccessKey());
     }
 
@@ -293,6 +299,8 @@ public class ApiController {
                                             @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
         // check if the AccessKey is logged in!
         this.throwIfNotLoggedIn(accessKey);
+
+        log.info("Starting prediction for CaptionToken with id <" + captionTokenId + "> with AccessKey <" + accessKey + ">");
 
         // get the model / user name
         String modelName = this.dbService.getUserByAccessKey(accessKey).getUsername();

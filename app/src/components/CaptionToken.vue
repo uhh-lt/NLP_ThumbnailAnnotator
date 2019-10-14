@@ -161,14 +161,22 @@
             triggers="hover"
             placement="right"
           >
+            <div class="row">
+              <div class="badge badge-dark text-left col-9">
+                Class Prior
+              </div>
+              <div class="badge badge-dark col-3">
+                {{ predictedClassPriors[cat].toPrecision(4) }}
+              </div>
+            </div>
             <div
               v-for="(feat) in predictedInfluentialFeatures[cat]"
               class="row"
             >
-              <div class="badge badge-dark text-left col-9">
+              <div class="badge badge-secondary text-left col-9">
                 {{ Object.keys(feat)[0] }}
               </div>
-              <div class="badge badge-dark col-3">
+              <div class="badge badge-secondary col-3">
                 {{ Object.values(feat)[0].toPrecision(5) }}
               </div>
             </div>
@@ -212,6 +220,7 @@ export default {
       predictionReady: false,
       predictedCategories: null,
       predictedInfluentialFeatures: null,
+      predictedClassPriors: null,
       predictedThumbnailUrl: null,
       request_access_key: null
     }
@@ -240,6 +249,7 @@ export default {
 
           this.predictedCategories = categoryPrediction.classProbabilities
           this.predictedInfluentialFeatures = categoryPrediction.influentialFeatures
+          this.predictedClassPriors = categoryPrediction.classPriors
           this.predictedThumbnailUrl = predictedThumbnailUrl
           this.predictionReady = true
         }).catch(error => {

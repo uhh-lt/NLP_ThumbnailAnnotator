@@ -17,15 +17,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@RedisHash("thumbnail_url_entity")
+@RedisHash("thumbnail_entity")
 public class ThumbnailEntity extends Entity {
 
-    @Indexed
     private String url;
 
     private String description;
 
-    @Indexed
     private Long shutterstockId;
 
     private List<Thumbnail.Category> categories;

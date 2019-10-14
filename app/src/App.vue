@@ -11,10 +11,16 @@
           class="col-md-6"
         >
           <SampleInput :siddhartha="false" />
-          <SampleInput :siddhartha="true" />
         </div>
         <div class="col-md-6">
           <ResultsCard />
+        </div>
+      </div>
+      <div class="row">
+        <div
+          v-if="resultsReady"
+          class="col-md-12">
+          <SampleInput :siddhartha="false" />
         </div>
       </div>
     </div>

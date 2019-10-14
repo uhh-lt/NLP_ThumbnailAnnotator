@@ -1,19 +1,29 @@
 package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 
+import lombok.Data;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
+import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVector;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Component
+@Data
 public class NaiveBayesClassifier extends IClassifier {
 
-    private static final Boolean LOGITS = true;
-    private static final Boolean NORMALIZE = true;
-    private static final Integer NUMBER_OF_INFLUENTIAL_FEATURES = 10;
+    private Boolean useLogits;
+    private Boolean normalize;
+    private Integer numberOfInfluentialFeatures;
+
+    public NaiveBayesClassifier() {
+        this.useLogits = true;
+        this.normalize = true;
+        this.numberOfInfluentialFeatures = 10;
+    }
 
     @Override
     public Prediction classify(FeatureVector featureVector) {
@@ -26,12 +36,14 @@ public class NaiveBayesClassifier extends IClassifier {
         Prediction pred = new Prediction();
 
         Double prob;
+        Double prior;
         // TODO do we really want logits and normalization?!
         for (Label clazz : myModel.getClasses()) {
             // prior probability
-            prob = myModel.getClassPrior(clazz);
-            if (LOGITS)
-                prob = -Math.log(prob);
+            prior = myModel.getClassPrior(clazz);
+            if (useLogits)
+                prior = -Math.log(prior);
+            prob = prior;
 
             // TODO most of the times features occur more than once in a FV..
             //  is the formula correct ?! or do we have to weight the unique features
@@ -40,7 +52,7 @@ public class NaiveBayesClassifier extends IClassifier {
             for (Object feature : featureVector) {
                 // class conditional probabilities
                 double classConditional = myModel.computeClassConditionalProbability(feature, clazz);
-                if (LOGITS)
+                if (useLogits)
                     prob += -Math.log(classConditional);
                 else
                     prob *= classConditional;
@@ -52,7 +64,7 @@ public class NaiveBayesClassifier extends IClassifier {
 //            int n_max = myModel.getMaxFeatureNumberOfClasses();
 //            int n_c = myModel.getClassFeatures().get(clazz).size();
 
-            if (LOGITS) {
+            if (useLogits) {
 //                prob += -Math.log(1.0 / n_max) * (n_max - n_c);
                 prob = Math.exp(-prob);
             } else {
@@ -65,9 +77,9 @@ public class NaiveBayesClassifier extends IClassifier {
                 pred.setHighestProbability(maxProb);
             }
             List<Pair<Object, Double>> mostInfluentialFeatures = getMostInfluentialFeatures(clazz, featureVector);
-            pred.addClass(clazz, prob, mostInfluentialFeatures);
+            pred.addClass(clazz, prob, mostInfluentialFeatures, prior);
         }
-        if (NORMALIZE)
+        if (normalize)
             pred.normalize();
         return pred;
     }
@@ -79,7 +91,7 @@ public class NaiveBayesClassifier extends IClassifier {
         List<Pair<Object, Double>> mostInfluentialFeatures = new ArrayList<>();
         for (Object feature : featureVector) {
             double classConditional = myModel.computeClassConditionalProbability(feature, clazz);
-            if (LOGITS)
+            if (useLogits)
                 classConditional = -Math.log(classConditional);
 
             mostInfluentialFeatures.add(Pair.of(feature, classConditional));
@@ -88,19 +100,19 @@ public class NaiveBayesClassifier extends IClassifier {
         // sort the list
         // TODO understand logits!!
         //  remove 1 counts!
-        if (LOGITS)
+        if (useLogits)
             mostInfluentialFeatures.sort(Comparator.comparing(Pair::getRight));
         else
             mostInfluentialFeatures.sort((o1, o2) -> o2.getRight().compareTo(o1.getRight()));
 
-        return mostInfluentialFeatures.subList(0, mostInfluentialFeatures.size() <= NUMBER_OF_INFLUENTIAL_FEATURES ? mostInfluentialFeatures.size() - 1 : NUMBER_OF_INFLUENTIAL_FEATURES);
+        return mostInfluentialFeatures.subList(0, mostInfluentialFeatures.size() <= numberOfInfluentialFeatures ? mostInfluentialFeatures.size() - 1 : numberOfInfluentialFeatures);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void train(List<? extends FeatureVector> featureVectors) {
+    public void train(Set<? extends FeatureVector> featureVectors) {
         assert featureVectors != null && !featureVectors.isEmpty();
-        assert featureVectors.get(0) != null;
-        ((NaiveBayesModel) this.model).addAll((List) featureVectors);
+        assert !featureVectors.contains(null);
+        ((NaiveBayesModel) this.model).addAll((Set<TrainingFeatureVector>) featureVectors);
     }
 }
