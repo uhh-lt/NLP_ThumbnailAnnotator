@@ -13,7 +13,7 @@
     </div>
 
     <b-popover
-      triggers="click blur"
+      triggers="click blur focus"
       placement="left"
       :target="thumbnail_details_popover_target_id"
       :show.sync="popoverShow"
@@ -36,10 +36,24 @@
       triggers="hover"
       placement="top"
     >
-      <img
-        :src="thumbnailObj.url"
-        :alt="thumbnailObj.url"
-      >
+      <div class="row">
+        <div class="col-12">
+          <img
+            :src="thumbnailObj.url"
+            :alt="thumbnailObj.url"
+          >
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <span
+            v-for="c in this.thumbnailObj.categories"
+            class="badge badge-info ml-1"
+          >
+              {{ c.name }}
+          </span>
+        </div>
+      </div>
     </b-popover>
   </li>
 </template>

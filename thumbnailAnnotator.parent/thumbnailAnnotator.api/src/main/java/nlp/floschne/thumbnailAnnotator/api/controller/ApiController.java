@@ -39,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin
@@ -61,6 +62,7 @@ public class ApiController {
         this.wsdService = wsdService;
         log.info("API Controller ready!");
     }
+
     /**
      * This does nothing but redirecting to the Swagger-UI
      */
@@ -223,6 +225,49 @@ public class ApiController {
     }
 
     /**
+     * Crawls new {@link ThumbnailEntity}s for a {@link CaptionTokenEntity}
+     *
+     * @param captionTokenId the ID of the {@link CaptionTokenEntity}
+     * @return the {@link CaptionTokenEntity} identified by the ID or null if the accessKey is not active
+     */
+    @RequestMapping(value = "/crawlNewThumbnails", method = RequestMethod.GET)
+    public CaptionTokenEntity crawlNewThumbnails(@RequestParam("captionTokenId") String captionTokenId,
+                                                 @RequestParam("accessKey") String accessKey) throws IOException, AuthException, ExecutionException {
+        // check if the AccessKey is logged in!
+        this.throwIfNotLoggedIn(accessKey);
+
+        CaptionToken ct = this.dbService.findCaptionTokenById(captionTokenId);
+
+        ct = crawlThumbnailsForCaptionToken(ct);
+
+        CaptionTokenEntity result = this.dbService.updateThumbnailsOfCaptionTokenEntity(captionTokenId, ct.getThumbnails());
+
+        log.info("Updating Thumbnails for '" + result + "' for AccessKey'" + accessKey + "'");
+        return result;
+    }
+
+    private CaptionToken crawlThumbnailsForCaptionToken(CaptionToken ct) throws ExecutionException, ConnectException {
+        List<Long> beforeIds = ct.getThumbnails().stream().map(Thumbnail::getShutterstockId).collect(Collectors.toList());
+        Future<CaptionToken> f = ThumbnailCrawler.getInstance().startCrawlingThumbnails(ct);
+        try {
+            // wait no longer than 120 second
+            // TODO ConfigVariable
+            ct = f.get(120, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            log.error("It too long time (120s) to finish crawling of Thumbnails!");
+            throw new ConnectException("It too long time (120s) to finish crawling of Thumbnails!");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        List<Long> afterIds = ct.getThumbnails().stream().map(Thumbnail::getShutterstockId).collect(Collectors.toList());
+
+        if (afterIds.containsAll(beforeIds))
+            log.warn("Cannot crawl new Thumbnails for '" + ct.toString() + "!'\n This happens most probably due to Shutterstock Licences.");
+
+        return ct;
+    }
+
+    /**
      * Get a single {@link ThumbnailEntity} by it's ID
      *
      * @param thumbnailId the ID of the {@link ThumbnailEntity}
@@ -264,7 +309,7 @@ public class ApiController {
         Thumbnail t = ThumbnailCrawler.getInstance().findThumbnailWithCategory(captionToken, pred.getMostProbable().toString());
 
         // convert the Thumbnail to ThumbnailEntity ID to save data
-        return Pair.of(t.getUrl(), pred);
+        return Pair.of(t != null ? t.getUrl() : "", pred);
     }
 
 

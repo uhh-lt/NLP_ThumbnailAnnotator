@@ -19,15 +19,14 @@
             class="form-control"
             rows="14"
             name="user_input"
-            title="user_input"
-          />
+            title="user_input"></textarea>
 
           <div class="form-group">
             <button
               type="submit"
               class="btn btn-primary btn-block mt-md-2"
               :disabled="submitting"
-              value="Get Thumbnails!"
+              value="Crawl Thumbnails!"
             >
               <span v-if="submitting"><img
                 id="loader"

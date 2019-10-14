@@ -19,11 +19,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @ComponentScan(basePackages = {"nlp.floschne.thumbnailAnnotator.db"})
@@ -74,13 +74,24 @@ public class DBService {
         return null;
     }
 
+    public CaptionTokenEntity updateThumbnailsOfCaptionTokenEntity(@NotNull String id, List<Thumbnail> thumbnails) throws IOException {
+        CaptionTokenEntity cte = this.findCaptionTokenEntityById(id);
+        List<ThumbnailEntity> thumbnailEntities = this.thumbnailMapper.mapToEntityList(thumbnails);
+
+        List<Long> beforeIds = cte.getThumbnails().stream().map(ThumbnailEntity::getShutterstockId).collect(Collectors.toList());
+        cte.setThumbnails(thumbnailEntities);
+        this.saveCaptionTokenEntity(cte);
+        List<Long> afterIds = cte.getThumbnails().stream().map(ThumbnailEntity::getShutterstockId).collect(Collectors.toList());
+
+        // TODO .equals() does not work.. (why?!)
+        if (!afterIds.containsAll(beforeIds) && afterIds.size() == beforeIds.size())
+            throw new IOException("There was a problem when updating Thumbnails of CaptionTokenEntity with ID <" + id + ">");
+
+        return cte;
+    }
+
     public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) throws IOException {
-        // get user
-        UserEntity owner;
-        if (this.userEntityRepository.findByAccessKey(accessKey).isPresent())
-            owner = this.userEntityRepository.findByAccessKey(accessKey).get();
-        else
-            throw new IOException("Cannot find UserEntity with accessKey: " + accessKey);
+        UserEntity owner = getUserEntity(accessKey);
 
         //CaptionToken is already cached -> get the CaptionTokenEntity
         CaptionTokenEntity entity = captionTokenIsCached(ct);
@@ -88,8 +99,7 @@ public class DBService {
             //CaptionToken is not yet in the DB -> convert it to a CaptionTokenEntity
             entity = this.captionTokenMapper.mapToEntity(ct);
 
-        this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
-        this.captionTokenEntityRepository.save(entity);
+        this.saveCaptionTokenEntity(entity);
 
         // add the CaptionTokenEntity to the user
         if (owner.getCaptionTokenEntities() == null)
@@ -99,6 +109,22 @@ public class DBService {
         this.userEntityRepository.save(owner);
 
         return entity;
+    }
+
+    private void saveCaptionTokenEntity(CaptionTokenEntity entity) {
+        this.thumbnailEntityRepository.saveAll(entity.getThumbnails());
+        this.captionTokenEntityRepository.save(entity);
+    }
+
+    @NotNull
+    private UserEntity getUserEntity(@NotNull String accessKey) throws IOException {
+        // get user
+        UserEntity owner;
+        if (this.userEntityRepository.findByAccessKey(accessKey).isPresent())
+            owner = this.userEntityRepository.findByAccessKey(accessKey).get();
+        else
+            throw new IOException("Cannot find UserEntity with accessKey: " + accessKey);
+        return owner;
     }
 
     public CaptionTokenEntity findCaptionTokenEntityById(@NotNull String id) throws IOException {

@@ -56,6 +56,31 @@
         :caption-token-id="captionTokenObj.id"
       />
     </draggable>
+
+    <form>
+      <form
+        v-if="!crawlingThumbnails"
+        class="form-group"
+        novalidate
+        @submit.prevent="crawlThumbnails"
+      >
+        <div class="form-group">
+          <button
+            type="submit"
+            class="btn btn-secondary btn-block mt-md-2"
+            :disabled="crawlingThumbnails"
+            value="Crawl Thumbnails!"
+          >
+              <span v-if="crawlingThumbnails"><img
+                id="loader"
+                src="../../static/img/loader.svg"
+              ></span>
+            <span v-else>Crawl new Thumbnails!</span>
+          </button>
+        </div>
+      </form>
+    </form>
+
   </div>
 </template>
 
@@ -85,6 +110,7 @@ export default {
     return {
       captionTokenObj: null,
       request_access_key: null,
+      crawlingThumbnails: false,
       training: false,
       trainingList: []
     }
@@ -141,7 +167,42 @@ export default {
         this.training = false
         this.trainingList = []
       }, 1000)
-    }
+    },
+
+    enableSubmitLoader () {
+      this.submitting = true
+      this.textAreaCursor = 'cursor: not-allowed'
+    },
+    disableSubmitLoader () {
+      this.submitting = false
+      this.textAreaCursor = 'cursor: text'
+    },
+
+    crawlThumbnails () {
+      this.enableSubmitLoader()
+
+      // get the AccessKey from the current user!
+      EventBus.$emit('get_request_access_key')
+      // wait 250ms
+      setTimeout(() => {
+        const captionTokenId = this.captionTokenObj.id
+        axios.get(this.$hostname + '/crawlNewThumbnails?captionTokenId=' + captionTokenId
+          + '&accessKey=' + this.request_access_key).then(response => {
+          this.crawlSuccess(response)
+          this.disableSubmitLoader()
+        }).catch(error => {
+          console.log(error)
+          this.disableSubmitLoader()
+        })
+      }, 250)
+    },
+    crawlSuccess (response) {
+      if (response.status === 200) {
+        this.captionTokenObj.thumbnails = response.data.thumbnails
+      } else {
+        this.crawlingThumbnails = true
+      }
+    },
   }
 }
 </script>
