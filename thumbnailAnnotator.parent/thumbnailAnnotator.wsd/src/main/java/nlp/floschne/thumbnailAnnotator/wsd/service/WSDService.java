@@ -230,6 +230,12 @@ public class WSDService {
         return this.classifier.classify(featureVector);
     }
 
+    public synchronized Prediction classifyWithGlobalModel(CaptionToken ct) throws FileNotFoundException {
+        FeatureVector featureVector = this.extractFeatures(ct);
+
+        return this.classifyWithGlobalModel(featureVector);
+    }
+
     private synchronized Prediction classifyWithModel(FeatureVector featureVector, String modelName) throws FileNotFoundException {
         this.classifier.setModel(loadModel(modelName));
         return this.classifier.classify(featureVector);

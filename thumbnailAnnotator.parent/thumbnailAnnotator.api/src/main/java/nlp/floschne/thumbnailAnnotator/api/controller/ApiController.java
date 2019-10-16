@@ -1,6 +1,8 @@
 package nlp.floschne.thumbnailAnnotator.api.controller;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.extjwnl.JWNLException;
 import nlp.floschne.thumbnailAnnotator.api.auth.AuthenticationService;
@@ -21,6 +23,7 @@ import nlp.floschne.thumbnailAnnotator.wsd.service.WSDService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Description;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -67,6 +70,7 @@ public class ApiController {
     /**
      * This does nothing but redirecting to the Swagger-UI
      */
+    @ApiOperation("Only for internal usage to redirect directly to Swagger-UI")
     @RequestMapping(value = "/", method = RequestMethod.GET)
     void home(HttpServletResponse response) throws IOException {
         response.sendRedirect("./swagger-ui.html");
@@ -76,10 +80,12 @@ public class ApiController {
      * Tries to register a user with a given password. Please note, that this is just a dummy implementation that will  later
      * be replaced by Oauth2 + JWT
      *
+     * @param userDataDTO he userDataDTO containing username and password
      * @return true or false when User was registered successfully or not respectively
      */
+    @ApiOperation("Registers a new user.")
     @RequestMapping(value = "/register", method = RequestMethod.PUT)
-    public boolean register(@RequestBody UserDataDTO userDataDTO) {
+    public boolean register(@ApiParam("he userDataDTO containing username and password") @RequestBody UserDataDTO userDataDTO) {
         if (this.dummyAuthenticationService.registerUser(userDataDTO.getUsername(), userDataDTO.getPassword())) {
             this.wsdService.createNewModel(userDataDTO.getUsername());
             return true;
@@ -91,22 +97,25 @@ public class ApiController {
      * Tries to login a user with a given password. Please note, that this is just a dummy implementation that will  later
      * be replaced by Oauth2 + JWT
      *
+     * @param userDataDTO the userDataDTO containing username and password
      * @return a access key that the user needs to provide to access the API Resources
      */
+    @ApiOperation("Login a user with the given password.")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public AccessKeyDTO login(@RequestBody UserDataDTO userDataDTO) {
+    public AccessKeyDTO login(@ApiParam("the userDataDTO containing username and password") @RequestBody UserDataDTO userDataDTO) {
         return this.dummyAuthenticationService.login(userDataDTO.getUsername(), userDataDTO.getPassword());
     }
 
 
     /**
-     * Tries to logout a user with a given password. Please note, that this is just a dummy implementation that will  later
+     * Logout the user which is linked with the given accesKey. Please note, that this is just a dummy implementation that will  later
      * be replaced by Oauth2 + JWT
      *
      * @param accessKeyDTO The accessKey in form of JSON
      */
+    @ApiOperation("Logout the user which is linked with the given accesKey. Please note, that this is just a dummy implementation that will  later")
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public boolean logout(@RequestBody AccessKeyDTO accessKeyDTO) throws FileNotFoundException {
+    public boolean logout(@ApiParam("accessKeyDTO The accessKey in form of JSON") @RequestBody AccessKeyDTO accessKeyDTO) throws FileNotFoundException {
         if (accessKeyDTO.getAccessKey() == null || accessKeyDTO.getAccessKey().isEmpty())
             return false;
 
@@ -118,15 +127,16 @@ public class ApiController {
     }
 
     /**
-     * This is the main method of the API it extracts {@link CaptionToken} from a {@link UserInput}, crawls the {@link Thumbnail} for the
+     * Extracts {@link CaptionToken} from a {@link UserInput}, crawls the {@link Thumbnail} for the
      * {@link CaptionToken} and returns the List of extracted {@link CaptionToken}.
      * It also caches the {@link CaptionTokenEntity} and returns the  {@link CaptionTokenEntity} that are already cached.
      *
      * @param authenticatedUserInputDTO the AuthUserInputDTO in form of JSON
      * @return a List of  {@link CaptionTokenEntity} for each CaptionToken that was extracted from the UserInput or null if the accessKey is not active
      */
+    @ApiOperation("Extracts CaptionToken from a UserInput, crawls the Thumbnail for the CaptionToken and returns the List of extracted CaptionToken.\nIt also caches the CaptionTokenEntity and returns the CaptionTokenEntity that are already cached.")
     @RequestMapping(value = "/crawlThumbnails", method = RequestMethod.POST)
-    public List<CaptionTokenEntity> crawlThumbnails(@RequestBody AuthenticatedUserInputDTO authenticatedUserInputDTO) throws ExecutionException, InterruptedException, IOException, ResourceInitializationException, JWNLException, AuthException {
+    public List<CaptionTokenEntity> crawlThumbnails(@ApiParam("the AuthUserInputDTO in form of JSON") @RequestBody AuthenticatedUserInputDTO authenticatedUserInputDTO) throws ExecutionException, InterruptedException, IOException, ResourceInitializationException, JWNLException, AuthException {
 
         // check if the AccessKey is logged in!
         this.throwIfNotLoggedIn(authenticatedUserInputDTO.getAccessKey());
@@ -192,13 +202,20 @@ public class ApiController {
     }
 
 
-    // TODO
-    //  make this POST
-    //  error handling if anything goes wrong
+    /**
+     *  Trains the model of the user witch is linked with the access key.
+     *
+     * @param thumbnailId the Id of the {@link ThumbnailEntity} which serves as label
+     * @param captionTokenId the CaptionToken that holds the target and the context
+     * @param accessKey accessKey of the user
+     * @throws IOException
+     * @throws AuthException
+     */
+    @ApiOperation("Trains the model of the user witch is linked with the access key.")
     @RequestMapping(value = "/trainModel", method = RequestMethod.POST)
-    public void trainModel(@RequestParam("thumbnailId") String thumbnailId,
-                           @RequestParam("captionTokenId") String captionTokenId,
-                           @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
+    public void trainModel(@ApiParam("thumbnailId the Id of the {@link ThumbnailEntity} which serves as label") @RequestParam("thumbnailId") String thumbnailId,
+                           @ApiParam("captionTokenId the CaptionToken that holds the target and the context") @RequestParam("captionTokenId") String captionTokenId,
+                           @ApiParam("accessKey accessKey of the user") @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
         // check if the AccessKey is logged in!
         this.throwIfNotLoggedIn(accessKey);
 
@@ -219,11 +236,14 @@ public class ApiController {
      * Get a single {@link CaptionTokenEntity} by it's ID
      *
      * @param captionTokenId the ID of the {@link CaptionTokenEntity}
+     * @param accessKey  the accessKey of the user
      * @return the {@link CaptionTokenEntity} identified by the ID or null if the accessKey is not active
      */
+
+    @ApiOperation("Get a single CaptionTokenEntity by it's ID")
     @RequestMapping(value = "/getCaptionTokenById", method = RequestMethod.GET)
-    public CaptionTokenEntity getCaptionToken(@RequestParam("captionTokenId") String captionTokenId,
-                                              @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
+    public CaptionTokenEntity getCaptionToken(@ApiParam("the Id of the CaptionTokenEntity") @RequestParam("captionTokenId") String captionTokenId,
+                                              @ApiParam("the accessKey of the user") @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
         // check if the AccessKey is logged in!
         this.throwIfNotLoggedIn(accessKey);
 
@@ -234,11 +254,14 @@ public class ApiController {
      * Crawls new {@link ThumbnailEntity}s for a {@link CaptionTokenEntity}
      *
      * @param captionTokenId the ID of the {@link CaptionTokenEntity}
+     * @param accessKey the accessKey of the user
      * @return the {@link CaptionTokenEntity} identified by the ID or null if the accessKey is not active
      */
+
+    @ApiOperation("Crawls new ThumbnailEntities for a CaptionTokenEntity")
     @RequestMapping(value = "/crawlNewThumbnails", method = RequestMethod.GET)
-    public CaptionTokenEntity crawlNewThumbnails(@RequestParam("captionTokenId") String captionTokenId,
-                                                 @RequestParam("accessKey") String accessKey) throws IOException, AuthException, ExecutionException {
+    public CaptionTokenEntity crawlNewThumbnails(@ApiParam("the ID of the CaptionTokenEntity") @RequestParam("captionTokenId") String captionTokenId,
+                                                 @ApiParam("the accessKey of the user") @RequestParam("accessKey") String accessKey) throws IOException, AuthException, ExecutionException {
         // check if the AccessKey is logged in!
         this.throwIfNotLoggedIn(accessKey);
 
@@ -277,11 +300,13 @@ public class ApiController {
      * Get a single {@link ThumbnailEntity} by it's ID
      *
      * @param thumbnailId the ID of the {@link ThumbnailEntity}
+     * @param accessKey the accessKey of the user
      * @return the {@link ThumbnailEntity} identified by the ID or null if the accessKey is not active
      */
+    @ApiOperation("Get a single ThumbnailEntity by it's Id.")
     @RequestMapping(value = "/getThumbnailById", method = RequestMethod.GET)
-    public ThumbnailEntity getThumbnail(@RequestParam("thumbnailId") String thumbnailId,
-                                        @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
+    public ThumbnailEntity getThumbnail(@ApiParam("the id of the ThumbnailEntity") @RequestParam("thumbnailId") String thumbnailId,
+                                        @ApiParam("the accessKey of the user") @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
         // check if the AccessKey is logged in!
         this.throwIfNotLoggedIn(accessKey);
 
@@ -292,11 +317,13 @@ public class ApiController {
      * Predicts a URL of a Thumbnail and {@link Prediction} from a given {@link CaptionToken}.
      *
      * @param captionTokenId the ID of the CaptionToken
+     * @param accessKey the accessKey of the user
      * @return pair of URL of Thumbnail and {@link Prediction}.
      */
+    @ApiOperation("Predicts a URL of a Thumbnail and Prediction from a given CaptionToken.")
     @RequestMapping(value = "/predict", method = RequestMethod.GET)
-    public Pair<String, Prediction> predict(@RequestParam("captionTokenId") String captionTokenId,
-                                            @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
+    public Pair<String, Prediction> predict(@ApiParam("the Id of the CaptionToken") @RequestParam("captionTokenId") String captionTokenId,
+                                            @ApiParam("the accessKey of the user") @RequestParam("accessKey") String accessKey) throws IOException, AuthException {
         // check if the AccessKey is logged in!
         this.throwIfNotLoggedIn(accessKey);
 
@@ -318,6 +345,35 @@ public class ApiController {
 
         // convert the Thumbnail to ThumbnailEntity ID to save data
         return Pair.of(t != null ? t.getUrl() : "", pred);
+    }
+
+    /**
+     * Predicts the first occurrence of a target word in a given (sentence) context.
+     *
+     * @param targetWord the target word
+     * @param context    the context in which the target word occurs (including the target word!)
+     * @return a {@link Prediction} or null if the model was not trained yet
+     */
+
+    @RequestMapping(value = "/predictTargetWord", method = RequestMethod.GET)
+    @ApiOperation("Predicts the first occurrence of a target word in a given (sentence) context.")
+    @ApiParam(value = "val",name = "context", example = "ex")
+    public Prediction predictTargetWord(@ApiParam("the context in which the target word occurs (including the target word!)") @RequestParam(value = "context") String context,
+                                        @ApiParam("the target word") @RequestParam("targetWord") String targetWord) throws ResourceInitializationException, JWNLException, IOException, ExecutionException, InterruptedException {
+
+        log.info("Predicting target word <" + targetWord + "> in context <" + context + ">");
+
+        // extract the CaptionTokens from UserInput
+        Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(new UserInput(context));
+        List<CaptionToken> extractedCaptionTokens = extractionResultFuture.get().getCaptionTokens();
+
+        // find the CaptionToken that matches with the target word
+        List<CaptionToken> targets = extractedCaptionTokens.stream().filter(captionToken -> context.contains(targetWord)).collect(Collectors.toList());
+        if (targets.size() < 1)
+            throw new IOException("Cannot find target word <" + targetWord + "> in context <" + context + ">");
+
+        // predict with global model
+        return this.wsdService.classifyWithGlobalModel(targets.get(0));
     }
 
 
