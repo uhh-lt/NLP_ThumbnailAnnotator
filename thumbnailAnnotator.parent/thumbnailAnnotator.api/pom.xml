@@ -51,6 +51,12 @@
         </dependency>
 
         <dependency>
+            <groupId>nlp.floschne</groupId>
+            <artifactId>thumbnailAnnotator.wsd</artifactId>
+            <version>${thumbnailAnnotator.parent.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <!-- exclude the logging due to dependency conflicts with DKPro in core module (with Lesk)-->

@@ -14,14 +14,14 @@ public interface ThumbnailMapper extends IMapper<ThumbnailEntity, Thumbnail> {
 
     @Override
     @Mapping(target = "id", ignore = true)
-    ThumbnailEntity mapToEntity(Thumbnail ulr);
+    ThumbnailEntity mapToEntity(Thumbnail thumbnail);
 
     @Override
-    Thumbnail mapFromEntity(ThumbnailEntity ulrEntity);
+    Thumbnail mapFromEntity(ThumbnailEntity thumbnailEntity);
 
     @Override
-    List<ThumbnailEntity> mapToEntityList(List<Thumbnail> urlList);
+    List<ThumbnailEntity> mapToEntityList(List<Thumbnail> thumbnails);
 
     @Override
-    List<Thumbnail> mapFromEntityList(List<ThumbnailEntity> urlEntityList);
+    List<Thumbnail> mapFromEntityList(List<ThumbnailEntity> thumbnailEntities);
 }

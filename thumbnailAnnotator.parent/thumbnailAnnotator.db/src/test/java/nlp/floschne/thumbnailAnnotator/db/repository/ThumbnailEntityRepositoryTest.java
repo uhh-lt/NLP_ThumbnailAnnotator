@@ -19,7 +19,6 @@ public class ThumbnailEntityRepositoryTest extends RepositoryTestBase<ThumbnailE
 
     @Override
     protected void assertEqual(ThumbnailEntity a, ThumbnailEntity b) {
-        assertEquals(a.getPriority(), b.getPriority());
         assertEquals(a.getUrl(), b.getUrl());
         assertEquals(a.getId(), b.getId());
 

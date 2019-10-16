@@ -2,13 +2,16 @@ package nlp.floschne.thumbnailAnnotator.core.captionTokenExtractor;
 
 import captionTokenExtractor.type.CaptionTokenAnnotation;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.NGram;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.dkpro.core.ngrams.NGramAnnotator;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpLemmatizer;
 import de.tudarmstadt.ukp.dkpro.core.clearnlp.ClearNlpPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.maltparser.MaltParser;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpNamedEntityRecognizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
+import de.tudarmstadt.ukp.dkpro.core.stopwordremover.StopWordRemover;
 import de.tudarmstadt.ukp.dkpro.wsd.lesk.algorithm.SimplifiedExtendedLesk;
 import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.normalization.NoNormalization;
 import de.tudarmstadt.ukp.dkpro.wsd.lesk.util.overlap.SetOverlap;
@@ -121,10 +124,12 @@ public class CaptionTokenExtractor {
             List<String> posTags = Arrays.asList(cta.getPOSList().split(";"));
             List<String> tokens = Arrays.asList(cta.getTokenList().split(";"));
             List<String> lemmata = Arrays.asList(cta.getLemmaList().split(";"));
+            List<String> biGrams = null;
+            List<String> triGrams = null;
 
-            // get UDContext and WordNetSense per sentence
-            List<String> wNetSenses = new ArrayList<>();
-            List<CaptionToken.UDependency> udContext = new ArrayList<>();
+            // get UDContext, Sentence Context, N-Grams and WordNetSense **per sentence** (not entire document)
+            List<String> wNetSenses = null;
+            List<CaptionToken.UDependency> udContext = null;
             SentenceContext sentenceContext = null;
             for (Sentence context : JCasUtil.select(userInputJCas, Sentence.class)) {
                 // only take the parent sentence into account
@@ -132,6 +137,8 @@ public class CaptionTokenExtractor {
                     udContext = getUDContext(tokens, userInputJCas, context);
                     wNetSenses = getWNetSenses(cta, userInputJCas, context);
                     sentenceContext = getSentenceContext(cta, userInputJCas, context);
+                    biGrams = getNGrams(2, cta, userInputJCas, context);
+                    triGrams = getNGrams(3, cta, userInputJCas, context);
                 }
             }
 
@@ -144,7 +151,21 @@ public class CaptionTokenExtractor {
                     wNetSenses,
                     null,
                     lemmata,
-                    sentenceContext);
+                    sentenceContext,
+                    biGrams,
+                    triGrams);
+        }
+
+        private List<String> getNGrams(Integer n, CaptionTokenAnnotation cta, JCas userInputJCas, Sentence s) {
+            List<String> nGrams = new ArrayList<>();
+            for (NGram nGram : JCasUtil.selectCovered(userInputJCas, NGram.class, s)) {
+                if(nGram.getText().split(" ").length == n)
+                    nGrams.add(nGram.getText());
+            }
+            // TODO we have to return null since redis cannot deserialize an empty list but deserializes it as null
+            if(nGrams.isEmpty())
+                return null;
+            return nGrams;
         }
 
         private SentenceContext getSentenceContext(CaptionTokenAnnotation cta, JCas userInputJCas, Sentence s) {
@@ -323,6 +344,16 @@ public class CaptionTokenExtractor {
 
         AnalysisEngineDescription nncta = AnalysisEngineFactory.createEngineDescription(NounCaptionTokenAnnotator.class);
         aggregateBuilder.add(nncta);
+
+        // STOP WORDS REMOVER
+        AnalysisEngineDescription swr = AnalysisEngineFactory.createEngineDescription(StopWordRemover.class,
+                StopWordRemover.PARAM_MODEL_LOCATION, "classpath:/stopwords/stopwords_en_nltk.txt");
+        aggregateBuilder.add(swr);
+
+        // N-GRAMS
+        AnalysisEngineDescription n_gram = AnalysisEngineFactory.createEngineDescription(NGramAnnotator.class,
+                NGramAnnotator.PARAM_N, 3);
+        aggregateBuilder.add(n_gram);
 
         return aggregateBuilder.createAggregate();
     }

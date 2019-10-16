@@ -4,42 +4,35 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
 import java.util.Arrays;
 import java.util.List;
 
 @Data
+@ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@RedisHash("thumbnail_url_entity")
-public class ThumbnailEntity extends Entity implements Comparable<ThumbnailEntity> {
+@RedisHash("thumbnail_entity")
+public class ThumbnailEntity extends Entity {
 
     private String url;
 
-    private Integer priority;
-
     private String description;
 
-    protected Long shutterstockId;
+    private Long shutterstockId;
 
-    protected List<Thumbnail.Category> categories;
+    private List<Thumbnail.Category> categories;
 
-    protected List<String> keywords;
-
-    @Override
-    public int compareTo(ThumbnailEntity o) {
-        if (o == null || o.priority == null)
-            return this.priority;
-        return o.priority - this.priority;
-    }
+    private List<String> keywords;
 
     public static ThumbnailEntity createDummyTestingThumbnailEntity() {
         return new ThumbnailEntity(
                 "https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg",
-                1,
                 "desc1",
                 13337L,
                 Arrays.asList(new Thumbnail.Category(1, "a"), new Thumbnail.Category(2, "b")),

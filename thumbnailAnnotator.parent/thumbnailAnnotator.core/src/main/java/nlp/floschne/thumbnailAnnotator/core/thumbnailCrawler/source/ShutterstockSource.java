@@ -30,6 +30,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -60,7 +61,10 @@ public class ShutterstockSource implements IThumbnailSource {
     private static final String IMAGE_LICENCES = "&license[]=commercial&license[]=editorial&license[]=enhanced&license[]=sensitive";
     private static final String IMAGE_QUERY_PARAMETER = "&query=";
     private static final String SORT_PARAMETER = "&sort=";
+    private static final String PAGE_PARAMETER = "&page=1";
     private static final String PER_PAGE_PARAMETER = "&per_page=";
+    private static final String CATEGORY = "&category=";
+    private static final String VIEW = "&view=full";
 
     private static final String OPERATOR_AND = "AND";
     private static final String OPERATOR_OR = "OR";
@@ -70,22 +74,22 @@ public class ShutterstockSource implements IThumbnailSource {
     private Integer per_page;
 
     public ShutterstockSource() {
-        this.sortBy = SortBy.RELEVANCE;
-        this.per_page = 20;
+        this.sortBy = SortBy.RANDOM;
+        this.per_page = 40;
     }
 
-    private String generateSearchImagesApiUrl(String queryParameter) throws UnsupportedEncodingException {
-        return IMAGE_SEARCH_RESOURCE_URL +
-                IMAGE_TYPES +
-                IMAGE_LICENCES +
-                IMAGE_QUERY_PARAMETER + URLEncoder.encode(queryParameter, "UTF-8") +
-                SORT_PARAMETER + sortBy.toString() +
-                PER_PAGE_PARAMETER + per_page.toString();
-    }
-
-
-    private String generateImageDetailsApiUrl(Long imageId) throws UnsupportedEncodingException {
-        return IMAGE_DETAILS_RESOURCE_URL + URLEncoder.encode(imageId.toString(), "UTF-8");
+    private String generateSearchImagesApiUrl(String queryParameter, String category) throws UnsupportedEncodingException {
+        StringBuilder sb = new StringBuilder(IMAGE_SEARCH_RESOURCE_URL);
+        sb.append(IMAGE_TYPES);
+        sb.append(IMAGE_LICENCES);
+        sb.append(IMAGE_QUERY_PARAMETER).append(URLEncoder.encode(queryParameter, "UTF-8"));
+        if (category != null && !category.isEmpty())
+            sb.append(CATEGORY).append(URLEncoder.encode(category, "UTF-8"));
+        sb.append(SORT_PARAMETER).append(URLEncoder.encode(sortBy.toString(), "UTF-8"));
+        sb.append(PAGE_PARAMETER);
+        sb.append(PER_PAGE_PARAMETER).append(URLEncoder.encode(per_page.toString(), "UTF-8"));
+        sb.append(VIEW);
+        return sb.toString();
     }
 
     private JsonElement getElementByPath(JsonObject obj, String path) {
@@ -121,8 +125,11 @@ public class ShutterstockSource implements IThumbnailSource {
                 // remove quotes
                 desc = desc.substring(1, desc.length() - 1);
 
+                List<Thumbnail.Category> categories = this.extractCategoriesFromJsonResponse(obj.getAsJsonObject());
 
-                result.add(new Thumbnail(url, 0, desc, id, null, null));
+                List<String> keywords = this.extractKeywordsFromJsonResponse(obj.getAsJsonObject());
+
+                result.add(new Thumbnail(url, desc, id, categories, keywords));
                 if (result.size() == limit)
                     break;
             }
@@ -145,6 +152,7 @@ public class ShutterstockSource implements IThumbnailSource {
                 categories.add(new Thumbnail.Category(catId, name));
             }
         }
+        categories = removeDisruptiveCategories(categories);
         return categories;
     }
 
@@ -159,20 +167,36 @@ public class ShutterstockSource implements IThumbnailSource {
         return keywords;
     }
 
-    private void setThumbnailDetails(Thumbnail t) throws IOException {
-        String imageDetailsApiUrl = generateImageDetailsApiUrl(t.getShutterstockId());
-        JsonObject imageDetailsResponse = ShutterstockRequestManager.getInstance().makeGetRequest(imageDetailsApiUrl);
-
-        List<Thumbnail.Category> categories = extractCategoriesFromJsonResponse(imageDetailsResponse);
-        List<String> keywords = extractKeywordsFromJsonResponse(imageDetailsResponse);
-
-        t.setCategories(categories);
-        t.setKeywords(keywords);
+    private List<Thumbnail.Category> removeDisruptiveCategories(List<Thumbnail.Category> categories) {
+        // see shutterstock API for category names instead of ID's
+        return categories.stream().filter(category -> {
+            switch (category.getId()) {
+                case 3:
+                case 8:
+                case 12:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                case 26:
+                    return false;
+                default:
+                    return true;
+            }
+        }).collect(Collectors.toList());
     }
 
     @Override
     public List<Thumbnail> queryThumbnails(String queryParameter, Integer limit) throws IOException {
-        String searchImagesApiUrl = generateSearchImagesApiUrl(queryParameter);
+        return this.queryThumbnails(queryParameter, limit, null);
+    }
+
+    @Override
+    public List<Thumbnail> queryThumbnails(String queryParameter, Integer limit, String category) throws IOException {
+        String searchImagesApiUrl = generateSearchImagesApiUrl(queryParameter, category);
 
         JsonObject searchImagesResponse = ShutterstockRequestManager.getInstance().makeGetRequest(searchImagesApiUrl);
         if (searchImagesResponse == null)
@@ -180,10 +204,10 @@ public class ShutterstockSource implements IThumbnailSource {
 
         List<Thumbnail> thumbnails = createThumbnailsFromJsonResponse(searchImagesResponse, limit);
 
-        for (Thumbnail t : thumbnails)
-            setThumbnailDetails(t);
+        // remove thumbnails with no categories
+        thumbnails = thumbnails.stream().filter(thumbnail -> !thumbnail.getCategories().isEmpty()).collect(Collectors.toList());
+        // TODO search new thumbnails that replace the removed ones
 
         return thumbnails;
     }
-
 }

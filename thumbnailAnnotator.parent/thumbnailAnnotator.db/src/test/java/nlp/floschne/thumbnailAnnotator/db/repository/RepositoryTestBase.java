@@ -19,9 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {RedisConfig.class, EmbeddedRedisServer.class})
@@ -43,9 +41,11 @@ public abstract class RepositoryTestBase<E extends Entity> {
     @Autowired
     protected CaptionTokenEntityRepository captionTokenEntityRepository;
 
+    @Autowired
+    protected UserEntityRepository userEntityRepository;
 
     public enum RepoType {
-        THUMBNAIL_URL, CAPTION_TOKEN;
+        THUMBNAIL_URL, CAPTION_TOKEN, USER, FEATURE_VECTOR
     }
 
     protected CrudRepository<E, String> repo;
@@ -63,6 +63,9 @@ public abstract class RepositoryTestBase<E extends Entity> {
                 break;
             case CAPTION_TOKEN:
                 this.repo = (CrudRepository<E, String>) captionTokenEntityRepository;
+                break;
+            case USER:
+                this.repo = (CrudRepository<E, String>) userEntityRepository;
                 break;
         }
     }
@@ -112,8 +115,6 @@ public abstract class RepositoryTestBase<E extends Entity> {
         this.repo.findAll().forEach(entities::add);
         assertEquals(entities.size(), saved.size());
         assertTrue(entities.containsAll(saved));
-
-
     }
 
     @Test

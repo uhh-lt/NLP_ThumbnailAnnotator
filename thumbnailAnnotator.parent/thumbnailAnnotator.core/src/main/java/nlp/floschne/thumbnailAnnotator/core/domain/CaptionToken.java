@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +50,29 @@ public class CaptionToken extends DomainObject {
 
     private SentenceContext sentenceContext;
 
+    private List<String> biGrams;
+    private List<String> triGrams;
+
+    public List<String> getPosTags() {
+        return posTags != null ? posTags : new ArrayList<>();
+    }
+
+    public List<String> getTokens() {
+        return tokens != null ? tokens : new ArrayList<>();
+    }
+
+    public List<String> getLemmata() {
+        return lemmata != null ? lemmata : new ArrayList<>();
+    }
+
+    public List<String> getBiGrams() {
+        return biGrams != null ? biGrams : new ArrayList<>();
+    }
+
+    public List<String> getTriGrams() {
+        return triGrams != null ? triGrams : new ArrayList<>();
+    }
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -63,15 +87,6 @@ public class CaptionToken extends DomainObject {
         public String toString() {
             return this.type + "(" + this.governor + "," + this.dependent + ")";
         }
-    }
-
-    public boolean contextEquals(CaptionToken other) {
-        return this == other || (this.value.equals(other.value) &&
-                this.type.equals(other.type) &&
-                this.posTags.equals(other.posTags) &&
-                this.tokens.equals(other.tokens) &&
-                this.udContext.equals(other.udContext) &&
-                this.sentenceContext.equals(other.sentenceContext));
     }
 
     @Override
@@ -90,6 +105,8 @@ public class CaptionToken extends DomainObject {
                 .append(getUdContext(), that.getUdContext())
                 .append(getLemmata(), that.getLemmata())
                 .append(getSentenceContext(), that.getSentenceContext())
+                .append(getBiGrams(), that.getBiGrams())
+                .append(getTriGrams(), that.getTriGrams())
                 .isEquals();
     }
 
@@ -116,6 +133,8 @@ public class CaptionToken extends DomainObject {
                 Collections.singletonList("A car is a vehicle with four wheels."),
                 Collections.singletonList(Thumbnail.createDummyTestingThumbnail()),
                 Arrays.asList("small", "car"),
-                SentenceContext.createDummyEntityTestingSentenceContext());
+                SentenceContext.createDummyEntityTestingSentenceContext(),
+                Collections.singletonList("smaller car"),
+                null);
     }
 }

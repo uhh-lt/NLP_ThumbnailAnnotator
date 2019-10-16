@@ -14,7 +14,6 @@ public class ShutterstockSourceTest {
 
     // TODO testing for all fields of a Thumbnail!
 
-
     @Test
     public void basicQueryTest() {
         String query = "water";
@@ -31,8 +30,8 @@ public class ShutterstockSourceTest {
         System.out.println("Query: '" + query + "'");
         System.out.println("Response:");
 
-        for (Thumbnail url : response)
-            System.out.println(url.getUrl());
+        for (Thumbnail thumbnail : response)
+            System.out.println(thumbnail.toString());
 
     }
 
@@ -53,8 +52,8 @@ public class ShutterstockSourceTest {
         System.out.println("Query: '" + query + "'");
         System.out.println("Response:");
 
-        for (Thumbnail url : response)
-            System.out.println(url.getUrl());
+        for (Thumbnail thumbnail : response)
+            System.out.println(thumbnail);
 
     }
 }

@@ -148,6 +148,23 @@ public class CaptionTokenExtractorTests {
         assertEquals(3, extractorResult.getCaptionTokens().size());
     }
 
+    @Test
+    public void stopwordsRemovalTest() throws ResourceInitializationException, ExecutionException, InterruptedException, IOException, JWNLException {
+        UserInput input = new UserInput("I use my own car very often.");
+        Future<ExtractorResult> extractionResultFuture = CaptionTokenExtractor.getInstance().startExtractionOfCaptionTokens(input);
+        assertNotNull(extractionResultFuture);
+        ExtractorResult extractorResult = extractionResultFuture.get();
+        assertNotNull(extractorResult);
+        assertEquals(input.getValue(), extractorResult.getUserInput().getValue());
+        assertEquals(1, extractorResult.getCaptionTokens().size());
+        CaptionToken ct = extractorResult.getCaptionTokens().get(0);
+        assertEquals(3, ct.getSentenceContext().getSTokens().size());
+        assertEquals(3, ct.getSentenceContext().getSLemmata().size());
+        assertEquals(3, ct.getSentenceContext().getSPosTags().size());
+        assertEquals(2, ct.getBiGrams().size());
+        assertEquals(1, ct.getTriGrams().size());
+
+    }
 
     @Test
     public void dependencyContextTest() throws ResourceInitializationException, AnalysisEngineProcessException, ExecutionException, InterruptedException, IOException, JWNLException {

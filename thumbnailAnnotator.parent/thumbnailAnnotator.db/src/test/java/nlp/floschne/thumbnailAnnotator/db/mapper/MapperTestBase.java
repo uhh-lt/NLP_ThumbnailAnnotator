@@ -35,7 +35,7 @@ public abstract class MapperTestBase<E extends Entity, D extends DomainObject> {
     protected CaptionTokenMapper captionTokenMapper;
 
     public enum MapperType {
-        THUMBNAIL_URL, CAPTION_TOKEN;
+        THUMBNAIL_URL, CAPTION_TOKEN, FEATURE_VECTOR
     }
 
     private IMapper<E, D> mapper;

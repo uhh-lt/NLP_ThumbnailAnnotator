@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.index.Indexed;
 import java.util.List;
 
 @Data
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,76 +1,109 @@
 <template>
-  <div>
-    <div class="float-left" :id="thumbnail_details_popover_target_id">
-      <img :src="thumbnailObj.url" class="img-thumbnail" :alt="thumbnailObj.url"
-           :id="thumbnail_large_image_popover_target_id">
+  <li style="list-style: none">
+    <div
+      :id="thumbnail_details_popover_target_id"
+      class="float-left"
+    >
+      <img
+        :id="thumbnail_large_image_popover_target_id"
+        :src="thumbnailObj.url"
+        class="img-thumbnail"
+        :alt="thumbnailObj.url"
+      >
     </div>
 
-    <b-popover triggers="click blur" placement="left"
-               :target="thumbnail_details_popover_target_id"
-               :show.sync="popoverShow">
-      <b-btn @click="popoverShow = false" class="close" aria-label="Close">
+    <b-popover
+      triggers="click blur focus"
+      placement="left"
+      :target="thumbnail_details_popover_target_id"
+      :show.sync="popoverShow"
+    >
+      <b-btn
+        class="close"
+        aria-label="Close"
+        @click="popoverShow = false"
+      >
         &times;
       </b-btn>
       <thumbnail-details-panel
-        v-bind:thumbnail="thumbnailObj"
-        v-bind:captionTokenId="captionTokenId"
+        :thumbnail="thumbnailObj"
+        :caption-token-id="captionTokenId"
       />
     </b-popover>
 
-    <b-popover :target="thumbnail_large_image_popover_target_id" triggers="hover" placement="top">
-      <img :src="thumbnailObj.url" :alt="thumbnailObj.url">
-      <code class="badge badge-danger badge-pill">
-        {{ this.thumbnailObj.priority }}
-      </code>
+    <b-popover
+      :target="thumbnail_large_image_popover_target_id"
+      triggers="hover"
+      placement="top"
+    >
+      <div class="row">
+        <div class="col-12">
+          <img
+            :src="thumbnailObj.url"
+            :alt="thumbnailObj.url"
+          >
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <span
+            v-for="c in this.thumbnailObj.categories"
+            class="badge badge-info ml-1"
+          >
+              {{ c.name }}
+          </span>
+        </div>
+      </div>
     </b-popover>
-  </div>
+  </li>
 </template>
 
 <script>
-  import ThumbnailDetailsPanel from "./ThumbnailDetailsPanel";
-  import {EventBus} from "../main";
+import ThumbnailDetailsPanel from './ThumbnailDetailsPanel'
+import { EventBus } from '../index'
 
-  export default {
-    name: "Thumbnail",
-    data: function () {
-      return {
-        thumbnail_details_popover_target_id: "thumbail-details-popver-target-" + this.id,
-        thumbnail_large_image_popover_target_id: "thumbail-large-image-popver-target" + this.id,
-        popoverShow: false,
-        thumbnailObj: null
-      }
+export default {
+  name: 'Thumbnail',
+  components: { ThumbnailDetailsPanel },
+  props: {
+    thumbnail: {
+      type: Object,
+      required: true
     },
-    components: {ThumbnailDetailsPanel},
-    props: {
-      thumbnail: {
-        type: Object,
-        required: true
-      },
-      id: {
-        required: true
-      },
-      captionTokenId: {
-        required: true
-      }
+    id: {
+      required: true
     },
-    methods: {
-      updateThumbnail(updatedThumbnail) {
-        if (this.thumbnailObj.id === updatedThumbnail.id) {
-          this.thumbnailObj = updatedThumbnail;
-        }
+    captionTokenId: {
+      required: true
+    }
+  },
+  data: function () {
+    return {
+      thumbnail_details_popover_target_id: 'thumbail-details-popver-target-' + this.id,
+      thumbnail_large_image_popover_target_id: 'thumbail-large-image-popver-target' + this.id,
+      popoverShow: false,
+      thumbnailObj: null
+    }
+  },
+  created () {
+    this.thumbnailObj = this.thumbnail
+    EventBus.$on('updatedThumbnail_event', this.updateThumbnail)
+    console.log('Thumbnail created')
+  },
+  methods: {
+    updateThumbnail (updatedThumbnail) {
+      if (this.thumbnailObj.id === updatedThumbnail.id) {
+        this.thumbnailObj = updatedThumbnail
       }
-    },
-    created() {
-      this.thumbnailObj = this.thumbnail;
-      EventBus.$on('updatedThumbnail_event', this.updateThumbnail)
     }
   }
+}
 </script>
 
 <style scoped>
   .img-thumbnail {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     margin: 1px;
     padding: 0;
   }
