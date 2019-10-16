@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,11 +74,12 @@ public class WSDService {
     }
 
     private Properties loadProperties() throws IOException {
-        String rootPath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-        String settingsPath = rootPath + "settings.properties";
+        String settingsPath = "settings.properties";
+
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(settingsPath);
 
         Properties props = new Properties();
-        props.load(new FileInputStream(settingsPath));
+        props.load(is);
 
         log.info("Loaded WSD Module properties");
         return props;
