@@ -18,7 +18,7 @@ import java.util.Set;
 @Log4j
 public class AuthenticationService {
     private static final String DUMMY_USER = "DUMMY";
-    private static final String DUMMY_PASSWORD = "dummy";
+    private static final String DUMMY_PASSWORD = "b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"; // sha256("dummy")
 
     private Set<String> activeSessions;
 

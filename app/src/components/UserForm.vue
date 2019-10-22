@@ -181,6 +181,7 @@
 
 <script>
 import axios from 'axios'
+import sha256 from 'js-sha256'
 import { EventBus } from '../index'
 import { VueTabs, VTab } from 'vue-nav-tabs'
 
@@ -241,7 +242,8 @@ export default {
       // wait for 250ms
       setTimeout(() => {
         if (!this.logged_in) {
-          axios.post(this.$hostname + '/login/', this.userDto).then(response => {
+          let hashedUserDto = this.hashPassword()
+          axios.post(this.$hostname + '/login/', hashedUserDto).then(response => {
             this.loginSuccess(response)
           }).catch(error => {
             this.loginError(error)
@@ -275,7 +277,8 @@ export default {
     },
 
     register () {
-      axios.put(this.$hostname + '/register/', this.userDto).then(response => {
+      let hashedUserDto = this.hashPassword()
+      axios.put(this.$hostname + '/register/', hashedUserDto).then(response => {
         this.registerSuccess(response)
       }).catch(error => {
         this.registerError(error)
@@ -337,6 +340,13 @@ export default {
     },
     updateIsLoggedIn (flag) {
       this.logged_in = flag
+    },
+    hashPassword () {
+      // TODO remove this piece of quick n dirty code..
+      return {
+        username: this.userDto.username,
+        password: sha256.sha256(this.userDto.password)
+      }
     }
   }
 }
