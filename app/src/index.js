@@ -13,8 +13,7 @@ export const EventBus = new Vue()
 
 Vue.use(BootstrapVue)
 
-// Vue.prototype.$hostname = 'http://api:8081'; // use with docker-compose
-Vue.prototype.$hostname = 'http://localhost:8081/thumbnail-api' // use for localhost
+Vue.prototype.$hostname = 'http://localhost:8081/thumbnail-api'
 
 library.add(faGithub, faUser)
 
