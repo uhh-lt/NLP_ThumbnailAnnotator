@@ -26,7 +26,7 @@ public class ThumbnailEntity extends Entity {
 
     private Long shutterstockId;
 
-    private List<Thumbnail.Category> categories;
+    private Thumbnail.Category category;
 
     private List<String> keywords;
 
@@ -35,7 +35,7 @@ public class ThumbnailEntity extends Entity {
                 "https://image.shutterstock.com/image-photo/big-ship-parked-harbor-260nw-677257045.jpg",
                 "desc1",
                 13337L,
-                Arrays.asList(new Thumbnail.Category(1, "a"), new Thumbnail.Category(2, "b")),
+                new Thumbnail.Category(2, "b"),
                 Arrays.asList("k1", "k2"));
     }
 }

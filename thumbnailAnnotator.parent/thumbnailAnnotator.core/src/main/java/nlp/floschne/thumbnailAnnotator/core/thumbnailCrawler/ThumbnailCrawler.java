@@ -27,7 +27,7 @@ public class ThumbnailCrawler {
          * The {@link CaptionToken}  that is processed by this {@link CrawlerAgent}
          */
         private CaptionToken captionToken;
-        private int limit;
+        private int limitPerCategory;
 
         /**
          * @param captionToken the input {@link CaptionToken}
@@ -35,7 +35,7 @@ public class ThumbnailCrawler {
         // package private by intention
         CrawlerAgent(CaptionToken captionToken) {
             this.captionToken = captionToken;
-            this.limit = 40;
+            this.limitPerCategory = 2;
         }
 
         /**
@@ -45,7 +45,7 @@ public class ThumbnailCrawler {
         public CaptionToken call() throws IOException {
             List<Thumbnail> thumbnails = null;
             try {
-                thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), limit);
+                thumbnails = thumbnailSource.queryThumbnails(this.captionToken.getValue(), limitPerCategory);
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new IOException("There went something wrong while crawling Thumbnails!\n" + e.getMessage());
@@ -53,9 +53,9 @@ public class ThumbnailCrawler {
             assert thumbnails != null;
             // remove tokens if the search was too specific, so that there where to less results
             // TODO remove this since it can produce errors if there is only one token
-            if (thumbnails.size() < limit / 2) {
+            if (thumbnails.size() < limitPerCategory / 2) {
                 try {
-                    thumbnails.addAll(thumbnailSource.queryThumbnails(this.captionToken.getTokens().get(this.captionToken.getTokens().size() - 1), limit));
+                    thumbnails.addAll(thumbnailSource.queryThumbnails(this.captionToken.getTokens().get(this.captionToken.getTokens().size() - 1), limitPerCategory));
                 } catch (IOException e) {
                     e.printStackTrace();
                     throw new IOException("There went something wrong while crawling Thumbnails!");

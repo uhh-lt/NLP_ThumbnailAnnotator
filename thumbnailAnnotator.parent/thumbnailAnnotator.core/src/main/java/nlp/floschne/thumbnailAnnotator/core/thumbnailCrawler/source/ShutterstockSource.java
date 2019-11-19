@@ -1,34 +1,29 @@
 package nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.source;
 
-import com.google.gson.GsonBuilder;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import nlp.floschne.thumbnailAnnotator.core.domain.Thumbnail;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -55,6 +50,16 @@ public class ShutterstockSource implements IThumbnailSource {
         }
     }
 
+    private static final String CATEGORIES_FILE = "shutterstock_categories.json";
+
+    private static final List<Integer> DISRUPTIVE_CATEGORY_IDS = Collections.unmodifiableList(Arrays.asList(
+            3, 8, 12, 19, 20, 21, 22, 23, 24, 25, 26
+    ));
+
+    private static final List<Integer> INFORMATIVE_CATEGORY_IDS = Collections.unmodifiableList(Arrays.asList(
+            1, 2, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 17, 18, 27
+    ));
+
     private static final String IMAGE_SEARCH_RESOURCE_URL = "https://api.shutterstock.com/v2/images/search";
     private static final String IMAGE_DETAILS_RESOURCE_URL = "https://api.shutterstock.com/v2/images/";
     private static final String IMAGE_TYPES = "?image_type[]=photo&image_type[]=illustration&image_type[]=vector";
@@ -73,9 +78,28 @@ public class ShutterstockSource implements IThumbnailSource {
     private SortBy sortBy;
     private Integer per_page;
 
+    private Map<Integer, String> shutterstockCategories;
+    private Map<String, Integer> shutterstockCategoriesReverse;
+
     public ShutterstockSource() {
         this.sortBy = SortBy.RANDOM;
         this.per_page = 40;
+
+        // get shutterstock categories from json file
+        shutterstockCategories = new HashMap<>();
+        shutterstockCategoriesReverse = new HashMap<>();
+        InputStream keyInputStream = Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream(CATEGORIES_FILE));
+        InputStreamReader inputStreamReader = new InputStreamReader(keyInputStream, StandardCharsets.UTF_8);
+        JsonParser parser = new JsonParser();
+        JsonArray root = parser.parse(inputStreamReader).getAsJsonArray();
+        for (JsonElement cat : root) {
+            Integer id = cat.getAsJsonObject().get("id").getAsInt();
+            String name = cat.getAsJsonObject().get("name").getAsString();
+            shutterstockCategories.put(id, name);
+            shutterstockCategoriesReverse.put(name, id);
+        }
+
+        DISRUPTIVE_CATEGORY_IDS.forEach(id -> shutterstockCategories.remove(id));
     }
 
     private String generateSearchImagesApiUrl(String queryParameter, String category) throws UnsupportedEncodingException {
@@ -111,8 +135,9 @@ public class ShutterstockSource implements IThumbnailSource {
     private List<Thumbnail> createThumbnailsFromJsonResponse(@NotNull JsonObject response, Integer limit) {
         List<Thumbnail> result = new ArrayList<>();
         for (JsonElement obj : response.getAsJsonArray("data")) {
+            if (result.size() == limit)
+                break;
             if (obj != null) {
-
                 String idStr = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "id")).toString();
                 // remove quotes
                 Long id = Long.parseLong(idStr.substring(1, idStr.length() - 1));
@@ -125,18 +150,40 @@ public class ShutterstockSource implements IThumbnailSource {
                 // remove quotes
                 desc = desc.substring(1, desc.length() - 1);
 
-                List<Thumbnail.Category> categories = this.extractCategoriesFromJsonResponse(obj.getAsJsonObject());
+                // TODO sure get(0)?!
+                Thumbnail.Category category = this.extractCategoriesFromJsonResponse(obj.getAsJsonObject()).get(0);
 
                 List<String> keywords = this.extractKeywordsFromJsonResponse(obj.getAsJsonObject());
 
-                result.add(new Thumbnail(url, desc, id, categories, keywords));
-                if (result.size() == limit)
-                    break;
+                result.add(new Thumbnail(url, desc, id, category, keywords));
             }
         }
         return result;
     }
 
+
+    private Thumbnail.Category extractCategoryFromJsonResponse(JsonObject response, String categoryId) {
+        for (JsonElement obj : response.getAsJsonArray("categories")) {
+            if (obj != null) {
+                // remove quotes
+                String idStr = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "id")).toString();
+                if (!idStr.equalsIgnoreCase(categoryId))
+                    continue;
+
+                int catId = Integer.parseInt(idStr.substring(1, idStr.length() - 1));
+
+                String name = Objects.requireNonNull(getElementByPath(obj.getAsJsonObject(), "name")).toString();
+                // remove quotes
+                name = name.substring(1, name.length() - 1);
+
+                return new Thumbnail.Category(catId, name);
+            }
+        }
+        // TODO can we actually reach this code??
+        return null;
+    }
+
+    @Deprecated
     private List<Thumbnail.Category> extractCategoriesFromJsonResponse(JsonObject response) {
         List<Thumbnail.Category> categories = new ArrayList<>();
         for (JsonElement obj : response.getAsJsonArray("categories")) {
@@ -167,6 +214,7 @@ public class ShutterstockSource implements IThumbnailSource {
         return keywords;
     }
 
+    @Deprecated
     private List<Thumbnail.Category> removeDisruptiveCategories(List<Thumbnail.Category> categories) {
         // see shutterstock API for category names instead of ID's
         return categories.stream().filter(category -> {
@@ -190,24 +238,31 @@ public class ShutterstockSource implements IThumbnailSource {
     }
 
     @Override
-    public List<Thumbnail> queryThumbnails(String queryParameter, Integer limit) throws IOException {
-        return this.queryThumbnails(queryParameter, limit, null);
+    public List<Thumbnail> queryThumbnails(String queryParameter, Integer limitPerCategory) throws IOException {
+        List<Thumbnail> thumbnails = new ArrayList<>();
+        shutterstockCategories.entrySet().parallelStream().forEach(entry -> {
+            try {
+                String cat = entry.getValue();
+                List<Thumbnail> thumbs = this.queryThumbnails(queryParameter, limitPerCategory, cat);
+                thumbs.removeIf(thumbnail -> !thumbnail.getCategory().getName().equals(cat));
+                thumbnails.addAll(thumbs);
+            } catch (IOException e) {
+                // TODO
+                e.printStackTrace();
+            }
+        });
+
+        return thumbnails;
     }
 
     @Override
-    public List<Thumbnail> queryThumbnails(String queryParameter, Integer limit, String category) throws IOException {
+    public List<Thumbnail> queryThumbnails(String queryParameter, Integer limitPerCategory, String category) throws IOException {
         String searchImagesApiUrl = generateSearchImagesApiUrl(queryParameter, category);
 
         JsonObject searchImagesResponse = ShutterstockRequestManager.getInstance().makeGetRequest(searchImagesApiUrl);
         if (searchImagesResponse == null)
             throw new ConnectException("Got no response from Thumbnail Source!");
 
-        List<Thumbnail> thumbnails = createThumbnailsFromJsonResponse(searchImagesResponse, limit);
-
-        // remove thumbnails with no categories
-        thumbnails = thumbnails.stream().filter(thumbnail -> !thumbnail.getCategories().isEmpty()).collect(Collectors.toList());
-        // TODO search new thumbnails that replace the removed ones
-
-        return thumbnails;
+        return createThumbnailsFromJsonResponse(searchImagesResponse, limitPerCategory);
     }
 }

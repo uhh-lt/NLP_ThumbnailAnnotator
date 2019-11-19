@@ -1,6 +1,7 @@
 package nlp.floschne.thumbnailAnnotator.wsd.classifier;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.FeatureVector;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVector;
 import org.apache.commons.lang3.tuple.Pair;
@@ -11,18 +12,19 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+@EqualsAndHashCode(callSuper = false)
 @Component
 @Data
 public class NaiveBayesClassifier extends IClassifier {
 
     private Boolean useLogits;
     private Boolean normalize;
-    private Integer numberOfInfluentialFeatures;
+    private Integer maxNumberOfInfluentialFeatures;
 
     public NaiveBayesClassifier() {
         this.useLogits = true;
         this.normalize = true;
-        this.numberOfInfluentialFeatures = 10;
+        this.maxNumberOfInfluentialFeatures = 10;
     }
 
     @Override
@@ -105,7 +107,7 @@ public class NaiveBayesClassifier extends IClassifier {
         else
             mostInfluentialFeatures.sort((o1, o2) -> o2.getRight().compareTo(o1.getRight()));
 
-        return mostInfluentialFeatures.subList(0, mostInfluentialFeatures.size() <= numberOfInfluentialFeatures ? mostInfluentialFeatures.size() - 1 : numberOfInfluentialFeatures);
+        return mostInfluentialFeatures.subList(0, mostInfluentialFeatures.size() <= maxNumberOfInfluentialFeatures ? mostInfluentialFeatures.size() - 1 : maxNumberOfInfluentialFeatures);
     }
 
     @Override

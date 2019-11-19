@@ -17,12 +17,9 @@
       <code class="text-warning">{{ this.thumbnailObj.description }}</code>
       <hr>
       <div>
-        <span
-          v-for="c in this.thumbnailObj.categories"
-          class="badge badge-info ml-1"
-        >
-          {{ c.name }}
-        </span>
+       <span class="badge badge-info ml-1" >
+              {{ this.thumbnailObj.category.name }}
+       </span>
       </div>
       <hr>
       <div>

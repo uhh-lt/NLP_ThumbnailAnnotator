@@ -29,7 +29,7 @@ public class ThumbnailMapperTest extends MapperTestBase<ThumbnailEntity, Thumbna
         assertEquals(entity.getUrl(), domain.getUrl());
         assertEquals(entity.getDescription(), domain.getDescription());
         assertEquals(entity.getShutterstockId(), domain.getShutterstockId());
-        assertEquals(entity.getCategories(), domain.getCategories());
+        assertEquals(entity.getCategory(), domain.getCategory());
         assertEquals(entity.getKeywords(), domain.getKeywords());
 
     }

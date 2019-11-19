@@ -67,7 +67,7 @@ public class WSDService {
 
         ((NaiveBayesClassifier) classifier).setNormalize(Boolean.parseBoolean(this.properties.getProperty("wsd.classifier.normalize", "true")));
         ((NaiveBayesClassifier) classifier).setUseLogits(Boolean.parseBoolean(this.properties.getProperty("wsd.classifier.logits", "true")));
-        ((NaiveBayesClassifier) classifier).setNumberOfInfluentialFeatures(Integer.parseInt(this.properties.getProperty("wsd.classifier.numberOfInfluentialFeatures", "10")));
+        ((NaiveBayesClassifier) classifier).setMaxNumberOfInfluentialFeatures(Integer.parseInt(this.properties.getProperty("wsd.classifier.numberOfInfluentialFeatures", "10")));
 
         this.loadGlobalModel();
         log.info("WSD Service ready!");
@@ -185,8 +185,7 @@ public class WSDService {
     // package private by intention
     List<TrainingFeatureVector> extractTrainingFeatures(CaptionToken ct, Thumbnail t) {
         List<TrainingFeatureVector> trainingFeatureVectors = new ArrayList<>();
-        for (Thumbnail.Category c : t.getCategories())
-            trainingFeatureVectors.add(this.featureExtractor.extractTrainingFeatures(ct, t, c.getName()));
+        trainingFeatureVectors.add(this.featureExtractor.extractTrainingFeatures(ct, t, t.getCategory().getName()));
 
         return trainingFeatureVectors;
     }

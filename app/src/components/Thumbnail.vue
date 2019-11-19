@@ -46,11 +46,8 @@
       </div>
       <div class="row">
         <div class="col-12">
-          <span
-            v-for="c in this.thumbnailObj.categories"
-            class="badge badge-info ml-1"
-          >
-              {{ c.name }}
+          <span class="badge badge-info ml-1" >
+              {{ this.thumbnailObj.category.name }}
           </span>
         </div>
       </div>

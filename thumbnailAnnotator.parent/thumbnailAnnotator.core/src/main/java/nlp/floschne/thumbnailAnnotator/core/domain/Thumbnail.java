@@ -18,7 +18,7 @@ public class Thumbnail extends DomainObject {
 
     protected Long shutterstockId;
 
-    protected List<Category> categories;
+    protected Category category;
 
     protected List<String> keywords;
 
@@ -26,7 +26,7 @@ public class Thumbnail extends DomainObject {
         return new Thumbnail("https://image.shutterstock.com/image-vector/lupe-magnifying-glass-barcode-serial-260nw-476181607.jpg",
                 "desc",
                 133437L,
-                Arrays.asList(new Thumbnail.Category(3, "c"), new Thumbnail.Category(1, "d")),
+                new Thumbnail.Category(3, "c"),
                 Arrays.asList("k1", "k2"));
     }
 
