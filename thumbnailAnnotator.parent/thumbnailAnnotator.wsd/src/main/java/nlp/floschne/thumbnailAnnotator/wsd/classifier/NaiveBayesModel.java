@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @AllArgsConstructor
 public class NaiveBayesModel extends IModel {
 
-    private Map<Label, List<Object>> classFeatures;
+    private Map<Label, Set<Object>> classFeatures;
 
     private Map<Label, Double> classPriors;
 
@@ -68,7 +68,7 @@ public class NaiveBayesModel extends IModel {
 
         // update the features per class (all the features that belong to the class)
         this.classFeatures.computeIfPresent(clazz, (label, stringFeatures) -> {
-            List<Object> addedFeatures = new ArrayList<>(stringFeatures);
+            Set<Object> addedFeatures = new HashSet<>(stringFeatures);
             addedFeatures.addAll(featureVector.getFeatures());
             return addedFeatures;
         });
