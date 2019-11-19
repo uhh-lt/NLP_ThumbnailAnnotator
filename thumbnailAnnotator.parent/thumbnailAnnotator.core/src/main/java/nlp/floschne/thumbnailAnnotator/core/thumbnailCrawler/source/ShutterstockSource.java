@@ -242,9 +242,10 @@ public class ShutterstockSource implements IThumbnailSource {
         List<Thumbnail> thumbnails = new ArrayList<>();
         shutterstockCategories.entrySet().parallelStream().forEach(entry -> {
             try {
-                String cat = entry.getValue();
-                List<Thumbnail> thumbs = this.queryThumbnails(queryParameter, limitPerCategory, cat);
-                thumbs.removeIf(thumbnail -> !thumbnail.getCategory().getName().equals(cat));
+                Integer cat = entry.getKey();
+                List<Thumbnail> thumbs = this.queryThumbnails(queryParameter, limitPerCategory, cat.toString());
+                // TODO this should be unnecessary!
+                thumbs.removeIf(thumbnail -> !thumbnail.getCategory().getId().equals(cat));
                 thumbnails.addAll(thumbs);
             } catch (IOException e) {
                 // TODO
@@ -263,6 +264,15 @@ public class ShutterstockSource implements IThumbnailSource {
         if (searchImagesResponse == null)
             throw new ConnectException("Got no response from Thumbnail Source!");
 
-        return createThumbnailsFromJsonResponse(searchImagesResponse, limitPerCategory);
+        // TODO remove this ugly piece of sh** by proper overloading and refactoring!
+        List<Thumbnail> thumbnails = createThumbnailsFromJsonResponse(searchImagesResponse, limitPerCategory);
+        try {
+            Integer id = Integer.valueOf(category);
+            thumbnails.forEach(thumbnail -> thumbnail.setCategory(new Thumbnail.Category(id, shutterstockCategories.get(id))));
+        } catch (NumberFormatException e) {
+            thumbnails.forEach(thumbnail -> thumbnail.setCategory(new Thumbnail.Category(0, category)));
+        }
+
+        return thumbnails;
     }
 }
