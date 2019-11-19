@@ -44,7 +44,7 @@ public class NaiveBayesClassifier extends IClassifier {
             // prior probability
             prior = myModel.getClassPrior(clazz);
             if (useLogits)
-                prior = -Math.log(prior);
+                prior = Math.log(prior);
             prob = prior;
 
             // TODO most of the times features occur more than once in a FV..
@@ -53,9 +53,9 @@ public class NaiveBayesClassifier extends IClassifier {
             //  checkout TF&IDF
             for (Object feature : featureVector) {
                 // class conditional probabilities
-                double classConditional = myModel.computeClassConditionalProbability(feature, clazz);
+                double classConditional = myModel.computeClassConditionalProbability(feature, clazz, useLogits);
                 if (useLogits)
-                    prob += -Math.log(classConditional);
+                    prob += classConditional;
                 else
                     prob *= classConditional;
             }
@@ -68,7 +68,7 @@ public class NaiveBayesClassifier extends IClassifier {
 
             if (useLogits) {
 //                prob += -Math.log(1.0 / n_max) * (n_max - n_c);
-                prob = Math.exp(-prob);
+                prob = Math.exp(prob);
             } else {
             }
 //                prob *= Math.exp(Math.log(1.0 / n_max) * (n_max - n_c));
@@ -92,10 +92,7 @@ public class NaiveBayesClassifier extends IClassifier {
 
         List<Pair<Object, Double>> mostInfluentialFeatures = new ArrayList<>();
         for (Object feature : featureVector) {
-            double classConditional = myModel.computeClassConditionalProbability(feature, clazz);
-            if (useLogits)
-                classConditional = -Math.log(classConditional);
-
+            double classConditional = myModel.computeClassConditionalProbability(feature, clazz, useLogits);
             mostInfluentialFeatures.add(Pair.of(feature, classConditional));
         }
 

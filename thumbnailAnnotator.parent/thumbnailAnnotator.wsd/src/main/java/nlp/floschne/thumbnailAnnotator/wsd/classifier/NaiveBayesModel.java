@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVector;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @AllArgsConstructor
 public class NaiveBayesModel extends IModel {
 
-    private Map<Label, Set<Object>> classFeatures;
+    private Map<Label, List<Object>> classFeatures;
 
     private Map<Label, Double> classPriors;
 
@@ -55,7 +56,7 @@ public class NaiveBayesModel extends IModel {
      * @param clazz the given class
      */
     private void updateClassPriors(Label clazz) {
-        // P(clazz) = number of fv belonging to class / number of all fv
+        // P(clazz) = number of fv belonging to class / number of all samples
         this.classPriors.putIfAbsent(clazz, 1.0);
         this.classPriors.replaceAll((c, v) -> (this.countFeatureVectorsOfClass(c) / (double) this.featureVectors.size()));
     }
@@ -68,11 +69,11 @@ public class NaiveBayesModel extends IModel {
 
         // update the features per class (all the features that belong to the class)
         this.classFeatures.computeIfPresent(clazz, (label, stringFeatures) -> {
-            Set<Object> addedFeatures = new HashSet<>(stringFeatures);
+            List<Object> addedFeatures = new ArrayList<>(stringFeatures);
             addedFeatures.addAll(featureVector.getFeatures());
             return addedFeatures;
         });
-        this.classFeatures.putIfAbsent(clazz, featureVector.getFeatures());
+        this.classFeatures.putIfAbsent(clazz, new ArrayList<>(featureVector.getFeatures()));
 
         // compute the class priors -> number of vectors of the class divided by total number of samples in the model
         this.updateClassPriors(clazz);
@@ -97,24 +98,23 @@ public class NaiveBayesModel extends IModel {
         return prob;
     }
 
-    public Double computeClassConditionalProbability(Object feature, Label clazz) {
+    public Double computeClassConditionalProbability(Object feature, Label clazz, Boolean useLogits) {
         assert classFeatures.containsKey(clazz);
 
-        // count occurrences of feature in class
+        // count of co-occurrences of feature_i for the clazz_k
         int noOfFeatureInClass = Collections.frequency(classFeatures.get(clazz), feature);
 
-        // total number of features of clazz
-        int totalNoOfFeaturesOfClass = this.classFeatures.get(clazz).size();
-
-        // number of unique features of clazz
-        int noOfUniqueFeaturesOfClass = new HashSet<>(classFeatures.get(clazz)).size();
+        // sum of counts of co-occurrences of all features for class_k
+        int totalNoOfFeaturesInClazz = this.classFeatures.get(clazz).size();
 
         /*
         with laplace smoothing
-        P(feature | clazz) = (noOfFeatureInClass + 1) / totalNoOfFeaturesOfClass + noOfUniqueFeaturesOfClass
+        P(feature | clazz) = (noOfFeatureInClazz + eps) / totalNumberOfFeaturesInClazz
          */
-        // TODO ADD DOCUMENTATION
-        return (noOfFeatureInClass + 1.0) / ((double) getMaxFeatureNumberOfClasses() + 1.0);
+        if(useLogits)
+            return Math.log(noOfFeatureInClass + 1e-7) - Math.log(totalNoOfFeaturesInClazz);
+        else
+            return (noOfFeatureInClass + 1e-7) / ((double) totalNoOfFeaturesInClazz);
     }
 
     public static NaiveBayesModel merge(NaiveBayesModel m1, NaiveBayesModel m2) {
