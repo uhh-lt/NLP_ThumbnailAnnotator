@@ -151,11 +151,13 @@ public class ShutterstockSource implements IThumbnailSource {
                 desc = desc.substring(1, desc.length() - 1);
 
                 // TODO sure get(0)?!
-                Thumbnail.Category category = this.extractCategoriesFromJsonResponse(obj.getAsJsonObject()).get(0);
+                if(!this.extractCategoriesFromJsonResponse(obj.getAsJsonObject()).isEmpty()) {
+                    Thumbnail.Category category = this.extractCategoriesFromJsonResponse(obj.getAsJsonObject()).get(0);
 
-                List<String> keywords = this.extractKeywordsFromJsonResponse(obj.getAsJsonObject());
+                    List<String> keywords = this.extractKeywordsFromJsonResponse(obj.getAsJsonObject());
 
-                result.add(new Thumbnail(url, desc, id, category, keywords));
+                    result.add(new Thumbnail(url, desc, id, category, keywords));
+                }
             }
         }
         return result;
