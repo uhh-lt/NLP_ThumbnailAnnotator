@@ -32,7 +32,7 @@
                 id="loader"
                 src="../../static/img/loader.svg"
               ></span>
-              <span v-else>Crawl Thumbnails!</span>
+              <span v-else>Process...</span>
             </button>
           </div>
         </form>
