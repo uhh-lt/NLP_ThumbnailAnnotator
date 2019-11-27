@@ -86,8 +86,8 @@ public class DBService {
         List<Long> afterIds = cte.getThumbnails().stream().map(ThumbnailEntity::getShutterstockId).collect(Collectors.toList());
 
         // TODO .equals() does not work.. (why?!)
-        if (!afterIds.containsAll(beforeIds) && afterIds.size() == beforeIds.size())
-            throw new IOException("There was a problem when updating Thumbnails of CaptionTokenEntity with ID <" + id + ">");
+//        if (!afterIds.containsAll(beforeIds) && afterIds.size() == beforeIds.size())
+//            throw new IOException("There was a problem when updating Thumbnails of CaptionTokenEntity with ID <" + id + ">");
 
         return cte;
     }
