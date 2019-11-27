@@ -5,8 +5,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import nlp.floschne.thumbnailAnnotator.wsd.featureExtractor.TrainingFeatureVector;
 
-import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -40,6 +45,7 @@ public class NaiveBayesModel extends IModel {
 
     /**
      * Counts the number of feature vectors that belong to the given class
+     *
      * @param clazz the given class
      * @return the number of feature vectors that belong to the given class
      */
@@ -53,6 +59,7 @@ public class NaiveBayesModel extends IModel {
 
     /**
      * Updates the class prior P(clazz) of the given class.
+     *
      * @param clazz the given class
      */
     private void updateClassPriors(Label clazz) {
@@ -108,13 +115,12 @@ public class NaiveBayesModel extends IModel {
         int totalNoOfFeaturesInClazz = this.classFeatures.get(clazz).size();
 
         /*
-        with laplace smoothing
         P(feature | clazz) = (noOfFeatureInClazz + eps) / totalNumberOfFeaturesInClazz
          */
-        if(useLogits)
-            return Math.log(noOfFeatureInClass + 1e-7) - Math.log(totalNoOfFeaturesInClazz);
+        if (useLogits)
+            return Math.log(noOfFeatureInClass + 1e-10) - Math.log(totalNoOfFeaturesInClazz);
         else
-            return (noOfFeatureInClass + 1e-7) / ((double) totalNoOfFeaturesInClazz);
+            return (noOfFeatureInClass + 1e-10) / ((double) totalNoOfFeaturesInClazz);
     }
 
     public static NaiveBayesModel merge(NaiveBayesModel m1, NaiveBayesModel m2) {

@@ -41,6 +41,7 @@ public class BasicFeatureExtractor implements IFeatureExtractor {
         return new FeatureVector(
                 captionTokenUdContext,
                 ct.getSentenceContext().getSLemmata(),
+                ct.getSentenceContext().getSTokens(),
                 ct.getBiGrams(),
                 ct.getTriGrams());
     }
