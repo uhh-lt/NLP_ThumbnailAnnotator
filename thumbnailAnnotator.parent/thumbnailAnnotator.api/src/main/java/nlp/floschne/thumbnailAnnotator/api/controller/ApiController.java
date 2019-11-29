@@ -17,13 +17,13 @@ import nlp.floschne.thumbnailAnnotator.core.domain.UserInput;
 import nlp.floschne.thumbnailAnnotator.core.thumbnailCrawler.ThumbnailCrawler;
 import nlp.floschne.thumbnailAnnotator.db.entity.CaptionTokenEntity;
 import nlp.floschne.thumbnailAnnotator.db.entity.ThumbnailEntity;
+import nlp.floschne.thumbnailAnnotator.db.entity.UserEntity;
 import nlp.floschne.thumbnailAnnotator.db.service.DBService;
 import nlp.floschne.thumbnailAnnotator.wsd.classifier.Prediction;
 import nlp.floschne.thumbnailAnnotator.wsd.service.WSDService;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Description;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -203,11 +203,11 @@ public class ApiController {
 
 
     /**
-     *  Trains the model of the user witch is linked with the access key.
+     * Trains the model of the user witch is linked with the access key.
      *
-     * @param thumbnailId the Id of the {@link ThumbnailEntity} which serves as label
+     * @param thumbnailId    the Id of the {@link ThumbnailEntity} which serves as label
      * @param captionTokenId the CaptionToken that holds the target and the context
-     * @param accessKey accessKey of the user
+     * @param accessKey      accessKey of the user
      * @throws IOException
      * @throws AuthException
      */
@@ -228,6 +228,9 @@ public class ApiController {
         // get the model / user name
         String modelName = this.dbService.getUserByAccessKey(accessKey).getUsername();
 
+        UserEntity user = dbService.getUserByAccessKey(accessKey);
+        log.info("[" + user.getUsername() + "]\t" + ct.getValue() + "\t" + ct.getSentenceContext().toString() + "\t" + t.getCategory().getName() + "\t" + t.getUrl());
+
         // train the user model
         this.wsdService.trainNaiveBayesModel(ct, t, modelName);
     }
@@ -236,7 +239,7 @@ public class ApiController {
      * Get a single {@link CaptionTokenEntity} by it's ID
      *
      * @param captionTokenId the ID of the {@link CaptionTokenEntity}
-     * @param accessKey  the accessKey of the user
+     * @param accessKey      the accessKey of the user
      * @return the {@link CaptionTokenEntity} identified by the ID or null if the accessKey is not active
      */
 
@@ -254,7 +257,7 @@ public class ApiController {
      * Crawls new {@link ThumbnailEntity}s for a {@link CaptionTokenEntity}
      *
      * @param captionTokenId the ID of the {@link CaptionTokenEntity}
-     * @param accessKey the accessKey of the user
+     * @param accessKey      the accessKey of the user
      * @return the {@link CaptionTokenEntity} identified by the ID or null if the accessKey is not active
      */
 
@@ -300,7 +303,7 @@ public class ApiController {
      * Get a single {@link ThumbnailEntity} by it's ID
      *
      * @param thumbnailId the ID of the {@link ThumbnailEntity}
-     * @param accessKey the accessKey of the user
+     * @param accessKey   the accessKey of the user
      * @return the {@link ThumbnailEntity} identified by the ID or null if the accessKey is not active
      */
     @ApiOperation("Get a single ThumbnailEntity by it's Id.")
@@ -317,7 +320,7 @@ public class ApiController {
      * Predicts a URL of a Thumbnail and {@link Prediction} from a given {@link CaptionToken}.
      *
      * @param captionTokenId the ID of the CaptionToken
-     * @param accessKey the accessKey of the user
+     * @param accessKey      the accessKey of the user
      * @return pair of URL of Thumbnail and {@link Prediction}.
      */
     @ApiOperation("Predicts a URL of a Thumbnail and Prediction from a given CaptionToken.")
@@ -357,7 +360,7 @@ public class ApiController {
 
     @RequestMapping(value = "/predictTargetWord", method = RequestMethod.GET)
     @ApiOperation("Predicts the first occurrence of a target word in a given (sentence) context.")
-    @ApiParam(value = "val",name = "context", example = "ex")
+    @ApiParam(value = "val", name = "context", example = "ex")
     public Prediction predictTargetWord(@ApiParam("the context in which the target word occurs (including the target word!)") @RequestParam(value = "context") String context,
                                         @ApiParam("the target word") @RequestParam("targetWord") String targetWord) throws ResourceInitializationException, JWNLException, IOException, ExecutionException, InterruptedException {
 
