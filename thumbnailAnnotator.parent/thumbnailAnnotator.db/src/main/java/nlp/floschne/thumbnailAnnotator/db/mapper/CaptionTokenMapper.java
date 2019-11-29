@@ -14,6 +14,7 @@ public interface CaptionTokenMapper extends IMapper<CaptionTokenEntity, CaptionT
 
     @Override
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "fullSentence", ignore = true)
     CaptionTokenEntity mapToEntity(CaptionToken domainObject);
 
     @Override

@@ -40,6 +40,8 @@ public class CaptionTokenEntity extends Entity {
     private List<String> biGrams;
     private List<String> triGrams;
 
+    private String fullSentence;
+
     public List<String> getPosTags() {
         return posTags != null ? posTags : new ArrayList<>();
     }
@@ -72,7 +74,8 @@ public class CaptionTokenEntity extends Entity {
                 Arrays.asList("big", "ship"),
                 SentenceContext.createDummyEntityTestingSentenceContext(),
                 Collections.singletonList("bigger ship"),
-                null
+                null,
+                "bigger ship"
         );
     }
 }

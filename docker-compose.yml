@@ -12,7 +12,7 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     volumes:
-      - ${PWD}/redis-data:/redis
+      - ${PWD}/redis_data:/bitnami/redis/data
 
   api:
     depends_on:

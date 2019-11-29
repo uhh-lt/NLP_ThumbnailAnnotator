@@ -92,7 +92,7 @@ public class DBService {
         return cte;
     }
 
-    public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey) throws IOException {
+    public CaptionTokenEntity saveCaptionToken(@NotNull CaptionToken ct, @NotNull String accessKey, String fullSentence) throws IOException {
         UserEntity owner = getUserEntity(accessKey);
 
         //CaptionToken is already cached -> get the CaptionTokenEntity
@@ -101,6 +101,8 @@ public class DBService {
             //CaptionToken is not yet in the DB -> convert it to a CaptionTokenEntity
             entity = this.captionTokenMapper.mapToEntity(ct);
 
+        // FIXME
+        entity.setFullSentence(fullSentence);
         this.saveCaptionTokenEntity(entity);
 
         // add the CaptionTokenEntity to the user

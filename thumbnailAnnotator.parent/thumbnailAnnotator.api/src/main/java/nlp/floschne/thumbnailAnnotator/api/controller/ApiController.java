@@ -188,7 +188,7 @@ public class ApiController {
 
             try {
                 // save the results in repo
-                CaptionTokenEntity result = this.dbService.saveCaptionToken(captionToken, authenticatedUserInputDTO.getAccessKey());
+                CaptionTokenEntity result = this.dbService.saveCaptionToken(captionToken, authenticatedUserInputDTO.getAccessKey(), authenticatedUserInputDTO.getUserInput().getValue());
                 log.info("Caching results for '" + result + "' for AccessKey'" + authenticatedUserInputDTO.getAccessKey() + "'");
 
                 if (!results.contains(result))
@@ -198,6 +198,11 @@ public class ApiController {
             }
 
         }
+
+        UserEntity user = dbService.getUserByAccessKey(authenticatedUserInputDTO.getAccessKey());
+        log.info("{ANNOTATION_TASK}[" + user.getUsername() + "]\t" + authenticatedUserInputDTO.getUserInput().getValue());
+
+
         return results;
     }
 
@@ -222,6 +227,7 @@ public class ApiController {
         // get the CaptionToken and Thumbnail to train and extract the FeatureVectors from them
         Thumbnail t = this.dbService.findThumbnailById(thumbnailId);
         CaptionToken ct = this.dbService.findCaptionTokenById(captionTokenId);
+        CaptionTokenEntity cte = this.dbService.findCaptionTokenEntityById(captionTokenId);
 
         // generate the corresponding FeatureVector and "train" the model with it!
 
@@ -229,7 +235,7 @@ public class ApiController {
         String modelName = this.dbService.getUserByAccessKey(accessKey).getUsername();
 
         UserEntity user = dbService.getUserByAccessKey(accessKey);
-        log.info("[" + user.getUsername() + "]\t" + ct.getValue() + "\t" + ct.getSentenceContext().toString() + "\t" + t.getCategory().getName() + "\t" + t.getUrl());
+        log.info("{ANNOTATION_TASK}[" + user.getUsername() + "]\t" + ct.getValue() + "\t" + cte.getFullSentence() + "\t" + t.getCategory().getName() + "\t" + t.getUrl());
 
         // train the user model
         this.wsdService.trainNaiveBayesModel(ct, t, modelName);
