@@ -135,7 +135,8 @@ public class CaptionTokenExtractor {
                 // only take the parent sentence into account
                 if (cta.getBegin() >= context.getBegin() && cta.getEnd() <= context.getEnd()) {
                     udContext = getUDContext(tokens, userInputJCas, context);
-                    wNetSenses = getWNetSenses(cta, userInputJCas, context);
+                    // FIXME hotfix for annotation
+                    // wNetSenses = getWNetSenses(cta, userInputJCas, context);
                     sentenceContext = getSentenceContext(cta, userInputJCas, context);
                     biGrams = getNGrams(2, cta, userInputJCas, context);
                     triGrams = getNGrams(3, cta, userInputJCas, context);
